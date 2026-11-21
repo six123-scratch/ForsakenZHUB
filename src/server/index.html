@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forsaken 3D - Noob vs c00lkidd</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        #ui {
+            position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
+        }
+        .skill-btn {
+            width: 70px; height: 70px; border-radius: 8px; border: 2px solid #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #fff; font-weight: bold; font-size: 11px; text-shadow: 1px 1px 2px #000;
+        }
+        #info {
+            position: absolute; top: 20px; left: 20px; color: #fff; font-size: 16px;
+            background: rgba(0,0,0,0.6); padding: 10px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <b>FORSAKEN WEB 3D</b><br>
+        Gerak: <b>W, A, S, D</b> | Lompat: <b>Spasi</b><br>
+        Klik layar untuk kunci kursor (Muter Kamera)
+    </div>
+
+    <div id="ui">
+        <div class="skill-btn" style="background:#00aaff;">[Q]<br>BURGER</div>
+        <div class="skill-btn" style="background:#888888;">[E]<br>SLATE</div>
+        <div class="skill-btn" style="background:#ff6600;">[R]<br>COLA</div>
+    </div>
+
+    <!-- Engine 3D Three.js Langsung dari Internet -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // 1. SETUP DUNIA 3D
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.03); // Kabut Gelap Horor
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Lampu Suasana Malam
+        const ambientLight = new THREE.AmbientLight(0x222233);
+        scene.add(ambientLight);
+
+        // Lantai Map (Rumput Gelap Kotak)
+        const floorGeo = new THREE.PlaneGeometry(120, 120);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a2e1a });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        // Rintangan Gedung / Dinding 3D
+        for(let i = 0; i < 15; i++) {
+            const boxGeo = new THREE.BoxGeometry(4, 8, 4);
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const box = new THREE.Mesh(boxGeo, boxMat);
+            box.position.set((Math.random() - 0.5) * 80, 4, (Math.random() - 0.5) * 80);
+            scene.add(box);
+        }
+
+        // 2. MODEL 3D NOOB (Karakter Kamu)
+        const noobGroup = new THREE.Group();
+        // Badan (Biru)
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.8), new THREE.MeshStandardMaterial({ color: 0x0055ff }));
+        torso.position.y = 1.7;
+        noobGroup.add(torso);
+        // Kepala (Kuning)
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
+        head.position.y = 2.8;
+        noobGroup.add(head);
+        // Kaki (Hijau)
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 0.8), new THREE.MeshStandardMaterial({ color: 0x33aa33 }));
+        leg.position.y = 0.5;
+        noobGroup.add(leg);
+
+        scene.add(noobGroup);
+
+        // 3. MODEL 3D c00lkidd (Killer Merah)
+        const c00lGroup = new THREE.Group();
+        const cTorso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.8), new THREE.MeshStandardMaterial({ color: 0xcc0000 }));
+        cTorso.position.y = 1.7;
+        c00lGroup.add(cTorso);
+        const cHead = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+        cHead.position.y = 2.8;
+        c00lGroup.add(cHead);
+        c00lGroup.position.set(0, 0, -25);
+        scene.add(c00lGroup);
+
+        // Lampu Senter Noob
+        const flashlight = new THREE.SpotLight(0xffffff, 2, 40, Math.PI / 6);
+        noobGroup.add(flashlight);
+        flashlight.position.set(0, 2, 0);
+        flashlight.target.position.set(0, 2, -10);
+        noobGroup.add(flashlight.target);
+
+        // 4. KONTROL GERAKAN (WASD + MOUSE)
+        let speed = 0.15;
+        const keys = {};
+        window.addEventListener("keydown", (e) => { 
+            keys[e.code] = true; 
+            // Ability Q: Burger (Transparan)
+            if(e.code === "KeyQ") {
+                torso.material.transparent = true; torso.material.opacity = 0.2;
+                head.material.transparent = true; head.material.opacity = 0.2;
+                setTimeout(() => { torso.material.opacity = 1; head.material.opacity = 1; }, 5000);
+            }
+            // Ability E: Slate Skin (Batu)
+            if(e.code === "KeyE") {
+                torso.material.color.setHex(0x555555);
+                setTimeout(() => { torso.material.color.setHex(0x0055ff); }, 4000);
+            }
+            // Ability R: Cola (Lari Kencang)
+            if(e.code === "KeyR") {
+                speed = 0.35;
+                setTimeout(() => { speed = 0.15; }, 4000);
+            }
+        });
+        window.addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+        document.body.addEventListener("click", () => { document.body.requestPointerLock(); });
+        let yaw = 0;
+        window.addEventListener("mousemove", (e) => {
+            if (document.pointerLockElement === document.body) {
+                yaw -= e.movementX * 0.003;
+                noobGroup.rotation.y = yaw;
+            }
+        });
+
+        // 5. GAME LOOP UTAMA
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Gerak Noob
+            if (keys["KeyW"]) {
+                noobGroup.position.x -= Math.sin(yaw) * speed;
+                noobGroup.position.z -= Math.cos(yaw) * speed;
+            }
+            if (keys["KeyS"]) {
+                noobGroup.position.x += Math.sin(yaw) * speed;
+                noobGroup.position.z += Math.cos(yaw) * speed;
+            }
+            if (keys["KeyA"]) {
+                noobGroup.position.x -= Math.cos(yaw) * speed;
+                noobGroup.position.z += Math.sin(yaw) * speed;
+            }
+            if (keys["KeyD"]) {
+                noobGroup.position.x += Math.cos(yaw) * speed;
+                noobGroup.position.z -= Math.sin(yaw) * speed;
+            }
+
+            // Kamera mengikuti Noob (Third-person 3D)
+            camera.position.x = noobGroup.position.x + Math.sin(yaw) * 7;
+            camera.position.z = noobGroup.position.z + Math.cos(yaw) * 7;
+            camera.position.y = noobGroup.position.y + 4;
+            camera.lookAt(noobGroup.position.x, noobGroup.position.y + 2, noobGroup.position.z);
+
+            // c00lkidd mengejar Noob secara otomatis (AI Chase sederhaan)
+            const dirX = noobGroup.position.x - c00lGroup.position.x;
+            const dirZ = noobGroup.position.z - c00lGroup.position.z;
+            const dist = Math.sqrt(dirX*dirX + dirZ*dirZ);
+            if(dist > 2) {
+                c00lGroup.position.x += (dirX / dist) * 0.08;
+                c00lGroup.position.z += (dirZ / dist) * 0.08;
+                c00lGroup.lookAt(noobGroup.position.x, 1.7, noobGroup.position.z);
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
