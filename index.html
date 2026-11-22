@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - 4 Layer Chase & Spectate Audio</title>
+    <title>Forsaken 3D - Exclusive Layers & High Ground</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -95,7 +95,7 @@
         #start-hint {
             position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.9); font-size: 14px; z-index: 10;
-            background: rgba(180, 0, 0, 0.7); padding: 7px 16px; border-radius: 20px;
+            background: rgba(180, 0, 0, 0.75); padding: 7px 16px; border-radius: 20px;
             font-weight: bold; cursor: pointer;
         }
     </style>
@@ -105,13 +105,12 @@
     <div id="crosshair"></div>
     <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
 
-    <!-- 4 LAYER CHASE THEME RESMI DARI GITHUB -->
+    <!-- 4 LAYER CHASE THEME -->
     <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer4" loop preload="auto"><source src="layer4.mp3" type="audio/mpeg"></audio>
 
-    <!-- AMBIENCE, LMS & SFX -->
     <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
     <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
     <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
@@ -133,7 +132,7 @@
     <div id="spectate-info">Spectating: AI Noob 1</div>
 
     <div id="lms-banner">LAST MAN STANDING!</div>
-    <div id="start-hint">🔊 KLIK LAYAR UNTUK MENGAKTIFKAN SUARA & KAMERA 360°</div>
+    <div id="start-hint">🔊 KLIK UNTUK MAIN | Tekan [M] untuk Unlock Mouse</div>
 
     <div id="skills-container">
         <div id="btn-burger" class="brush-circle" onclick="useBurger()">
@@ -181,7 +180,7 @@
 
     <script>
         // =========================================================================
-        // 1. MESIN 4-LAYER CHASE THEME SINKRON & PENGATUR AUDIO RONDE
+        // 1. SISTEM 4-LAYER BERGANTIAN (HANYA 1 LAYER AKTIF & RESET DARI DETIK 0)
         // =========================================================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isAudioInit = false;
@@ -197,27 +196,22 @@
         const sfxSlate = document.getElementById("sfx-slate");
         const sfxBurger = document.getElementById("sfx-burger");
 
-        // Helper Mainkan SFX
-        function playSFX(el, fallbackFn) {
+        let activeLayerIndex = 0; // 0: None, 1: Layer1, 2: Layer2, 3: Layer3, 4: Layer4
+
+        function playSFX(el) {
             if (el && el.readyState >= 2) {
-                el.currentTime = 0; el.play().catch(()=>{ if(fallbackFn) fallbackFn(); });
-            } else if (fallbackFn) {
-                fallbackFn();
+                el.currentTime = 0; el.play().catch(()=>{});
             }
         }
 
-        // Hentikan Semua Lagu Saat Pertandingan Berakhir & Reset ke Detik 0
         function stopAndResetAllAudio() {
             [l1, l2, l3, l4, bgmLMS, bgmAmbience].forEach(a => {
-                if (a) {
-                    a.pause();
-                    a.currentTime = 0; // Reset ke detik 0
-                }
+                if (a) { a.pause(); a.currentTime = 0; }
             });
+            activeLayerIndex = 0;
             document.getElementById("vignette").style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
         }
 
-        // Mulai Semua Lagu dari Detik 0 Saat Ronde Dimulai
         function startRoundAudio() {
             if (!isAudioInit) return;
             stopAndResetAllAudio();
@@ -226,25 +220,37 @@
                 bgmAmbience.volume = 0.4;
                 bgmAmbience.play().catch(()=>{});
             }
-
-            // Putar 4 layer bersamaan dengan volume 0 (agar ketukan tetap sinkron!)
-            [l1, l2, l3, l4].forEach(layer => {
-                if (layer) {
-                    layer.volume = 0;
-                    layer.play().catch(()=>{});
-                }
-            });
         }
 
-        // KONTROL 4-LAYER CHASE DINAMIS (BEKERJA SAAT MAIN & SAAT SPECTATE!)
+        // Beralih ke 1 layer saja: Layer lain dimatikan & layer baru diputar dari detik 0!
+        function switchSingleLayer(targetLayer) {
+            if (activeLayerIndex === targetLayer) return;
+
+            // Matikan layer lama
+            [l1, l2, l3, l4].forEach(l => {
+                if (l && !l.paused) { l.pause(); l.currentTime = 0; }
+            });
+
+            activeLayerIndex = targetLayer;
+
+            const layers = [null, l1, l2, l3, l4];
+            const chosen = layers[targetLayer];
+
+            if (chosen) {
+                chosen.currentTime = 0; // Mulai dari awal lagi!
+                chosen.volume = 1.0;
+                chosen.play().catch(()=>{});
+            }
+        }
+
         function update4LayerChase(dist) {
             if (!isAudioInit || gameState !== "INGAME") return;
-
             const vignette = document.getElementById("vignette");
 
-            // JIKA LMS (LAST MAN STANDING)
+            // JIKA LMS
             if (lmsTriggered) {
-                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) l.pause(); });
+                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
+                activeLayerIndex = 0;
                 if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
 
                 if (bgmLMS && bgmLMS.paused) {
@@ -258,53 +264,32 @@
                 if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
             }
 
-            // Sinkronisasi Beat Antar 4 Layer (Agar tidak ada layer yang mendahului)
-            if (l1 && l1.readyState >= 2) {
-                [l2, l3, l4].forEach(ly => {
-                    if (ly && ly.readyState >= 2 && Math.abs(ly.currentTime - l1.currentTime) > 0.15) {
-                        ly.currentTime = l1.currentTime;
-                    }
-                });
-            }
-
-            // ATUR VOLUME 4-LAYER BERDASARKAN JARAK KE C00LKIDD:
+            // PERGANTIAN LAYER EKSKLUSIF BERDASARKAN JARAK
             if (dist > 75) {
-                // JAUH SEKALI: Hening / Hanya Ambience
-                setLayerVols(0, 0, 0, 0);
+                switchSingleLayer(0); // Jauh = Hening
                 if (bgmAmbience) bgmAmbience.volume = 0.45;
                 vignette.style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
             } else if (dist > 50) {
-                // LAYER 1: Mulai Mendekat
-                setLayerVols(0.8, 0, 0, 0);
+                switchSingleLayer(1); // Hanya Layer 1
                 if (bgmAmbience) bgmAmbience.volume = 0.3;
                 vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)";
             } else if (dist > 30) {
-                // LAYER 2: Semakin Dekat (Layer 1 + Layer 2)
-                setLayerVols(0.8, 0.8, 0, 0);
+                switchSingleLayer(2); // Hanya Layer 2
                 if (bgmAmbience) bgmAmbience.volume = 0.2;
                 vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)";
-            } else if (dist > 15) {
-                // LAYER 3: Dekat! (Layer 1 + Layer 2 + Layer 3)
-                setLayerVols(0.9, 0.9, 0.9, 0);
+            } else if (dist > 18) {
+                switchSingleLayer(3); // Hanya Layer 3
                 if (bgmAmbience) bgmAmbience.volume = 0.1;
                 vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)";
             } else {
-                // LAYER 4 / CHASE!: Di Depan Mata! (Semua 4 Layer Volume Penuh 100%!)
-                setLayerVols(1.0, 1.0, 1.0, 1.0);
+                switchSingleLayer(4); // Hanya Layer 4 (Pasti Berbunyi Saat Dekat!)
                 if (bgmAmbience) bgmAmbience.volume = 0.05;
                 vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)";
             }
         }
 
-        function setLayerVols(v1, v2, v3, v4) {
-            if (l1) l1.volume = v1;
-            if (l2) l2.volume = v2;
-            if (l3) l3.volume = v3;
-            if (l4) l4.volume = v4;
-        }
-
         // ==========================================
-        // 2. 3D SCENE & MAP
+        // 2. 3D SCENE, MAP, COLLISION & TEMPAT TINGGI
         // ==========================================
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x181a24, 0.007);
@@ -320,19 +305,22 @@
         dirLight.position.set(40, 80, 40);
         scene.add(dirLight);
 
+        // Lantai Arena
         const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x223522 }));
         arenaFloor.rotation.x = -Math.PI / 2;
         scene.add(arenaFloor);
 
+        // Lobby Atas
         const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
         lobbyPlatform.position.set(0, 70, 0);
         scene.add(lobbyPlatform);
 
         const solidBoxes = [];
         function registerBox(x, z, w, d) {
-            solidBoxes.push({ minX: x - w/2 - 1.0, maxX: x + w/2 + 1.0, minZ: z - d/2 - 1.0, maxZ: z + d/2 + 1.0 });
+            solidBoxes.push({ minX: x - w/2 - 1.2, maxX: x + w/2 + 1.2, minZ: z - d/2 - 1.2, maxZ: z + d/2 + 1.2 });
         }
 
+        // TEMBOK PEMBATAS RAKSASA
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x1f1f2e, roughness: 0.9 });
         function createBorderWall(x, z, w, d) {
             const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
@@ -345,6 +333,7 @@
         createBorderWall(-125, 0, 6, 250);
         createBorderWall(125, 0, 6, 250);
 
+        // GEDUNG & DINDING
         for(let i = 0; i < 24; i++) {
             const h = 8 + Math.random() * 8;
             const b = new THREE.Mesh(new THREE.BoxGeometry(7, h, 7), new THREE.MeshStandardMaterial({ color: 0x333340 }));
@@ -355,6 +344,7 @@
             registerBox(bx, bz, 7, 7);
         }
 
+        // POHON
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
         const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
         for(let i = 0; i < 35; i++) {
@@ -369,11 +359,49 @@
             registerBox(tx, tz, 1.2, 1.2);
         }
 
+        // TEMPAT TINGGI: BUKIT / PLATFORM DENGAN TANJAKAN (RAMP)
+        const hillPlatform = new THREE.Mesh(new THREE.BoxGeometry(26, 6, 26), new THREE.MeshStandardMaterial({ color: 0x444455 }));
+        hillPlatform.position.set(40, 3, 40);
+        scene.add(hillPlatform);
+
+        // Tanjakan Menuju Bukit
+        const rampGeo = new THREE.BoxGeometry(10, 1, 20);
+        const rampMat = new THREE.MeshStandardMaterial({ color: 0x666677 });
+        const ramp = new THREE.Mesh(rampGeo, rampMat);
+        ramp.position.set(40, 3, 18);
+        ramp.rotation.x = 0.32; // Kemiringan tanjakan
+        scene.add(ramp);
+
+        // Fungsi Deteksi Tabrakan untuk Semua Karakter
         function canMoveTo(x, z) {
             for (let b of solidBoxes) {
                 if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
             }
             return true;
+        }
+
+        // Gerakkan Entitas dengan Sistem Tabrakan (Tidak Bisa Tembus Dinding/Pohon!)
+        function moveWithCollision(entity, vx, vz) {
+            const nextX = entity.position.x + vx;
+            const nextZ = entity.position.z + vz;
+
+            if (canMoveTo(nextX, nextZ)) {
+                entity.position.x = nextX;
+                entity.position.z = nextZ;
+            } else if (canMoveTo(nextX, entity.position.z)) {
+                entity.position.x = nextX;
+            } else if (canMoveTo(entity.position.x, nextZ)) {
+                entity.position.z = nextZ;
+            }
+
+            // Ketinggian Bukit
+            if (entity.position.x >= 27 && entity.position.x <= 53 && entity.position.z >= 27 && entity.position.z <= 53) {
+                entity.position.y = 6; // Di atas bukit
+            } else if (entity.position.x >= 35 && entity.position.x <= 45 && entity.position.z >= 8 && entity.position.z <= 28) {
+                entity.position.y = (entity.position.z - 8) * 0.3; // Di atas tanjakan
+            } else if (gameState === "INGAME") {
+                entity.position.y = 0; // Di tanah
+            }
         }
 
         // ==========================================
@@ -466,8 +494,7 @@
             g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh };
             g.isHighlighted = false;
             g.hp = 100;
-            g.isInvulnerable = false;
-            g.cdQ = false; g.cdE = false; g.cdR = false;
+            g.isInvulnerable = false; // Player saja yang bisa pakai Slateskin
             return g;
         }
 
@@ -475,12 +502,14 @@
         playerNoob.position.set(0, 72, 0);
         scene.add(playerNoob);
 
+        // AI SURVIVOR: DIBERSIHKAN TOTAL DARI BUG KEBAL!
         const aiSurvivors = [];
         for(let i = 0; i < 3; i++) {
             const ai = createR6(false);
             ai.position.set((i - 1) * 6, 72, 5);
             ai.alive = true;
             ai.hp = 100;
+            ai.isInvulnerable = false;
             ai.name = "AI Noob " + (i + 1);
             ai.patrolTarget = new THREE.Vector3();
             scene.add(ai);
@@ -497,7 +526,7 @@
         const minions = [];
 
         // ==========================================
-        // 4. KAMERA 360 & CONTROLS
+        // 4. KAMERA 360 & UNLOCK MOUSE [M]
         // ==========================================
         let camYaw = 0, camPitch = 0.2;
         let isPointerLocked = false, isMouseDown = false;
@@ -508,7 +537,7 @@
             document.getElementById("start-hint").style.display = "none";
             if (audioCtx.state === "suspended") audioCtx.resume();
             isAudioInit = true;
-            if (gameState === "INGAME" && l1 && l1.paused) startRoundAudio();
+            if (gameState === "INGAME" && activeLayerIndex === 0) startRoundAudio();
         });
 
         document.addEventListener("pointerlockchange", () => {
@@ -536,7 +565,7 @@
         });
 
         // ==========================================
-        // 5. ROUND & LMS (LOBBY STOP -> INGAME START)
+        // 5. ROUND & LMS LOGIC
         // ==========================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
@@ -598,21 +627,18 @@
                     document.getElementById("hp-bar").style.width = "100%";
                     playerNoob.position.set(0, 0, 0);
 
+                    // RESET SEMUA AI: PASTI BISA DIBUNUH DAN TIDAK KEBAL!
                     aiSurvivors.forEach((ai, idx) => {
                         ai.alive = true;
                         ai.hp = 100;
                         ai.isInvulnerable = false;
-                        ai.cdE = false; ai.cdQ = false; ai.cdR = false;
                         ai.visible = true;
-                        ai.parts.torso.material.color.setHex(0x0055ff);
                         ai.position.set((idx - 1) * 15, 0, 20);
                         pickNewPatrol(ai);
                     });
                     c00lkidd.position.set(0, 0, -80);
                     updateUIState();
-
-                    // LAGU DIMULAI DARI AWAL DETIK 0!
-                    startRoundAudio();
+                    startRoundAudio(); // LAGU MULAI DARI DETIK 0!
                 }
             } else if (gameState === "INGAME") {
                 const mins = Math.floor(timerSeconds / 60);
@@ -629,7 +655,7 @@
                     setTimeout(() => { document.getElementById("lms-banner").style.display = "none"; }, 5000);
                 }
 
-                // PERTANDINGAN BERAKHIR: STOP SEMUA LAGU & KEMBALI KE LOBBY
+                // RONDE BERAKHIR: STOP LAGU & RESET KE AWAL!
                 if (timerSeconds <= 0 || aliveCount === 0) {
                     gameState = "LOBBY";
                     timerSeconds = 15;
@@ -639,15 +665,13 @@
                     minions.forEach(m => scene.remove(m));
                     minions.length = 0;
                     updateUIState();
-
-                    // STOP & RESET LAGU KE AWAL!
-                    stopAndResetAllAudio();
+                    stopAndResetAllAudio(); // STOP LAGU!
                 }
             }
         }, 1000);
 
         // =========================================================================
-        // 6. ABILITIES NOOB
+        // 6. ABILITIES & TOMBOL UNLOCK MOUSE [M]
         // =========================================================================
         let keys = {};
         let isShiftlock = false;
@@ -671,6 +695,7 @@
 
         window.addEventListener("keydown", (e) => { 
             keys[e.code] = true;
+            if (e.code === "KeyM") document.exitPointerLock(); // TOMBOL UNLOCK MOUSE!
             if (e.code === "ShiftLeft") isSprinting = true;
             if (e.code === "KeyQ") useBurger();
             if (e.code === "KeyE") useSlate();
@@ -931,7 +956,7 @@
         }
 
         // =========================================================================
-        // 8. GAME LOOP (AUDIO BEKERJA SAAT MAIN & SPECTATE)
+        // 8. GAME LOOP (SEMUA ENTITAS MEMAKAI FISIKA COLLISION TABRAKAN)
         // =========================================================================
         let walkCycle = 0;
         let c00lAttackTimer = 0;
@@ -942,6 +967,7 @@
             if (keys["ArrowLeft"]) camYaw += 0.04;
             if (keys["ArrowRight"]) camYaw -= 0.04;
 
+            // GERAK PLAYER (DENGAN COLLISION)
             if (!isPlayerDead && gameState === "INGAME") {
                 let spd = 0.16 * speedBoostMultiplier;
                 
@@ -971,17 +997,10 @@
 
                 if (mx !== 0 || mz !== 0) {
                     const angle = Math.atan2(mx, mz);
-                    const nextX = playerNoob.position.x + Math.sin(camYaw + angle) * spd;
-                    const nextZ = playerNoob.position.z + Math.cos(camYaw + angle) * spd;
+                    const vx = Math.sin(camYaw + angle) * spd;
+                    const vz = Math.cos(camYaw + angle) * spd;
 
-                    if (canMoveTo(nextX, nextZ)) {
-                        playerNoob.position.x = nextX;
-                        playerNoob.position.z = nextZ;
-                    } else if (canMoveTo(nextX, playerNoob.position.z)) {
-                        playerNoob.position.x = nextX;
-                    } else if (canMoveTo(playerNoob.position.x, nextZ)) {
-                        playerNoob.position.z = nextZ;
-                    }
+                    moveWithCollision(playerNoob, vx, vz); // Tabrakan aktif!
 
                     walkCycle += (playerNoob.isInvulnerable ? 0.08 : 0.18);
                     if (!isDrinkingOrEating) {
@@ -998,7 +1017,7 @@
                 }
             }
 
-            // KAMERA & FOKUS AUDIO
+            // KAMERA & FOKUS AUDIO SPECTATE
             let camFocus = playerNoob;
             if (isSpectating && spectateList[spectateIdx]) {
                 camFocus = spectateList[spectateIdx];
@@ -1011,14 +1030,14 @@
             camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
 
             if (gameState === "INGAME") {
-                // JARAK AUDIO DIHITUNG DARI KARAKTER YANG SEDANG KAMU MAIN / TONTON!
+                // JARAK AUDIO SPECTATE
                 let audioDistance = 9999;
                 if (!isPlayerDead) {
                     audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
                 } else if (isSpectating && camFocus) {
                     audioDistance = camFocus.position.distanceTo(c00lkidd.position);
                 }
-                update4LayerChase(audioDistance); // LAGU TETAP BERJALAN SAAT SPECTATE!
+                update4LayerChase(audioDistance);
 
                 let targets = [];
                 if (!isPlayerDead) targets.push(playerNoob);
@@ -1044,7 +1063,7 @@
                     if (c00lState === "DASHING") {
                         dashTimer--;
                         const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                        c00lkidd.position.addScaledVector(fwd, 0.7);
+                        moveWithCollision(c00lkidd, fwd.x * 0.7, fwd.z * 0.7);
 
                         if (checkHitbox(closestTarget)) {
                             if (!closestTarget.isInvulnerable) {
@@ -1066,21 +1085,22 @@
                         const kd = Math.sqrt(kx*kx + kz*kz);
 
                         if (kd > 4) {
-                            c00lkidd.position.x += (kx / kd) * 0.13;
-                            c00lkidd.position.z += (kz / kd) * 0.13;
+                            // C00LKIDD TIDAK TEMBUS TEMBOK LAGI!
+                            moveWithCollision(c00lkidd, (kx / kd) * 0.13, (kz / kd) * 0.13);
                         }
 
+                        // TAG M1 (26.5 DMG)
                         if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
                             c00lAttackTimer = 120;
                             c00lkidd.parts.rArm.rotation.x = -1.6;
 
                             if (!closestTarget.isInvulnerable) {
-                                closestTarget.hp -= 26.5;
+                                closestTarget.hp -= 26.5; // AI PASTI BISA KENA HIT!
                                 if (closestTarget === playerNoob) {
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
                                 } else if (closestTarget.hp <= 0) {
-                                    closestTarget.alive = false; closestTarget.visible = false;
+                                    closestTarget.alive = false; closestTarget.visible = false; // AI MATI!
                                 }
                             }
                             setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
@@ -1094,7 +1114,7 @@
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
-                // MINIONS
+                // MINIONS TIDAK TEMBUS TEMBOK
                 for (let i = minions.length - 1; i >= 0; i--) {
                     const m = minions[i];
                     if (closestTarget) {
@@ -1105,8 +1125,7 @@
                         const md = Math.sqrt(mx*mx + mz*mz);
 
                         if (md > 2.5) {
-                            m.position.x += (mx / md) * 0.085;
-                            m.position.z += (mz / md) * 0.085;
+                            moveWithCollision(m, (mx / md) * 0.085, (mz / md) * 0.085);
                         } else {
                             clearTimeout(m.despawnTimeout);
                             scene.remove(m);
@@ -1128,49 +1147,18 @@
                     }
                 }
 
-                // AI BEHAVIOR
+                // AI SURVIVOR: GERAK TIDAK TEMBUS TEMBOK
                 aiSurvivors.forEach(ai => {
                     if (ai.alive) {
                         const distToKiller = ai.position.distanceTo(c00lkidd.position);
 
-                        if (distToKiller < 10 && !ai.cdE && !ai.isInvulnerable) {
-                            ai.cdE = true;
-                            ai.isInvulnerable = true;
-                            ai.parts.torso.material.color.setHex(0x4a5568);
-                            setTimeout(() => {
-                                ai.isInvulnerable = false;
-                                ai.parts.torso.material.color.setHex(0x0055ff);
-                                setTimeout(() => { ai.cdE = false; }, 35000);
-                            }, 6000);
-                        }
-
-                        if (ai.hp < 50 && !ai.cdQ) {
-                            ai.cdQ = true;
-                            ai.hp = Math.min(100, ai.hp + 25);
-                            Object.values(ai.parts).forEach(p => { if (p.material) p.material.opacity = 0.2; });
-                            setTimeout(() => {
-                                Object.values(ai.parts).forEach(p => { if (p.material) p.material.opacity = 1; });
-                                setTimeout(() => { ai.cdQ = false; }, 30000);
-                            }, 7000);
-                        }
-
-                        let aiSpeed = 0.13;
-                        if (distToKiller < 35 && !ai.cdR) {
-                            ai.cdR = true;
-                            aiSpeed = 0.21;
-                            setTimeout(() => { ai.cdR = false; }, 40000);
-                        }
+                        let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.14 : 0.08;
 
                         if (distToKiller < 35 || ai.isHighlighted) {
                             const adx = ai.position.x - c00lkidd.position.x;
                             const adz = ai.position.z - c00lkidd.position.z;
                             const dist = Math.sqrt(adx*adx + adz*adz);
-                            const nX = ai.position.x + (adx / dist) * aiSpeed;
-                            const nZ = ai.position.z + (adz / dist) * aiSpeed;
-                            if (canMoveTo(nX, nZ)) {
-                                ai.position.x = nX;
-                                ai.position.z = nZ;
-                            }
+                            moveWithCollision(ai, (adx / dist) * aiSpeed, (adz / dist) * aiSpeed);
                             ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz);
                         } else {
                             const pdx = ai.patrolTarget.x - ai.position.x;
@@ -1178,14 +1166,7 @@
                             const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
 
                             if (pdist > 2) {
-                                const nX = ai.position.x + (pdx / pdist) * 0.08;
-                                const nZ = ai.position.z + (pdz / pdist) * 0.08;
-                                if (canMoveTo(nX, nZ)) {
-                                    ai.position.x = nX;
-                                    ai.position.z = nZ;
-                                } else {
-                                    pickNewPatrol(ai);
-                                }
+                                moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
                                 ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z);
                             } else {
                                 pickNewPatrol(ai);
