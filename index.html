@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forsaken 3D - Fixed AI & Sound System</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
+
+        #vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5;
+            box-shadow: inset 0 0 100px rgba(255, 0, 0, 0);
+            transition: box-shadow 0.3s ease;
+        }
+
+        #top-hud {
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(0, 0, 0, 0.75); padding: 8px 24px; border-radius: 8px;
+            border: 2px solid #555; z-index: 10; color: #fff;
+        }
+        #round-timer { font-size: 24px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
+
+        #highlight-warning {
+            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 200, 0, 0.85); color: #000; font-weight: 900;
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; letter-spacing: 1px;
+            display: none; z-index: 12; animation: blink 0.5s infinite alternate;
+        }
+        @keyframes blink { from { opacity: 0.7; } to { opacity: 1; } }
+
+        #player-bars {
+            position: absolute; bottom: 25px; left: 25px;
+            background: rgba(0, 0, 0, 0.75); padding: 10px 14px; border-radius: 8px;
+            border: 2px solid #444; width: 170px; z-index: 10; color: #fff;
+            display: none;
+        }
+        .bar-container { background: #222; height: 12px; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+        #hp-bar { width: 100%; height: 100%; background: #00e64d; transition: width 0.2s; }
+        #stamina-bar { width: 100%; height: 100%; background: #ffaa00; transition: width 0.1s; }
+        .bar-title { font-size: 10px; font-weight: bold; margin-top: 3px; }
+
+        #spectate-btn {
+            position: absolute; top: 50%; left: 20px; transform: translateY(-50%);
+            background: #111; color: #00e6ff; border: 2px solid #00e6ff;
+            padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
+            cursor: pointer; z-index: 25; display: none; box-shadow: 0 0 10px rgba(0, 230, 255, 0.4);
+        }
+        #spectate-btn:hover { background: #00e6ff; color: #000; }
+        #spectate-info {
+            position: absolute; top: calc(50% + 40px); left: 20px;
+            color: #fff; font-size: 12px; display: none; z-index: 25; text-shadow: 1px 1px 2px #000;
+        }
+
+        #lms-banner {
+            position: absolute; top: 22%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 42px; font-weight: 900; color: #ff0000; letter-spacing: 5px;
+            text-shadow: 0 0 20px #ff0000, 0 0 35px #000; display: none; z-index: 20;
+            text-align: center; animation: pulse 0.8s infinite alternate;
+        }
+        @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.08); } }
+
+        #skills-container {
+            position: absolute; bottom: 20px; right: 25px; width: 220px; height: 210px;
+            z-index: 10; display: none;
+        }
+        .brush-circle {
+            position: absolute; border-radius: 50%; background: #0a101d;
+            border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #fff; text-align: center; cursor: pointer;
+        }
+        .skill-name {
+            position: absolute; bottom: -16px; font-size: 10px; font-weight: bold;
+            white-space: nowrap; color: #fff; text-shadow: 1px 1px 3px #000;
+        }
+        .cd-dark {
+            position: absolute; top: 0; left: 0; width: 100%; height: 0%;
+            background: rgba(0, 0, 0, 0.7); border-radius: 50%; pointer-events: none;
+        }
+
+        #btn-burger { width: 56px; height: 56px; top: 5px; right: 8px; }
+        #btn-slate  { width: 60px; height: 60px; top: 5px; left: 55px; }
+        #btn-cola   { width: 56px; height: 56px; bottom: 35px; left: 5px; }
+        #btn-sprint { width: 80px; height: 80px; bottom: 28px; right: 25px; }
+        #btn-shiftlock { width: 36px; height: 36px; bottom: -6px; left: 82px; background: #111; }
+        #btn-shiftlock.active { border-color: #00ffcc; box-shadow: 0 0 10px #00ffcc; }
+
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 8px; height: 8px; border: 2px solid #00ffcc; border-radius: 50%;
+            pointer-events: none; display: none; z-index: 15;
+        }
+
+        #start-hint {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.9); font-size: 14px; z-index: 10;
+            background: rgba(180, 0, 0, 0.7); padding: 7px 16px; border-radius: 20px;
+            font-weight: bold; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="vignette"></div>
+    <div id="crosshair"></div>
+    <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
+
+    <!-- ELEMEN AUDIO (MEMBACA FILE MP3 DI GITHUB) -->
+    <audio id="audio-chase" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"></audio>
+    <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
+    <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-slate" preload="auto"><source src="slate.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-burger" preload="auto"><source src="burger.mp3" type="audio/mpeg"></audio>
+
+    <div id="player-bars">
+        <div class="bar-title">HEALTH</div>
+        <div class="bar-container"><div id="hp-bar"></div></div>
+        <div class="bar-title">STAMINA</div>
+        <div class="bar-container"><div id="stamina-bar"></div></div>
+    </div>
+
+    <div id="top-hud">
+        <div id="round-timer">LOBBY: 15s</div>
+    </div>
+
+    <button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button>
+    <div id="spectate-info">Spectating: AI Noob 1</div>
+
+    <div id="lms-banner">LAST MAN STANDING!</div>
+    <div id="start-hint">🔊 KLIK LAYAR UNTUK MENGAKTIFKAN SUARA & KAMERA 360°</div>
+
+    <div id="skills-container">
+        <div id="btn-burger" class="brush-circle" onclick="useBurger()">
+            <div id="cd-q" class="cd-dark"></div>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M12 2a4 4 0 0 0-4 4c0 3 4 5 4 5s4-2 4-5a4 4 0 0 0-4-4z"/>
+                <path d="M4 16c0-3 3-5 8-5s8 2 8 5H4z"/>
+            </svg>
+            <div class="skill-name">Ghostburger [Q]</div>
+        </div>
+
+        <div id="btn-slate" class="brush-circle" onclick="useSlate()">
+            <div id="cd-e" class="cd-dark"></div>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M9 2h6v3H9zM10 5v4l-4 7v4h12v-4l-4-7V5"/>
+            </svg>
+            <div id="label-slate" class="skill-name">Slateskin [E]</div>
+        </div>
+
+        <div id="btn-cola" class="brush-circle" onclick="useCola()">
+            <div id="cd-r" class="cd-dark"></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <rect x="7" y="4" width="10" height="16" rx="2"/>
+                <path d="M11 2h2"/>
+            </svg>
+            <div class="skill-name">Bloxy Cola [R]</div>
+        </div>
+
+        <div id="btn-sprint" class="brush-circle">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="white">
+                <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
+            </svg>
+            <div class="skill-name" style="bottom: 4px; font-size: 8px;">SPRINT [Shift]</div>
+        </div>
+
+        <div id="btn-shiftlock" class="brush-circle" onclick="toggleShiftlock()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                <circle cx="12" cy="12" r="6"/>
+                <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+            </svg>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // =========================================================================
+        // 1. SISTEM AUDIO CERDAS: MP3 DARI GITHUB + FALLBACK
+        // =========================================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let currentLayer = 0;
+        let isAudioInit = false;
+
+        const bgmAmbience = document.getElementById("audio-ambience");
+        const bgmChase = document.getElementById("audio-chase");
+        const bgmLMS = document.getElementById("audio-lms");
+        const sfxCola = document.getElementById("sfx-cola");
+        const sfxSlate = document.getElementById("sfx-slate");
+        const sfxBurger = document.getElementById("sfx-burger");
+
+        function playSafeAudio(audioEl, fallbackFn) {
+            if (audioEl && audioEl.readyState >= 2) {
+                audioEl.currentTime = 0;
+                audioEl.play().catch(() => { if (fallbackFn) fallbackFn(); });
+            } else {
+                if (fallbackFn) fallbackFn();
+            }
+        }
+
+        function playTone(freq, type, duration, vol, startTime = 0) {
+            if (!audioCtx || audioCtx.state !== "running") return;
+            const t = audioCtx.currentTime + startTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t);
+            osc.stop(t + duration);
+        }
+
+        function playNoise(duration, vol, startTime = 0) {
+            if (!audioCtx || audioCtx.state !== "running") return;
+            const t = audioCtx.currentTime + startTime;
+            const bufferSize = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start(t);
+        }
+
+        function fallbackCola() {
+            playNoise(0.35, 0.45, 0);
+            playTone(280, "sine", 0.15, 0.3, 0.4);
+            playTone(320, "sine", 0.15, 0.3, 0.7);
+            playTone(360, "sine", 0.18, 0.35, 1.0);
+        }
+        function fallbackSlate() {
+            playTone(340, "sine", 0.16, 0.3, 0.1);
+            playTone(85, "sawtooth", 0.9, 0.45, 0.4);
+            playNoise(0.4, 0.25, 0.6);
+        }
+        function fallbackBurger() {
+            playNoise(0.12, 0.4, 0.1);
+            playNoise(0.15, 0.45, 0.3);
+            if (audioCtx && audioCtx.state === "running") {
+                const t = audioCtx.currentTime + 0.5;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(260, t);
+                osc.frequency.exponentialRampToValueAtTime(540, t + 0.8);
+                osc.frequency.exponentialRampToValueAtTime(320, t + 1.8);
+                gain.gain.setValueAtTime(0.01, t);
+                gain.gain.linearRampToValueAtTime(0.35, t + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + 1.8);
+            }
+        }
+
+        const bassNotes = [110, 110, 130, 146, 110, 98, 110, 123];
+        const leadArp   = [440, 523, 659, 880, 784, 659, 523, 587];
+        let step = 0;
+
+        setInterval(() => {
+            if (!isAudioInit || gameState !== "INGAME" || isPlayerDead) return;
+
+            // Ambience Map
+            if (bgmAmbience && bgmAmbience.readyState >= 2) {
+                if (bgmAmbience.paused) { bgmAmbience.volume = 0.35; bgmAmbience.play().catch(()=>{}); }
+            }
+
+            // JIKA LMS
+            if (lmsTriggered) {
+                if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
+                if (bgmChase && !bgmChase.paused) bgmChase.pause();
+
+                if (bgmLMS && bgmLMS.readyState >= 2) {
+                    if (bgmLMS.paused) { bgmLMS.volume = 1.0; bgmLMS.play().catch(()=>{}); }
+                } else {
+                    // Fallback synthesizer jika belum upload lms.mp3
+                    playTone(85, "sawtooth", 0.16, 0.28);
+                    if (step % 2 === 0) playTone(170, "square", 0.09, 0.18);
+                    if (step % 4 === 0) playTone(680, "sawtooth", 0.18, 0.22);
+                }
+                step++;
+                return;
+            } else {
+                if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
+            }
+
+            // CHASE THEME
+            if (bgmChase && bgmChase.readyState >= 2) {
+                if (currentLayer > 0) {
+                    if (bgmChase.paused) bgmChase.play().catch(()=>{});
+                    const volMap = [0, 0.25, 0.55, 0.85, 1.0];
+                    bgmChase.volume = volMap[currentLayer];
+                } else {
+                    if (!bgmChase.paused) bgmChase.pause();
+                }
+            } else {
+                // Fallback synthesizer jika belum upload chase.mp3
+                if (currentLayer === 1 && step % 2 === 0) playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.15, 0.12);
+                if (currentLayer === 2) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.13, 0.18); if (step % 4 === 2) playTone(200, "square", 0.08, 0.09); }
+                if (currentLayer === 3) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.12, 0.22); playTone(leadArp[step % leadArp.length], "square", 0.09, 0.14); }
+                if (currentLayer === 4) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.12, 0.28); playTone(leadArp[step % leadArp.length] * 1.5, "square", 0.08, 0.22); }
+            }
+            step++;
+        }, 130);
+
+        function updateChaseLayers(dist) {
+            const vignette = document.getElementById("vignette");
+            if (lmsTriggered) {
+                vignette.style.boxShadow = "inset 0 0 120px rgba(255, 0, 0, 0.7)";
+                return;
+            }
+            if (dist > 75) { currentLayer = 0; vignette.style.boxShadow = "inset 0 0 40px rgba(255, 0, 0, 0)"; }
+            else if (dist > 50) { currentLayer = 1; vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)"; }
+            else if (dist > 30) { currentLayer = 2; vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)"; }
+            else if (dist > 15) { currentLayer = 3; vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)"; }
+            else { currentLayer = 4; vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)"; }
+        }
+
+        // ==========================================
+        // 2. 3D SCENE & MAP
+        // ==========================================
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x181a24, 0.007);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0x888899, 1.3);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
+        dirLight.position.set(40, 80, 40);
+        scene.add(dirLight);
+
+        const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x223522 }));
+        arenaFloor.rotation.x = -Math.PI / 2;
+        scene.add(arenaFloor);
+
+        const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
+        lobbyPlatform.position.set(0, 70, 0);
+        scene.add(lobbyPlatform);
+
+        const solidBoxes = [];
+        function registerBox(x, z, w, d) {
+            solidBoxes.push({ minX: x - w/2 - 1.0, maxX: x + w/2 + 1.0, minZ: z - d/2 - 1.0, maxZ: z + d/2 + 1.0 });
+        }
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1f1f2e, roughness: 0.9 });
+        function createBorderWall(x, z, w, d) {
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
+            wall.position.set(x, 11, z);
+            scene.add(wall);
+            registerBox(x, z, w, d);
+        }
+        createBorderWall(0, -125, 250, 6);
+        createBorderWall(0, 125, 250, 6);
+        createBorderWall(-125, 0, 6, 250);
+        createBorderWall(125, 0, 6, 250);
+
+        for(let i = 0; i < 24; i++) {
+            const h = 8 + Math.random() * 8;
+            const b = new THREE.Mesh(new THREE.BoxGeometry(7, h, 7), new THREE.MeshStandardMaterial({ color: 0x333340 }));
+            const bx = (Math.random() - 0.5) * 170;
+            const bz = (Math.random() - 0.5) * 170;
+            b.position.set(bx, h/2, bz);
+            scene.add(b);
+            registerBox(bx, bz, 7, 7);
+        }
+
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
+        const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
+        for(let i = 0; i < 35; i++) {
+            const tx = (Math.random() - 0.5) * 190;
+            const tz = (Math.random() - 0.5) * 190;
+            const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), trunkMat);
+            trunk.position.set(tx, 3.5, tz);
+            scene.add(trunk);
+            const foliage = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), foliageMat);
+            foliage.position.set(tx, 8, tz);
+            scene.add(foliage);
+            registerBox(tx, tz, 1.2, 1.2);
+        }
+
+        function canMoveTo(x, z) {
+            for (let b of solidBoxes) {
+                if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
+            }
+            return true;
+        }
+
+        // ==========================================
+        // 3. MODEL R6 NOOB & C00LKIDD
+        // ==========================================
+        function createFace(isRed) {
+            const c = document.createElement("canvas"); c.width = 128; c.height = 128;
+            const ctx = c.getContext("2d");
+            ctx.fillStyle = isRed ? "#ff0000" : "#ffd200";
+            ctx.fillRect(0,0,128,128);
+            ctx.fillStyle = "#000";
+            ctx.beginPath(); ctx.arc(40, 45, 8, 0, Math.PI*2); ctx.arc(88, 45, 8, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(64, 75, isRed ? 30 : 22, 0, Math.PI, false); ctx.lineWidth = 6; ctx.stroke();
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createC00lkiddTorsoTexture() {
+            const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+            const ctx = c.getContext("2d");
+            ctx.fillStyle = "#cc0000";
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = "#111111";
+            ctx.font = "bold 26px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("team c00lkidd", 128, 100);
+            ctx.fillText("join today!", 128, 150);
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createSword() {
+            const sword = new THREE.Group();
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
+            blade.position.y = 1.3;
+            sword.add(blade);
+            const cross = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.2), new THREE.MeshStandardMaterial({ color: 0x880000 }));
+            cross.position.y = 0.1;
+            sword.add(cross);
+            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            handle.position.y = -0.25;
+            sword.add(handle);
+            return sword;
+        }
+
+        function createR6(isRed) {
+            const g = new THREE.Group();
+            const mBody = isRed ? new THREE.MeshStandardMaterial({ color: 0xcc0000 }) : new THREE.MeshStandardMaterial({ color: 0x0055ff });
+            const mLimb = new THREE.MeshStandardMaterial({ color: isRed ? 0x990000 : 0xffd200 });
+            const mLeg  = new THREE.MeshStandardMaterial({ color: isRed ? 0x990000 : 0x287f46 });
+
+            let torsoMat = mBody;
+            if (isRed) {
+                torsoMat = [
+                    mBody, mBody, mBody, mBody,
+                    mBody,
+                    new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })
+                ];
+            }
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; g.add(torso);
+            
+            const headMaterials = [
+                mLimb, mLimb, mLimb, mLimb,
+                mLimb,
+                new THREE.MeshStandardMaterial({ map: createFace(isRed) })
+            ];
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; g.add(head);
+            
+            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); lArm.position.set(-1.5, 3, 0); g.add(lArm);
+            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); rArm.position.set(1.5, 3, 0); g.add(rArm);
+            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); g.add(lLeg);
+            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); g.add(rLeg);
+
+            const highlightMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 }));
+            highlightMesh.position.y = 2.6;
+            highlightMesh.visible = false;
+            g.add(highlightMesh);
+
+            const heldItem = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6), new THREE.MeshStandardMaterial({ color: 0xaa2222 }));
+            heldItem.position.set(0, -0.9, -0.3);
+            heldItem.visible = false;
+            rArm.add(heldItem);
+
+            if (isRed) {
+                const sw = createSword();
+                sw.position.set(0, -1, -0.4);
+                sw.rotation.x = Math.PI / 2;
+                rArm.add(sw);
+            }
+
+            g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh };
+            g.isHighlighted = false;
+            g.hp = 100;
+            g.isInvulnerable = false;
+            g.cdQ = false; g.cdE = false; g.cdR = false;
+            return g;
+        }
+
+        const playerNoob = createR6(false);
+        playerNoob.position.set(0, 72, 0);
+        scene.add(playerNoob);
+
+        const aiSurvivors = [];
+        for(let i = 0; i < 3; i++) {
+            const ai = createR6(false);
+            ai.position.set((i - 1) * 6, 72, 5);
+            ai.alive = true;
+            ai.hp = 100;
+            ai.name = "AI Noob " + (i + 1);
+            ai.patrolTarget = new THREE.Vector3();
+            scene.add(ai);
+            aiSurvivors.push(ai);
+        }
+
+        const c00lkidd = createR6(true);
+        c00lkidd.name = "c00lkidd";
+        const redGlow = new THREE.PointLight(0xff0000, 3, 20);
+        c00lkidd.add(redGlow);
+        c00lkidd.position.set(0, 0, -80);
+        scene.add(c00lkidd);
+
+        const minions = [];
+
+        // ==========================================
+        // 4. KAMERA 360 & CONTROLS
+        // ==========================================
+        let camYaw = 0, camPitch = 0.2;
+        let isPointerLocked = false, isMouseDown = false;
+        let prevMouseX = 0, prevMouseY = 0;
+
+        document.body.addEventListener("click", () => {
+            document.body.requestPointerLock();
+            document.getElementById("start-hint").style.display = "none";
+            if (audioCtx.state === "suspended") audioCtx.resume();
+            isAudioInit = true;
+        });
+
+        document.addEventListener("pointerlockchange", () => {
+            isPointerLocked = (document.pointerLockElement === document.body);
+        });
+
+        window.addEventListener("mousedown", (e) => {
+            isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY;
+        });
+        window.addEventListener("mouseup", () => { isMouseDown = false; });
+
+        window.addEventListener("mousemove", (e) => {
+            let dx = 0, dy = 0;
+            if (isPointerLocked) {
+                dx = e.movementX; dy = e.movementY;
+            } else if (isMouseDown) {
+                dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY;
+                prevMouseX = e.clientX; prevMouseY = e.clientY;
+            }
+
+            if (dx !== 0 || dy !== 0) {
+                camYaw -= dx * 0.0035;
+                camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
+            }
+        });
+
+        // ==========================================
+        // 5. ROUND & LMS (RESET KEBAL SEMUA AI DI RONDE BARU)
+        // ==========================================
+        let gameState = "LOBBY";
+        let timerSeconds = 15;
+        let lmsTriggered = false;
+        let isPlayerDead = false;
+
+        let spectateList = [];
+        let spectateIdx = 0;
+        let isSpectating = false;
+
+        function updateUIState() {
+            const showHUD = (gameState === "INGAME" && !isPlayerDead);
+            document.getElementById("player-bars").style.display = showHUD ? "block" : "none";
+            document.getElementById("skills-container").style.display = showHUD ? "block" : "none";
+            
+            const showSpectate = (gameState === "INGAME" && isPlayerDead);
+            document.getElementById("spectate-btn").style.display = showSpectate ? "block" : "none";
+            document.getElementById("spectate-info").style.display = showSpectate ? "block" : "none";
+        }
+
+        function cycleSpectate() {
+            spectateList = [];
+            aiSurvivors.forEach(ai => { if (ai.alive) spectateList.push(ai); });
+            spectateList.push(c00lkidd);
+
+            if (spectateList.length > 0) {
+                isSpectating = true;
+                spectateIdx = (spectateIdx + 1) % spectateList.length;
+                document.getElementById("spectate-info").innerText = "Spectating: " + spectateList[spectateIdx].name;
+            }
+        }
+
+        function killPlayer() {
+            isPlayerDead = true;
+            playerNoob.hp = 0;
+            playerNoob.position.set(0, 72, 0);
+            updateUIState();
+            cycleSpectate();
+        }
+
+        function pickNewPatrol(ai) {
+            ai.patrolTarget.set((Math.random() - 0.5) * 160, 0, (Math.random() - 0.5) * 160);
+        }
+        aiSurvivors.forEach(pickNewPatrol);
+
+        setInterval(() => {
+            timerSeconds--;
+            const timerEl = document.getElementById("round-timer");
+
+            if (gameState === "LOBBY") {
+                timerEl.innerText = "LOBBY: " + timerSeconds + "s";
+                if (timerSeconds <= 0) {
+                    gameState = "INGAME";
+                    timerSeconds = 180;
+                    isPlayerDead = false;
+                    isSpectating = false;
+                    playerNoob.hp = 100;
+                    playerNoob.isInvulnerable = false; // Reset kebal
+                    document.getElementById("hp-bar").style.width = "100%";
+                    playerNoob.position.set(0, 0, 0);
+
+                    // RESET SEMUA STATUS AI NOOB AGAR TIDAK KEBAL ABADI!
+                    aiSurvivors.forEach((ai, idx) => {
+                        ai.alive = true;
+                        ai.hp = 100;
+                        ai.isInvulnerable = false; // Bug kebal diperbaiki di sini!
+                        ai.cdE = false;
+                        ai.cdQ = false;
+                        ai.cdR = false;
+                        ai.visible = true;
+                        ai.parts.torso.material.color.setHex(0x0055ff);
+                        ai.position.set((idx - 1) * 15, 0, 20);
+                        pickNewPatrol(ai);
+                    });
+                    c00lkidd.position.set(0, 0, -80);
+                    updateUIState();
+                }
+            } else if (gameState === "INGAME") {
+                const mins = Math.floor(timerSeconds / 60);
+                const secs = timerSeconds % 60;
+                timerEl.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+
+                let aliveCount = (isPlayerDead ? 0 : 1);
+                aiSurvivors.forEach(ai => { if (ai.alive) aliveCount++; });
+
+                if (aliveCount === 1 && !isPlayerDead && !lmsTriggered) {
+                    lmsTriggered = true;
+                    timerSeconds = 75;
+                    document.getElementById("lms-banner").style.display = "block";
+                    setTimeout(() => { document.getElementById("lms-banner").style.display = "none"; }, 5000);
+                }
+
+                if (timerSeconds <= 0 || aliveCount === 0) {
+                    gameState = "LOBBY";
+                    timerSeconds = 15;
+                    lmsTriggered = false;
+                    isSpectating = false;
+                    playerNoob.position.set(0, 72, 0);
+                    minions.forEach(m => scene.remove(m));
+                    minions.length = 0;
+                    updateUIState();
+                }
+            }
+        }, 1000);
+
+        // =========================================================================
+        // 6. ABILITIES NOOB (PLAYER & AI)
+        // =========================================================================
+        let keys = {};
+        let isShiftlock = false;
+        let stamina = 100;
+        let isSprinting = false;
+
+        let isDrinkingOrEating = false;
+        let slateTimerId = null;
+        let speedBoostMultiplier = 1.0;
+        let hasSlowness = false;
+
+        let cdQ = false;
+        let cdE = false;
+        let cdR = false;
+
+        function toggleShiftlock() {
+            isShiftlock = !isShiftlock;
+            document.getElementById("btn-shiftlock").classList.toggle("active", isShiftlock);
+            document.getElementById("crosshair").style.display = isShiftlock ? "block" : "none";
+        }
+
+        window.addEventListener("keydown", (e) => { 
+            keys[e.code] = true;
+            if (e.code === "ShiftLeft") isSprinting = true;
+            if (e.code === "KeyQ") useBurger();
+            if (e.code === "KeyE") useSlate();
+            if (e.code === "KeyR") useCola();
+        });
+
+        window.addEventListener("keyup", (e) => { 
+            keys[e.code] = false;
+            if (e.code === "ShiftLeft") isSprinting = false;
+        });
+
+        function playConsumeAnimation(itemColor, onComplete) {
+            isDrinkingOrEating = true;
+            playerNoob.parts.heldItem.material.color.setHex(itemColor);
+            playerNoob.parts.heldItem.visible = true;
+
+            playerNoob.parts.rArm.rotation.x = 2.2;
+            playerNoob.parts.rArm.rotation.z = -0.4;
+            playerNoob.parts.lArm.rotation.x = 2.2;
+            playerNoob.parts.lArm.rotation.z = 0.4;
+
+            setTimeout(() => {
+                playerNoob.parts.heldItem.visible = false;
+                playerNoob.parts.rArm.rotation.x = 0;
+                playerNoob.parts.rArm.rotation.z = 0;
+                playerNoob.parts.lArm.rotation.x = 0;
+                playerNoob.parts.lArm.rotation.z = 0;
+                isDrinkingOrEating = false;
+                if (onComplete) onComplete();
+            }, 1400);
+        }
+
+        function useBurger() {
+            if (cdQ || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            cdQ = true;
+            animateCD("cd-q", 40, () => { cdQ = false; });
+            playSafeAudio(sfxBurger, fallbackBurger);
+
+            playConsumeAnimation(0xd4a373, () => {
+                const missingHp = 100 - playerNoob.hp;
+                const healAmount = Math.max(6, missingHp * 0.25);
+                playerNoob.hp = Math.min(100, playerNoob.hp + healAmount);
+                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+
+                Object.values(playerNoob.parts).forEach(p => { 
+                    if (p.material) { p.material.transparent = true; p.material.opacity = 0.15; }
+                });
+                setTimeout(() => {
+                    Object.values(playerNoob.parts).forEach(p => { 
+                        if (p.material) p.material.opacity = 1; 
+                    });
+                }, 7000);
+            });
+        }
+
+        function revertSlateAppearance() {
+            playerNoob.parts.torso.material.color.setHex(0x0055ff);
+            playerNoob.parts.head.material.color.setHex(0xffd200);
+            playerNoob.parts.lArm.material.color.setHex(0xffd200);
+            playerNoob.parts.rArm.material.color.setHex(0xffd200);
+            playerNoob.parts.lLeg.material.color.setHex(0x287f46);
+            playerNoob.parts.rLeg.material.color.setHex(0x287f46);
+            document.getElementById("label-slate").innerText = "Slateskin [E]";
+        }
+
+        function useSlate() {
+            if (playerNoob.isInvulnerable) {
+                clearTimeout(slateTimerId);
+                playerNoob.isInvulnerable = false;
+                revertSlateAppearance();
+
+                playTone(160, "triangle", 0.35, 0.6);
+                const distToKiller = playerNoob.position.distanceTo(c00lkidd.position);
+                if (distToKiller < 18) {
+                    const pushDir = c00lkidd.position.clone().sub(playerNoob.position).normalize();
+                    c00lkidd.position.addScaledVector(pushDir, 9);
+                }
+
+                speedBoostMultiplier = 1.5;
+                setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
+                return;
+            }
+
+            if (cdE || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            cdE = true;
+            animateCD("cd-e", 44, () => { cdE = false; });
+            playSafeAudio(sfxSlate, fallbackSlate);
+
+            playConsumeAnimation(0x4a6572, () => {
+                playerNoob.isInvulnerable = true;
+                document.getElementById("label-slate").innerText = "CANCEL [E]";
+
+                const slateColor = 0x4a5568;
+                playerNoob.parts.torso.material.color.setHex(slateColor);
+                playerNoob.parts.head.material.color.setHex(slateColor);
+                playerNoob.parts.lArm.material.color.setHex(slateColor);
+                playerNoob.parts.rArm.material.color.setHex(slateColor);
+                playerNoob.parts.lLeg.material.color.setHex(slateColor);
+                playerNoob.parts.rLeg.material.color.setHex(slateColor);
+
+                slateTimerId = setTimeout(() => {
+                    playerNoob.isInvulnerable = false;
+                    revertSlateAppearance();
+                    speedBoostMultiplier = 1.7;
+                    setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
+                }, 6000);
+            });
+        }
+
+        function useCola() {
+            if (cdR || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            cdR = true;
+            animateCD("cd-r", 50, () => { cdR = false; });
+            playSafeAudio(sfxCola, fallbackCola);
+
+            playConsumeAnimation(0xaa1111, () => {
+                hasSlowness = false;
+                speedBoostMultiplier = 1.5;
+                setTimeout(() => { speedBoostMultiplier = 1.0; }, 7000);
+            });
+        }
+
+        function animateCD(elemId, duration, onComplete) {
+            const el = document.getElementById(elemId);
+            el.style.height = "100%";
+            let t = 0;
+            const timer = setInterval(() => {
+                t += 0.2;
+                el.style.height = Math.max(0, (1 - (t / duration)) * 100) + "%";
+                if (t >= duration) {
+                    clearInterval(timer);
+                    if (onComplete) onComplete();
+                }
+            }, 200);
+        }
+
+        function applyHighlight(target) {
+            target.isHighlighted = true;
+            target.parts.highlightMesh.visible = true;
+
+            if (target === playerNoob) {
+                document.getElementById("highlight-warning").style.display = "block";
+            }
+
+            setTimeout(() => {
+                target.isHighlighted = false;
+                target.parts.highlightMesh.visible = false;
+                if (target === playerNoob) {
+                    document.getElementById("highlight-warning").style.display = "none";
+                }
+            }, 7500);
+        }
+
+        // =========================================================================
+        // 7. ANIMASI C00LKIDD
+        // =========================================================================
+        let c00lState = "IDLE";
+        let dashTimer = 0;
+        let c00lAbilitiesTimer = 0;
+
+        function triggerWalkspeedOverride() {
+            c00lState = "OVERRIDE_WINDUP";
+            c00lkidd.parts.torso.rotation.x = 0.5;
+            c00lkidd.parts.lArm.rotation.x = 0.8;
+            c00lkidd.parts.rArm.rotation.x = 0.8;
+
+            setTimeout(() => {
+                c00lState = "DASHING";
+                dashTimer = 45;
+                c00lkidd.parts.torso.rotation.x = 0;
+            }, 600);
+        }
+
+        function triggerCorruptNature(target) {
+            c00lState = "CASTING";
+            c00lkidd.parts.rArm.rotation.x = -2.2;
+
+            setTimeout(() => {
+                c00lkidd.parts.rArm.rotation.x = -0.5;
+                
+                const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
+                proj.position.copy(c00lkidd.position);
+                proj.position.y += 3;
+                scene.add(proj);
+
+                const dir = target.position.clone().sub(c00lkidd.position).normalize();
+                let life = 120;
+                let hitDone = false;
+
+                const intv = setInterval(() => {
+                    proj.position.addScaledVector(dir, 0.85);
+                    life--;
+
+                    if (!hitDone && !isPlayerDead && proj.position.distanceTo(playerNoob.position) < 3.2) {
+                        hitDone = true;
+                        if (!playerNoob.isInvulnerable) {
+                            playerNoob.hp = Math.max(0, playerNoob.hp - 15);
+                            hasSlowness = true;
+                            document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                            if (playerNoob.hp <= 0) killPlayer();
+                        }
+                        scene.remove(proj);
+                        clearInterval(intv);
+                    }
+                    if (life <= 0) {
+                        scene.remove(proj);
+                        clearInterval(intv);
+                    }
+                }, 16);
+
+                setTimeout(() => { c00lState = "IDLE"; }, 400);
+            }, 400);
+        }
+
+        function triggerPizzaDelivery() {
+            if (minions.length >= 2) return;
+
+            c00lState = "SUMMONING";
+            c00lkidd.parts.lArm.rotation.x = -2.5;
+            c00lkidd.parts.rArm.rotation.x = -2.5;
+
+            const needed = 2 - minions.length;
+            for(let i = 0; i < needed; i++) {
+                const offset = (i === 0) ? -4 : 4;
+                const m = createR6(true);
+                m.scale.set(0.65, 0.65, 0.65);
+                m.position.set(c00lkidd.position.x + offset, -3, c00lkidd.position.z);
+                scene.add(m);
+                minions.push(m);
+
+                let riseT = 0;
+                const riseInterval = setInterval(() => {
+                    m.position.y += 0.15;
+                    riseT++;
+                    if (riseT >= 20) {
+                        m.position.y = 0;
+                        clearInterval(riseInterval);
+                    }
+                }, 40);
+
+                m.despawnTimeout = setTimeout(() => {
+                    const idx = minions.indexOf(m);
+                    if (idx > -1) minions.splice(idx, 1);
+                    scene.remove(m);
+                }, 30000);
+            }
+
+            setTimeout(() => {
+                c00lkidd.parts.lArm.rotation.x = 0;
+                c00lkidd.parts.rArm.rotation.x = 0;
+                c00lState = "IDLE";
+            }, 1200);
+        }
+
+        function checkHitbox(target) {
+            const relPos = target.position.clone().sub(c00lkidd.position);
+            relPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), -c00lkidd.rotation.y);
+            return (Math.abs(relPos.x) <= 1.8 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0 && relPos.z >= -5);
+        }
+
+        // =========================================================================
+        // 8. GAME LOOP (AI SURVIVOR NORMAL & TIDAK KEBAL ABADI)
+        // =========================================================================
+        let walkCycle = 0;
+        let c00lAttackTimer = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (keys["ArrowLeft"]) camYaw += 0.04;
+            if (keys["ArrowRight"]) camYaw -= 0.04;
+
+            if (!isPlayerDead && gameState === "INGAME") {
+                let spd = 0.16 * speedBoostMultiplier;
+                
+                if (playerNoob.isInvulnerable) {
+                    spd *= 0.45;
+                } else if (isDrinkingOrEating) {
+                    spd *= 0.35;
+                } else if (hasSlowness) {
+                    spd *= 0.65;
+                }
+
+                if (isSprinting && stamina > 0 && !isDrinkingOrEating && !playerNoob.isInvulnerable) {
+                    spd *= 1.6;
+                    stamina = Math.max(0, stamina - 0.35);
+                } else {
+                    stamina = Math.min(100, stamina + 0.2);
+                }
+                document.getElementById("stamina-bar").style.width = stamina + "%";
+
+                let mx = 0, mz = 0;
+                if (keys["KeyW"]) mz -= 1;
+                if (keys["KeyS"]) mz += 1;
+                if (keys["KeyA"]) mx -= 1;
+                if (keys["KeyD"]) mx += 1;
+
+                playerNoob.rotation.y = camYaw;
+
+                if (mx !== 0 || mz !== 0) {
+                    const angle = Math.atan2(mx, mz);
+                    const nextX = playerNoob.position.x + Math.sin(camYaw + angle) * spd;
+                    const nextZ = playerNoob.position.z + Math.cos(camYaw + angle) * spd;
+
+                    if (canMoveTo(nextX, nextZ)) {
+                        playerNoob.position.x = nextX;
+                        playerNoob.position.z = nextZ;
+                    } else if (canMoveTo(nextX, playerNoob.position.z)) {
+                        playerNoob.position.x = nextX;
+                    } else if (canMoveTo(playerNoob.position.x, nextZ)) {
+                        playerNoob.position.z = nextZ;
+                    }
+
+                    walkCycle += (playerNoob.isInvulnerable ? 0.08 : 0.18);
+                    if (!isDrinkingOrEating) {
+                        playerNoob.parts.lArm.rotation.x = Math.sin(walkCycle) * 0.7;
+                        playerNoob.parts.rArm.rotation.x = -Math.sin(walkCycle) * 0.7;
+                    }
+                    playerNoob.parts.lLeg.rotation.x = -Math.sin(walkCycle) * 0.7;
+                    playerNoob.parts.rLeg.rotation.x = Math.sin(walkCycle) * 0.7;
+                } else {
+                    if (!isDrinkingOrEating) {
+                        playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.rArm.rotation.x = 0;
+                    }
+                    playerNoob.parts.lLeg.rotation.x = 0; playerNoob.parts.rLeg.rotation.x = 0;
+                }
+            }
+
+            let camFocus = playerNoob;
+            if (isSpectating && spectateList[spectateIdx]) {
+                camFocus = spectateList[spectateIdx];
+            }
+
+            const cDist = 9;
+            camera.position.x = camFocus.position.x + Math.sin(camYaw) * Math.cos(camPitch) * cDist;
+            camera.position.z = camFocus.position.z + Math.cos(camYaw) * Math.cos(camPitch) * cDist;
+            camera.position.y = camFocus.position.y + 3.5 + Math.sin(camPitch) * cDist;
+            camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
+
+            if (gameState === "INGAME") {
+                const distPlayerToKiller = playerNoob.position.distanceTo(c00lkidd.position);
+                updateChaseLayers(distPlayerToKiller);
+
+                let targets = [];
+                if (!isPlayerDead) targets.push(playerNoob);
+                aiSurvivors.forEach(ai => { if (ai.alive) targets.push(ai); });
+
+                let closestTarget = null;
+                for (let t of targets) {
+                    if (t.isHighlighted) { closestTarget = t; break; }
+                }
+
+                if (!closestTarget) {
+                    let minDist = 9999;
+                    targets.forEach(t => {
+                        const d = t.position.distanceTo(c00lkidd.position);
+                        if (d < minDist) { minDist = d; closestTarget = t; }
+                    });
+                }
+
+                if (closestTarget) {
+                    c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
+                    c00lkidd.rotation.y += Math.PI;
+
+                    if (c00lState === "DASHING") {
+                        dashTimer--;
+                        const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+                        c00lkidd.position.addScaledVector(fwd, 0.7);
+
+                        if (checkHitbox(closestTarget)) {
+                            if (!closestTarget.isInvulnerable) {
+                                closestTarget.hp -= 32;
+                                if (closestTarget === playerNoob) {
+                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                    if (playerNoob.hp <= 0) killPlayer();
+                                } else if (closestTarget.hp <= 0) {
+                                    closestTarget.alive = false; closestTarget.visible = false;
+                                }
+                            }
+                            c00lState = "IDLE";
+                        }
+                        if (dashTimer <= 0) c00lState = "IDLE";
+                    } 
+                    else if (c00lState === "IDLE") {
+                        const kx = closestTarget.position.x - c00lkidd.position.x;
+                        const kz = closestTarget.position.z - c00lkidd.position.z;
+                        const kd = Math.sqrt(kx*kx + kz*kz);
+
+                        if (kd > 4) {
+                            c00lkidd.position.x += (kx / kd) * 0.13;
+                            c00lkidd.position.z += (kz / kd) * 0.13;
+                        }
+
+                        // TAG M1 (26.5 DMG)
+                        if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
+                            c00lAttackTimer = 120;
+                            c00lkidd.parts.rArm.rotation.x = -1.6;
+
+                            if (!closestTarget.isInvulnerable) {
+                                closestTarget.hp -= 26.5;
+                                if (closestTarget === playerNoob) {
+                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                    if (playerNoob.hp <= 0) killPlayer();
+                                } else if (closestTarget.hp <= 0) {
+                                    closestTarget.alive = false; closestTarget.visible = false;
+                                }
+                            }
+                            setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
+                        }
+
+                        c00lAbilitiesTimer++;
+                        if (c00lAbilitiesTimer === 450) triggerWalkspeedOverride();
+                        if (c00lAbilitiesTimer === 900) triggerCorruptNature(closestTarget);
+                        if (c00lAbilitiesTimer === 1350) { triggerPizzaDelivery(); c00lAbilitiesTimer = 0; }
+                    }
+                }
+                if (c00lAttackTimer > 0) c00lAttackTimer--;
+
+                // MINION ATTACK
+                for (let i = minions.length - 1; i >= 0; i--) {
+                    const m = minions[i];
+                    if (closestTarget) {
+                        m.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
+                        m.rotation.y += Math.PI;
+                        const mx = closestTarget.position.x - m.position.x;
+                        const mz = closestTarget.position.z - m.position.z;
+                        const md = Math.sqrt(mx*mx + mz*mz);
+
+                        if (md > 2.5) {
+                            m.position.x += (mx / md) * 0.085;
+                            m.position.z += (mz / md) * 0.085;
+                        } else {
+                            clearTimeout(m.despawnTimeout);
+                            scene.remove(m);
+                            minions.splice(i, 1);
+
+                            applyHighlight(closestTarget);
+
+                            if (!closestTarget.isInvulnerable) {
+                                closestTarget.hp -= 15;
+                                if (closestTarget === playerNoob) {
+                                    hasSlowness = true;
+                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                    if (playerNoob.hp <= 0) killPlayer();
+                                } else if (closestTarget.hp <= 0) {
+                                    closestTarget.alive = false; closestTarget.visible = false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // AI SURVIVOR: TIDAK KEBAL ABADI & PAKAI SKILL DENGAN BENAR
+                aiSurvivors.forEach(ai => {
+                    if (ai.alive) {
+                        const distToKiller = ai.position.distanceTo(c00lkidd.position);
+
+                        // AI Pakai Slateskin saat c00lkidd sangat dekat (< 10 stud)
+                        if (distToKiller < 10 && !ai.cdE && !ai.isInvulnerable) {
+                            ai.cdE = true;
+                            ai.isInvulnerable = true;
+                            ai.parts.torso.material.color.setHex(0x4a5568);
+                            
+                            // Durasi Slateskin AI tepat 6 detik lalu hilang kebalnya!
+                            setTimeout(() => {
+                                ai.isInvulnerable = false;
+                                ai.parts.torso.material.color.setHex(0x0055ff);
+                                setTimeout(() => { ai.cdE = false; }, 35000);
+                            }, 6000);
+                        }
+
+                        // AI Pakai Ghostburger saat HP sekarat (< 50)
+                        if (ai.hp < 50 && !ai.cdQ) {
+                            ai.cdQ = true;
+                            ai.hp = Math.min(100, ai.hp + 25);
+                            Object.values(ai.parts).forEach(p => { if (p.material) p.material.opacity = 0.2; });
+                            setTimeout(() => {
+                                Object.values(ai.parts).forEach(p => { if (p.material) p.material.opacity = 1; });
+                                setTimeout(() => { ai.cdQ = false; }, 30000);
+                            }, 7000);
+                        }
+
+                        let aiSpeed = 0.13;
+                        if (distToKiller < 35 && !ai.cdR) {
+                            ai.cdR = true;
+                            aiSpeed = 0.21;
+                            setTimeout(() => { ai.cdR = false; }, 40000);
+                        }
+
+                        if (distToKiller < 35 || ai.isHighlighted) {
+                            const adx = ai.position.x - c00lkidd.position.x;
+                            const adz = ai.position.z - c00lkidd.position.z;
+                            const dist = Math.sqrt(adx*adx + adz*adz);
+                            const nX = ai.position.x + (adx / dist) * aiSpeed;
+                            const nZ = ai.position.z + (adz / dist) * aiSpeed;
+                            if (canMoveTo(nX, nZ)) {
+                                ai.position.x = nX;
+                                ai.position.z = nZ;
+                            }
+                            ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz);
+                        } else {
+                            const pdx = ai.patrolTarget.x - ai.position.x;
+                            const pdz = ai.patrolTarget.z - ai.position.z;
+                            const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
+
+                            if (pdist > 2) {
+                                const nX = ai.position.x + (pdx / pdist) * 0.08;
+                                const nZ = ai.position.z + (pdz / pdist) * 0.08;
+                                if (canMoveTo(nX, nZ)) {
+                                    ai.position.x = nX;
+                                    ai.position.z = nZ;
+                                } else {
+                                    pickNewPatrol(ai);
+                                }
+                                ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z);
+                            } else {
+                                pickNewPatrol(ai);
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+        updateUIState();
+    </script>
+</body>
+</html>
