@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Fixed AI & Sound System</title>
+    <title>Forsaken 3D - 4 Layer Chase & Spectate Audio</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -105,8 +105,13 @@
     <div id="crosshair"></div>
     <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
 
-    <!-- ELEMEN AUDIO (MEMBACA FILE MP3 DI GITHUB) -->
-    <audio id="audio-chase" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"></audio>
+    <!-- 4 LAYER CHASE THEME RESMI DARI GITHUB -->
+    <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer4" loop preload="auto"><source src="layer4.mp3" type="audio/mpeg"></audio>
+
+    <!-- AMBIENCE, LMS & SFX -->
     <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
     <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
     <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
@@ -176,154 +181,126 @@
 
     <script>
         // =========================================================================
-        // 1. SISTEM AUDIO CERDAS: MP3 DARI GITHUB + FALLBACK
+        // 1. MESIN 4-LAYER CHASE THEME SINKRON & PENGATUR AUDIO RONDE
         // =========================================================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let currentLayer = 0;
         let isAudioInit = false;
 
-        const bgmAmbience = document.getElementById("audio-ambience");
-        const bgmChase = document.getElementById("audio-chase");
+        const l1 = document.getElementById("chase-layer1");
+        const l2 = document.getElementById("chase-layer2");
+        const l3 = document.getElementById("chase-layer3");
+        const l4 = document.getElementById("chase-layer4");
         const bgmLMS = document.getElementById("audio-lms");
+        const bgmAmbience = document.getElementById("audio-ambience");
+
         const sfxCola = document.getElementById("sfx-cola");
         const sfxSlate = document.getElementById("sfx-slate");
         const sfxBurger = document.getElementById("sfx-burger");
 
-        function playSafeAudio(audioEl, fallbackFn) {
-            if (audioEl && audioEl.readyState >= 2) {
-                audioEl.currentTime = 0;
-                audioEl.play().catch(() => { if (fallbackFn) fallbackFn(); });
-            } else {
-                if (fallbackFn) fallbackFn();
+        // Helper Mainkan SFX
+        function playSFX(el, fallbackFn) {
+            if (el && el.readyState >= 2) {
+                el.currentTime = 0; el.play().catch(()=>{ if(fallbackFn) fallbackFn(); });
+            } else if (fallbackFn) {
+                fallbackFn();
             }
         }
 
-        function playTone(freq, type, duration, vol, startTime = 0) {
-            if (!audioCtx || audioCtx.state !== "running") return;
-            const t = audioCtx.currentTime + startTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, t);
-            gain.gain.setValueAtTime(vol, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(t);
-            osc.stop(t + duration);
-        }
-
-        function playNoise(duration, vol, startTime = 0) {
-            if (!audioCtx || audioCtx.state !== "running") return;
-            const t = audioCtx.currentTime + startTime;
-            const bufferSize = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(vol, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-            noise.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start(t);
-        }
-
-        function fallbackCola() {
-            playNoise(0.35, 0.45, 0);
-            playTone(280, "sine", 0.15, 0.3, 0.4);
-            playTone(320, "sine", 0.15, 0.3, 0.7);
-            playTone(360, "sine", 0.18, 0.35, 1.0);
-        }
-        function fallbackSlate() {
-            playTone(340, "sine", 0.16, 0.3, 0.1);
-            playTone(85, "sawtooth", 0.9, 0.45, 0.4);
-            playNoise(0.4, 0.25, 0.6);
-        }
-        function fallbackBurger() {
-            playNoise(0.12, 0.4, 0.1);
-            playNoise(0.15, 0.45, 0.3);
-            if (audioCtx && audioCtx.state === "running") {
-                const t = audioCtx.currentTime + 0.5;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = "sine";
-                osc.frequency.setValueAtTime(260, t);
-                osc.frequency.exponentialRampToValueAtTime(540, t + 0.8);
-                osc.frequency.exponentialRampToValueAtTime(320, t + 1.8);
-                gain.gain.setValueAtTime(0.01, t);
-                gain.gain.linearRampToValueAtTime(0.35, t + 0.5);
-                gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(t);
-                osc.stop(t + 1.8);
-            }
-        }
-
-        const bassNotes = [110, 110, 130, 146, 110, 98, 110, 123];
-        const leadArp   = [440, 523, 659, 880, 784, 659, 523, 587];
-        let step = 0;
-
-        setInterval(() => {
-            if (!isAudioInit || gameState !== "INGAME" || isPlayerDead) return;
-
-            // Ambience Map
-            if (bgmAmbience && bgmAmbience.readyState >= 2) {
-                if (bgmAmbience.paused) { bgmAmbience.volume = 0.35; bgmAmbience.play().catch(()=>{}); }
-            }
-
-            // JIKA LMS
-            if (lmsTriggered) {
-                if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
-                if (bgmChase && !bgmChase.paused) bgmChase.pause();
-
-                if (bgmLMS && bgmLMS.readyState >= 2) {
-                    if (bgmLMS.paused) { bgmLMS.volume = 1.0; bgmLMS.play().catch(()=>{}); }
-                } else {
-                    // Fallback synthesizer jika belum upload lms.mp3
-                    playTone(85, "sawtooth", 0.16, 0.28);
-                    if (step % 2 === 0) playTone(170, "square", 0.09, 0.18);
-                    if (step % 4 === 0) playTone(680, "sawtooth", 0.18, 0.22);
+        // Hentikan Semua Lagu Saat Pertandingan Berakhir & Reset ke Detik 0
+        function stopAndResetAllAudio() {
+            [l1, l2, l3, l4, bgmLMS, bgmAmbience].forEach(a => {
+                if (a) {
+                    a.pause();
+                    a.currentTime = 0; // Reset ke detik 0
                 }
-                step++;
+            });
+            document.getElementById("vignette").style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
+        }
+
+        // Mulai Semua Lagu dari Detik 0 Saat Ronde Dimulai
+        function startRoundAudio() {
+            if (!isAudioInit) return;
+            stopAndResetAllAudio();
+
+            if (bgmAmbience) {
+                bgmAmbience.volume = 0.4;
+                bgmAmbience.play().catch(()=>{});
+            }
+
+            // Putar 4 layer bersamaan dengan volume 0 (agar ketukan tetap sinkron!)
+            [l1, l2, l3, l4].forEach(layer => {
+                if (layer) {
+                    layer.volume = 0;
+                    layer.play().catch(()=>{});
+                }
+            });
+        }
+
+        // KONTROL 4-LAYER CHASE DINAMIS (BEKERJA SAAT MAIN & SAAT SPECTATE!)
+        function update4LayerChase(dist) {
+            if (!isAudioInit || gameState !== "INGAME") return;
+
+            const vignette = document.getElementById("vignette");
+
+            // JIKA LMS (LAST MAN STANDING)
+            if (lmsTriggered) {
+                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) l.pause(); });
+                if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
+
+                if (bgmLMS && bgmLMS.paused) {
+                    bgmLMS.currentTime = 0;
+                    bgmLMS.volume = 1.0;
+                    bgmLMS.play().catch(()=>{});
+                }
+                vignette.style.boxShadow = "inset 0 0 120px rgba(255, 0, 0, 0.7)";
                 return;
             } else {
                 if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
             }
 
-            // CHASE THEME
-            if (bgmChase && bgmChase.readyState >= 2) {
-                if (currentLayer > 0) {
-                    if (bgmChase.paused) bgmChase.play().catch(()=>{});
-                    const volMap = [0, 0.25, 0.55, 0.85, 1.0];
-                    bgmChase.volume = volMap[currentLayer];
-                } else {
-                    if (!bgmChase.paused) bgmChase.pause();
-                }
-            } else {
-                // Fallback synthesizer jika belum upload chase.mp3
-                if (currentLayer === 1 && step % 2 === 0) playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.15, 0.12);
-                if (currentLayer === 2) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.13, 0.18); if (step % 4 === 2) playTone(200, "square", 0.08, 0.09); }
-                if (currentLayer === 3) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.12, 0.22); playTone(leadArp[step % leadArp.length], "square", 0.09, 0.14); }
-                if (currentLayer === 4) { playTone(bassNotes[step % bassNotes.length], "sawtooth", 0.12, 0.28); playTone(leadArp[step % leadArp.length] * 1.5, "square", 0.08, 0.22); }
+            // Sinkronisasi Beat Antar 4 Layer (Agar tidak ada layer yang mendahului)
+            if (l1 && l1.readyState >= 2) {
+                [l2, l3, l4].forEach(ly => {
+                    if (ly && ly.readyState >= 2 && Math.abs(ly.currentTime - l1.currentTime) > 0.15) {
+                        ly.currentTime = l1.currentTime;
+                    }
+                });
             }
-            step++;
-        }, 130);
 
-        function updateChaseLayers(dist) {
-            const vignette = document.getElementById("vignette");
-            if (lmsTriggered) {
-                vignette.style.boxShadow = "inset 0 0 120px rgba(255, 0, 0, 0.7)";
-                return;
+            // ATUR VOLUME 4-LAYER BERDASARKAN JARAK KE C00LKIDD:
+            if (dist > 75) {
+                // JAUH SEKALI: Hening / Hanya Ambience
+                setLayerVols(0, 0, 0, 0);
+                if (bgmAmbience) bgmAmbience.volume = 0.45;
+                vignette.style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
+            } else if (dist > 50) {
+                // LAYER 1: Mulai Mendekat
+                setLayerVols(0.8, 0, 0, 0);
+                if (bgmAmbience) bgmAmbience.volume = 0.3;
+                vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)";
+            } else if (dist > 30) {
+                // LAYER 2: Semakin Dekat (Layer 1 + Layer 2)
+                setLayerVols(0.8, 0.8, 0, 0);
+                if (bgmAmbience) bgmAmbience.volume = 0.2;
+                vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)";
+            } else if (dist > 15) {
+                // LAYER 3: Dekat! (Layer 1 + Layer 2 + Layer 3)
+                setLayerVols(0.9, 0.9, 0.9, 0);
+                if (bgmAmbience) bgmAmbience.volume = 0.1;
+                vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)";
+            } else {
+                // LAYER 4 / CHASE!: Di Depan Mata! (Semua 4 Layer Volume Penuh 100%!)
+                setLayerVols(1.0, 1.0, 1.0, 1.0);
+                if (bgmAmbience) bgmAmbience.volume = 0.05;
+                vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)";
             }
-            if (dist > 75) { currentLayer = 0; vignette.style.boxShadow = "inset 0 0 40px rgba(255, 0, 0, 0)"; }
-            else if (dist > 50) { currentLayer = 1; vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)"; }
-            else if (dist > 30) { currentLayer = 2; vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)"; }
-            else if (dist > 15) { currentLayer = 3; vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)"; }
-            else { currentLayer = 4; vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)"; }
+        }
+
+        function setLayerVols(v1, v2, v3, v4) {
+            if (l1) l1.volume = v1;
+            if (l2) l2.volume = v2;
+            if (l3) l3.volume = v3;
+            if (l4) l4.volume = v4;
         }
 
         // ==========================================
@@ -531,6 +508,7 @@
             document.getElementById("start-hint").style.display = "none";
             if (audioCtx.state === "suspended") audioCtx.resume();
             isAudioInit = true;
+            if (gameState === "INGAME" && l1 && l1.paused) startRoundAudio();
         });
 
         document.addEventListener("pointerlockchange", () => {
@@ -558,7 +536,7 @@
         });
 
         // ==========================================
-        // 5. ROUND & LMS (RESET KEBAL SEMUA AI DI RONDE BARU)
+        // 5. ROUND & LMS (LOBBY STOP -> INGAME START)
         // ==========================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
@@ -616,18 +594,15 @@
                     isPlayerDead = false;
                     isSpectating = false;
                     playerNoob.hp = 100;
-                    playerNoob.isInvulnerable = false; // Reset kebal
+                    playerNoob.isInvulnerable = false;
                     document.getElementById("hp-bar").style.width = "100%";
                     playerNoob.position.set(0, 0, 0);
 
-                    // RESET SEMUA STATUS AI NOOB AGAR TIDAK KEBAL ABADI!
                     aiSurvivors.forEach((ai, idx) => {
                         ai.alive = true;
                         ai.hp = 100;
-                        ai.isInvulnerable = false; // Bug kebal diperbaiki di sini!
-                        ai.cdE = false;
-                        ai.cdQ = false;
-                        ai.cdR = false;
+                        ai.isInvulnerable = false;
+                        ai.cdE = false; ai.cdQ = false; ai.cdR = false;
                         ai.visible = true;
                         ai.parts.torso.material.color.setHex(0x0055ff);
                         ai.position.set((idx - 1) * 15, 0, 20);
@@ -635,6 +610,9 @@
                     });
                     c00lkidd.position.set(0, 0, -80);
                     updateUIState();
+
+                    // LAGU DIMULAI DARI AWAL DETIK 0!
+                    startRoundAudio();
                 }
             } else if (gameState === "INGAME") {
                 const mins = Math.floor(timerSeconds / 60);
@@ -651,6 +629,7 @@
                     setTimeout(() => { document.getElementById("lms-banner").style.display = "none"; }, 5000);
                 }
 
+                // PERTANDINGAN BERAKHIR: STOP SEMUA LAGU & KEMBALI KE LOBBY
                 if (timerSeconds <= 0 || aliveCount === 0) {
                     gameState = "LOBBY";
                     timerSeconds = 15;
@@ -660,12 +639,15 @@
                     minions.forEach(m => scene.remove(m));
                     minions.length = 0;
                     updateUIState();
+
+                    // STOP & RESET LAGU KE AWAL!
+                    stopAndResetAllAudio();
                 }
             }
         }, 1000);
 
         // =========================================================================
-        // 6. ABILITIES NOOB (PLAYER & AI)
+        // 6. ABILITIES NOOB
         // =========================================================================
         let keys = {};
         let isShiftlock = false;
@@ -725,7 +707,7 @@
             if (cdQ || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
             cdQ = true;
             animateCD("cd-q", 40, () => { cdQ = false; });
-            playSafeAudio(sfxBurger, fallbackBurger);
+            playSFX(sfxBurger);
 
             playConsumeAnimation(0xd4a373, () => {
                 const missingHp = 100 - playerNoob.hp;
@@ -760,7 +742,6 @@
                 playerNoob.isInvulnerable = false;
                 revertSlateAppearance();
 
-                playTone(160, "triangle", 0.35, 0.6);
                 const distToKiller = playerNoob.position.distanceTo(c00lkidd.position);
                 if (distToKiller < 18) {
                     const pushDir = c00lkidd.position.clone().sub(playerNoob.position).normalize();
@@ -775,7 +756,7 @@
             if (cdE || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
             cdE = true;
             animateCD("cd-e", 44, () => { cdE = false; });
-            playSafeAudio(sfxSlate, fallbackSlate);
+            playSFX(sfxSlate);
 
             playConsumeAnimation(0x4a6572, () => {
                 playerNoob.isInvulnerable = true;
@@ -802,7 +783,7 @@
             if (cdR || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
             cdR = true;
             animateCD("cd-r", 50, () => { cdR = false; });
-            playSafeAudio(sfxCola, fallbackCola);
+            playSFX(sfxCola);
 
             playConsumeAnimation(0xaa1111, () => {
                 hasSlowness = false;
@@ -950,7 +931,7 @@
         }
 
         // =========================================================================
-        // 8. GAME LOOP (AI SURVIVOR NORMAL & TIDAK KEBAL ABADI)
+        // 8. GAME LOOP (AUDIO BEKERJA SAAT MAIN & SPECTATE)
         // =========================================================================
         let walkCycle = 0;
         let c00lAttackTimer = 0;
@@ -1017,6 +998,7 @@
                 }
             }
 
+            // KAMERA & FOKUS AUDIO
             let camFocus = playerNoob;
             if (isSpectating && spectateList[spectateIdx]) {
                 camFocus = spectateList[spectateIdx];
@@ -1029,8 +1011,14 @@
             camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
 
             if (gameState === "INGAME") {
-                const distPlayerToKiller = playerNoob.position.distanceTo(c00lkidd.position);
-                updateChaseLayers(distPlayerToKiller);
+                // JARAK AUDIO DIHITUNG DARI KARAKTER YANG SEDANG KAMU MAIN / TONTON!
+                let audioDistance = 9999;
+                if (!isPlayerDead) {
+                    audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
+                } else if (isSpectating && camFocus) {
+                    audioDistance = camFocus.position.distanceTo(c00lkidd.position);
+                }
+                update4LayerChase(audioDistance); // LAGU TETAP BERJALAN SAAT SPECTATE!
 
                 let targets = [];
                 if (!isPlayerDead) targets.push(playerNoob);
@@ -1082,7 +1070,6 @@
                             c00lkidd.position.z += (kz / kd) * 0.13;
                         }
 
-                        // TAG M1 (26.5 DMG)
                         if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
                             c00lAttackTimer = 120;
                             c00lkidd.parts.rArm.rotation.x = -1.6;
@@ -1107,7 +1094,7 @@
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
-                // MINION ATTACK
+                // MINIONS
                 for (let i = minions.length - 1; i >= 0; i--) {
                     const m = minions[i];
                     if (closestTarget) {
@@ -1141,18 +1128,15 @@
                     }
                 }
 
-                // AI SURVIVOR: TIDAK KEBAL ABADI & PAKAI SKILL DENGAN BENAR
+                // AI BEHAVIOR
                 aiSurvivors.forEach(ai => {
                     if (ai.alive) {
                         const distToKiller = ai.position.distanceTo(c00lkidd.position);
 
-                        // AI Pakai Slateskin saat c00lkidd sangat dekat (< 10 stud)
                         if (distToKiller < 10 && !ai.cdE && !ai.isInvulnerable) {
                             ai.cdE = true;
                             ai.isInvulnerable = true;
                             ai.parts.torso.material.color.setHex(0x4a5568);
-                            
-                            // Durasi Slateskin AI tepat 6 detik lalu hilang kebalnya!
                             setTimeout(() => {
                                 ai.isInvulnerable = false;
                                 ai.parts.torso.material.color.setHex(0x0055ff);
@@ -1160,7 +1144,6 @@
                             }, 6000);
                         }
 
-                        // AI Pakai Ghostburger saat HP sekarat (< 50)
                         if (ai.hp < 50 && !ai.cdQ) {
                             ai.cdQ = true;
                             ai.hp = Math.min(100, ai.hp + 25);
