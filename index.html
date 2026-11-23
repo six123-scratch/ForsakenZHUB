@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Special LMS: PLEAD</title>
+    <title>Forsaken 3D - Custom Kill Animations & Ragdoll</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -130,11 +130,12 @@
     <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
     <div id="status-effects"></div>
 
-    <!-- AUDIO ASSETS (TERMASUK SPECIAL LMS: PLEAD) -->
+    <!-- PRIORITAS CHASE.MP3 UNTUK LAYER 4 -->
     <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
-    <audio id="chase-layer4" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer4" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"><source src="layer4.mp3" type="audio/mpeg"></audio>
+
     <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
     <audio id="audio-plead" loop preload="auto"><source src="plead.mp3" type="audio/mpeg"></audio>
     <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
@@ -229,37 +230,24 @@
         const effectsContainer = document.getElementById("status-effects");
 
         function addStatusEffect(key, label, color, durationSec) {
-            if (activeEffects[key]) {
-                clearInterval(activeEffects[key].interval);
-                activeEffects[key].el.remove();
-            }
+            if (activeEffects[key]) { clearInterval(activeEffects[key].interval); activeEffects[key].el.remove(); }
             const el = document.createElement("div");
-            el.className = "effect-badge";
-            el.style.borderLeftColor = color; el.style.color = color;
+            el.className = "effect-badge"; el.style.borderLeftColor = color; el.style.color = color;
             effectsContainer.appendChild(el);
-
-            let timeLeft = durationSec;
-            el.innerText = `${label} (${timeLeft}s)`;
-
+            let timeLeft = durationSec; el.innerText = `${label} (${timeLeft}s)`;
             const interval = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) removeStatusEffect(key);
-                else el.innerText = `${label} (${timeLeft}s)`;
+                timeLeft--; if (timeLeft <= 0) removeStatusEffect(key); else el.innerText = `${label} (${timeLeft}s)`;
             }, 1000);
             activeEffects[key] = { el, interval };
         }
 
         function removeStatusEffect(key) {
-            if (activeEffects[key]) {
-                clearInterval(activeEffects[key].interval);
-                activeEffects[key].el.remove();
-                delete activeEffects[key];
-            }
+            if (activeEffects[key]) { clearInterval(activeEffects[key].interval); activeEffects[key].el.remove(); delete activeEffects[key]; }
         }
         function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
         // =========================================================================
-        // 2. AUDIO ENGINE: 4-LAYER, LMS NORMAL & SPECIAL LMS "PLEAD"
+        // 2. AUDIO ENGINE: CHASE.MP3 PRIORITAS DI LAYER 4 + ANTI-STUCK
         // =========================================================================
         let isAudioInit = false;
         const l1 = document.getElementById("chase-layer1");
@@ -278,17 +266,22 @@
         function unlockAllAudio() {
             if (isAudioInit) return;
             isAudioInit = true;
+            // Preload & unlock semua audio dengan cara paling aman di ChromeOS
             [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxCola, sfxSlate, sfxBurger].forEach(a => {
                 if (a) {
+                    a.load();
                     a.volume = 0;
-                    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{});
+                    const p = a.play();
+                    if (p !== undefined) {
+                        p.then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{});
+                    }
                 }
             });
             if (gameState === "INGAME") startRoundAudio();
         }
 
         function playSFX(el) {
-            if (el && el.readyState >= 1) { el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{}); }
+            if (el) { el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{}); }
         }
 
         function stopAndResetAllAudio() {
@@ -310,20 +303,16 @@
             const chosen = layers[targetLayer];
 
             if (activeLayerIndex !== targetLayer) {
-                [l1, l2, l3, l4].forEach(l => {
-                    if (l && !l.paused) { l.pause(); l.currentTime = 0; }
-                });
+                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
                 activeLayerIndex = targetLayer;
                 if (chosen) {
                     chosen.currentTime = 0;
                     chosen.volume = 1.0;
                     chosen.play().catch(()=>{});
                 }
-            } else {
-                if (chosen && chosen.paused) {
-                    chosen.volume = 1.0;
-                    chosen.play().catch(()=>{});
-                }
+            } else if (chosen && chosen.paused) {
+                chosen.volume = 1.0;
+                chosen.play().catch(()=>{});
             }
         }
 
@@ -331,7 +320,6 @@
             if (!isAudioInit || gameState !== "INGAME") return;
             const vignette = document.getElementById("vignette");
 
-            // SAAT LMS AKTIF (PILIH LMS BIASA ATAU SPECIAL LMS "PLEAD")
             if (lmsTriggered) {
                 [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
                 activeLayerIndex = 0;
@@ -339,9 +327,7 @@
 
                 const targetLmsTrack = isPleadLMS ? bgmPlead : bgmLMS;
                 if (targetLmsTrack && targetLmsTrack.paused) {
-                    targetLmsTrack.currentTime = 0;
-                    targetLmsTrack.volume = 1.0;
-                    targetLmsTrack.play().catch(()=>{});
+                    targetLmsTrack.currentTime = 0; targetLmsTrack.volume = 1.0; targetLmsTrack.play().catch(()=>{});
                 }
                 vignette.style.boxShadow = isPleadLMS ? "inset 0 0 130px rgba(255, 255, 255, 0.4)" : "inset 0 0 120px rgba(255, 0, 0, 0.7)";
                 return;
@@ -371,7 +357,7 @@
         }
 
         // =========================================================================
-        // 3. 3D SCENE, SHADOWS, TORCHES & SPAWN POINTS
+        // 3. 3D SCENE, SHADOWS & TORCHES
         // =========================================================================
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x14151f, 0.008);
@@ -583,10 +569,9 @@
             playerNoob.parts.lLeg.material.color.setHex(legCol); playerNoob.parts.rLeg.material.color.setHex(legCol);
         }
 
-        // AI SURVIVOR (AI Noob 1, AI Noob 2, dan AI 007n7)
         const aiSurvivors = [];
         for(let i = 0; i < 3; i++) {
-            const isBot007 = (i === 2); // Bot ke-3 adalah 007n7 agar Killer bisa memicu PLEAD!
+            const isBot007 = (i === 2);
             const ai = createR6(false, isBot007);
             ai.position.set((i - 1) * 6, 72, 5);
             ai.alive = true; ai.hp = 100; ai.isInvulnerable = false;
@@ -605,9 +590,131 @@
 
         const minions = [];
         const clones = [];
+        const corpses = []; // Menyimpan mayat ragdoll / lembut selama 5 detik
 
         // ==========================================
-        // 5. KAMERA 360 & UNLOCK MOUSE [M]
+        // 5. ANIMASI KILL: CHOKE & THROW (NOOB) VS GENTLE PLACEMENT (007n7)
+        // ==========================================
+        let camFocusOverride = null;
+
+        function playKillAnimation(victim) {
+            if (c00lState === "KILLING") return;
+            c00lState = "KILLING";
+
+            // Buat model tubuh mayat khusus di lokasi kematian agar animasi berjalan mulus
+            const is007Victim = victim.is007;
+            const corpse = createR6(false, is007Victim);
+            corpse.position.copy(victim.position);
+            corpse.rotation.copy(victim.rotation);
+            scene.add(corpse);
+            corpses.push(corpse);
+
+            // Sembunyikan korban asli
+            victim.alive = false;
+            victim.visible = false;
+
+            // Jika player yang mati, arahkan kamera ke animasi kematiannya dulu selama 2.5 detik!
+            if (victim === playerNoob && playerRole === "SURVIVOR") {
+                camFocusOverride = corpse;
+                isPlayerDead = true;
+                playerNoob.hp = 0;
+                playerNoob.position.set(0, 72, 0);
+                clearAllEffects();
+                cancelC00lgui();
+            }
+
+            // FASE 1 (0 - 1.2 detik): C00LKIDD MENGANGKAT & MENCEKIK LEHER KORBAN
+            c00lkidd.parts.rArm.rotation.x = 2.0; // Lengan kanan terangkat mencekik ke depan-atas
+            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+            corpse.position.copy(c00lkidd.position).addScaledVector(fwd, 2.5);
+            corpse.position.y = 2.6; // Terangkat di udara!
+            corpse.lookAt(c00lkidd.position.x, 2.6, c00lkidd.position.z);
+            corpse.rotation.y += Math.PI;
+
+            // Animasi kaki meronta-ronta di udara saat dicekik
+            let struggleTick = 0;
+            const struggleIntv = setInterval(() => {
+                struggleTick += 0.4;
+                corpse.parts.lLeg.rotation.x = Math.sin(struggleTick) * 0.6;
+                corpse.parts.rLeg.rotation.x = -Math.sin(struggleTick) * 0.6;
+                corpse.parts.lArm.rotation.z = -0.3 + Math.sin(struggleTick) * 0.2;
+                corpse.parts.rArm.rotation.z = 0.3 - Math.sin(struggleTick) * 0.2;
+            }, 40);
+
+            setTimeout(() => {
+                clearInterval(struggleIntv);
+
+                if (is007Victim) {
+                    // =================================================================
+                    // JIKA 007n7: DITARUH DI TANAH DENGAN LEMBUT (BAPAK & ANAK)
+                    // =================================================================
+                    let stepT = 0;
+                    const gentleIntv = setInterval(() => {
+                        stepT++;
+                        // Turunkan lengan c00lkidd & tubuh 007n7 perlahan-lahan
+                        c00lkidd.parts.rArm.rotation.x = 2.0 - (stepT * 0.08);
+                        corpse.position.y = Math.max(0.6, 2.6 - (stepT * 0.1));
+                        corpse.rotation.x = - (stepT / 20) * (Math.PI / 2); // Baringkan telentang lembut
+
+                        // Luruskan anggota badan tenang
+                        corpse.parts.lLeg.rotation.x = 0; corpse.parts.rLeg.rotation.x = 0;
+                        corpse.parts.lArm.rotation.z = 0.1; corpse.parts.rArm.rotation.z = -0.1;
+
+                        if (stepT >= 20) {
+                            clearInterval(gentleIntv);
+                            c00lkidd.parts.rArm.rotation.x = 0;
+                            c00lState = "IDLE";
+
+                            if (victim === playerNoob && playerRole === "SURVIVOR") {
+                                camFocusOverride = null; updateUIState(); cycleSpectate();
+                            }
+
+                            // Hilang setelah 5 detik terbaring di tanah
+                            setTimeout(() => { scene.remove(corpse); }, 5000);
+                        }
+                    }, 45);
+
+                } else {
+                    // =================================================================
+                    // JIKA NOOB: DILEMPAR KERAS JADI RAGDOLL LALU HILANG 5 DETIK!
+                    // =================================================================
+                    c00lkidd.parts.rArm.rotation.x = -0.8; // Gerakan melempar keras ke depan!
+                    let vx = fwd.x * 0.85, vz = fwd.z * 0.85, vy = 0.45;
+
+                    const throwIntv = setInterval(() => {
+                        corpse.position.x += vx;
+                        corpse.position.z += vz;
+                        corpse.position.y += vy;
+                        vy -= 0.04; // Gravitasi jatuh
+                        corpse.rotation.x += 0.2; // Berputar saat terbang
+
+                        if (corpse.position.y <= 0.6) {
+                            corpse.position.y = 0.6;
+                            clearInterval(throwIntv);
+
+                            // Posisi Ragdoll Jatuh Acak di Tanah
+                            corpse.rotation.x = Math.PI / 2;
+                            corpse.rotation.z = (Math.random() - 0.5) * 1.5;
+                            corpse.parts.lArm.rotation.z = -1.2; corpse.parts.rArm.rotation.z = 1.1;
+                            corpse.parts.lLeg.rotation.x = 0.5; corpse.parts.rLeg.rotation.x = -0.4;
+
+                            c00lkidd.parts.rArm.rotation.x = 0;
+                            c00lState = "IDLE";
+
+                            if (victim === playerNoob && playerRole === "SURVIVOR") {
+                                camFocusOverride = null; updateUIState(); cycleSpectate();
+                            }
+
+                            // Ragdoll hilang setelah 5 detik!
+                            setTimeout(() => { scene.remove(corpse); }, 5000);
+                        }
+                    }, 30);
+                }
+            }, 1200);
+        }
+
+        // ==========================================
+        // 6. KAMERA 360 & UNLOCK MOUSE [M]
         // ==========================================
         let camYaw = 0, camPitch = 0.2;
         let isPointerLocked = false, isMouseDown = false;
@@ -642,7 +749,7 @@
         });
 
         // ==========================================
-        // 6. ROUND, SPECTATE & SPECIAL LMS "PLEAD"
+        // 7. ROUND, SPECTATE & SPECIAL LMS "PLEAD"
         // ==========================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
@@ -653,7 +760,7 @@
 
         let burnTimer = null;
         function applyBurningToPlayer(durationSec) {
-            if (playerNoob.isInvulnerable) return;
+            if (playerNoob.isInvulnerable || isPlayerDead) return;
             addStatusEffect("burn", "BURNING I", "#ff4400", durationSec);
             if (burnTimer) clearInterval(burnTimer);
 
@@ -665,7 +772,7 @@
                 }
                 playerNoob.hp = Math.max(0, playerNoob.hp - 1.5);
                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                if (playerNoob.hp <= 0) killPlayer();
+                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
             }, 1000);
         }
 
@@ -705,7 +812,7 @@
             dexMarker.visible = (gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead);
             updateSkillButtonsForRole();
             
-            const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR");
+            const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride);
             document.getElementById("spectate-panel").style.display = showSpectate ? "flex" : "none";
         }
 
@@ -731,17 +838,6 @@
             }
         }
 
-        function killPlayer() {
-            if (playerRole === "KILLER") return;
-            cancelC00lgui();
-            isPlayerDead = true;
-            playerNoob.hp = 0;
-            playerNoob.position.set(0, 72, 0);
-            clearAllEffects();
-            updateUIState();
-            cycleSpectate();
-        }
-
         function pickNewPatrol(ai) {
             ai.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
         }
@@ -756,8 +852,9 @@
                 if (timerSeconds <= 0) {
                     gameState = "INGAME";
                     timerSeconds = 180;
-                    isPlayerDead = false; isSpectating = false; isPleadLMS = false;
+                    isPlayerDead = false; isSpectating = false; isPleadLMS = false; camFocusOverride = null;
                     clearAllEffects(); cancelC00lgui();
+                    c00lState = "IDLE";
 
                     playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
                     playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false;
@@ -786,15 +883,13 @@
 
                 updateSpectateHPList();
 
-                // CEK LAST MAN STANDING (APAKAH SISA 007n7 ATAU NOOB?)
                 if (aliveList.length === 1 && !lmsTriggered) {
                     lmsTriggered = true;
                     const lastSurvivor = aliveList[0];
 
-                    // JIKA SURVIVOR TERAKHIR ADALAH 007n7 -> TRIGGER SPECIAL LMS "PLEAD"!
                     if (lastSurvivor.is007) {
                         isPleadLMS = true;
-                        timerSeconds = 90; // 1:30 Sesuai Video PLEAD!
+                        timerSeconds = 90;
                         const b = document.getElementById("lms-banner");
                         b.innerText = "PLEAD\n(FATHER & SON)";
                         b.style.color = "#ffffff";
@@ -811,15 +906,16 @@
                     }
                 }
 
-                if (timerSeconds <= 0 || aliveList.length === 0) {
+                if (timerSeconds <= 0 || (aliveList.length === 0 && c00lState !== "KILLING")) {
                     gameState = "LOBBY";
                     timerSeconds = 15;
-                    lmsTriggered = false; isPleadLMS = false; isSpectating = false;
+                    lmsTriggered = false; isPleadLMS = false; isSpectating = false; camFocusOverride = null;
                     clearAllEffects(); cancelC00lgui();
                     playerNoob.position.set(0, 72, 0);
                     c00lkidd.position.set(0, 72, -10);
                     minions.forEach(m => scene.remove(m)); minions.length = 0;
                     clones.forEach(c => scene.remove(c)); clones.length = 0;
+                    corpses.forEach(cp => scene.remove(cp)); corpses.length = 0;
                     updateUIState();
                     stopAndResetAllAudio();
                 }
@@ -827,7 +923,7 @@
         }, 1000);
 
         // =========================================================================
-        // 7. ABILITIES: NOOB, 007n7 & C00LKIDD
+        // 8. ABILITIES: NOOB, 007n7 & C00LKIDD
         // =========================================================================
         let keys = {};
         let isShiftlock = false, stamina = 100, isSprinting = false;
@@ -836,8 +932,7 @@
 
         const injectModes = ["Wander", "Pathfind", "Cursor"];
         let injectIdx = 0;
-        let isCastingC00lgui = false;
-        let c00lguiTimeout = null;
+        let isCastingC00lgui = false, c00lguiTimeout = null;
 
         function toggleShiftlock() {
             isShiftlock = !isShiftlock;
@@ -876,14 +971,12 @@
         }
         function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
 
-        // --- 007n7 ---
         function use007Clone() {
             if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
             cdQ = true; animateCD("cd-q", 27, () => { cdQ = false; });
 
             const clone = createR6(false, true);
-            clone.position.copy(playerNoob.position);
-            clone.rotation.copy(playerNoob.rotation);
+            clone.position.copy(playerNoob.position); clone.rotation.copy(playerNoob.rotation);
             clone.hp = 100; clone.alive = true; clone.mode = injectModes[injectIdx];
             clone.patrolTarget = new THREE.Vector3((Math.random()-0.5)*140, 0, (Math.random()-0.5)*140);
             scene.add(clone); clones.push(clone);
@@ -929,7 +1022,6 @@
             document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
         }
 
-        // --- NOOB ---
         function playConsumeAnimation(itemColor, onComplete) {
             isDrinkingOrEating = true;
             playerNoob.parts.heldItem.material.color.setHex(itemColor);
@@ -1009,16 +1101,15 @@
             });
         }
 
-        // --- KILLER ---
         function killerTagM1() {
             if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return;
             cdM1 = true; animateCD("cd-m1", 2, () => { cdM1 = false; });
             c00lkidd.parts.rArm.rotation.x = -1.6;
-            setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
+            setTimeout(() => { if(c00lState !== "KILLING") c00lkidd.parts.rArm.rotation.x = 0; }, 300);
             [playerNoob, ...aiSurvivors, ...clones].forEach(s => {
                 if (s.alive && checkHitbox(s)) {
                     s.hp -= 26.5;
-                    if (s.hp <= 0) { s.alive = false; s.visible = false; }
+                    if (s.hp <= 0) playKillAnimation(s);
                 }
             });
         }
@@ -1063,14 +1154,14 @@
         }
 
         // =========================================================================
-        // 8. ANIMASI C00LKIDD
+        // 9. ANIMASI C00LKIDD
         // =========================================================================
         let c00lState = "IDLE", dashTimer = 0, c00lAbilitiesTimer = 0;
 
         function triggerWalkspeedOverride() {
             c00lState = "OVERRIDE_WINDUP";
             c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = 0.9; c00lkidd.parts.rArm.rotation.x = 0.9;
-            setTimeout(() => { c00lState = "DASHING"; dashTimer = 80; c00lkidd.parts.torso.rotation.x = 0.2; }, 450);
+            setTimeout(() => { if(c00lState==="OVERRIDE_WINDUP"){ c00lState = "DASHING"; dashTimer = 80; c00lkidd.parts.torso.rotation.x = 0.2; } }, 450);
         }
 
         function triggerCorruptNature(target) {
@@ -1078,6 +1169,7 @@
             c00lkidd.parts.torso.rotation.y = -0.4; c00lkidd.parts.rArm.rotation.x = 1.2;
 
             setTimeout(() => {
+                if (c00lState === "KILLING") return;
                 c00lkidd.parts.torso.rotation.y = 0.3; c00lkidd.parts.rArm.rotation.x = -2.2;
                 const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
                 proj.position.copy(c00lkidd.position); proj.position.y += 3; scene.add(proj);
@@ -1098,8 +1190,8 @@
                                     cancelC00lgui(); hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
                                     setTimeout(() => { hasSlowness = false; }, 4000);
                                     document.getElementById("hp-bar").style.width = t.hp + "%";
-                                    if (t.hp <= 0) killPlayer();
-                                } else if (t.hp <= 0) { t.alive = false; t.visible = false; }
+                                    if (t.hp <= 0) playKillAnimation(t);
+                                } else if (t.hp <= 0) { playKillAnimation(t); }
                             }
                             scene.remove(proj); clearInterval(intv); break;
                         }
@@ -1107,7 +1199,7 @@
                     if (life <= 0) { scene.remove(proj); clearInterval(intv); }
                 }, 16);
 
-                setTimeout(() => { c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; }, 350);
+                setTimeout(() => { if(c00lState !== "KILLING"){ c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 350);
             }, 350);
         }
 
@@ -1133,7 +1225,7 @@
                         m.position.y = 0; m.isRising = false; clearInterval(riseInterval);
                         minionsFinished++;
                         if (minionsFinished === needed) {
-                            setTimeout(() => { c00lkidd.parts.lArm.rotation.x = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; }, 500);
+                            setTimeout(() => { if(c00lState !== "KILLING"){ c00lkidd.parts.lArm.rotation.x = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 500);
                         }
                     }
                 }, 40);
@@ -1159,7 +1251,7 @@
         }
 
         // =========================================================================
-        // 9. GAME LOOP UTAMA
+        // 10. GAME LOOP UTAMA
         // =========================================================================
         let c00lAttackTimer = 0;
 
@@ -1208,7 +1300,8 @@
             }
 
             let camFocus = controlledChar;
-            if (isSpectating && spectateList[spectateIdx]) camFocus = spectateList[spectateIdx];
+            if (camFocusOverride) camFocus = camFocusOverride;
+            else if (isSpectating && spectateList[spectateIdx]) camFocus = spectateList[spectateIdx];
 
             const cDist = 9;
             camera.position.x = camFocus.position.x + Math.sin(camYaw) * Math.cos(camPitch) * cDist;
@@ -1244,7 +1337,7 @@
                     });
                 }
 
-                if (playerRole === "SURVIVOR" && closestTarget) {
+                if (playerRole === "SURVIVOR" && closestTarget && c00lState !== "KILLING") {
                     if (c00lState !== "SUMMONING" && c00lState !== "CASTING") {
                         c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
                         c00lkidd.rotation.y += Math.PI;
@@ -1259,11 +1352,12 @@
                             if (closestTarget === playerNoob) {
                                 cancelC00lgui(); applyBurningToPlayer(8);
                                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                if (playerNoob.hp <= 0) killPlayer();
-                            } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
-                            c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0;
+                                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
+                            } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
+                            if (c00lState !== "KILLING") c00lState = "IDLE";
+                            c00lkidd.parts.torso.rotation.x = 0;
                         }
-                        if (dashTimer <= 0) { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
+                        if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
                     } else if (c00lState === "IDLE") {
                         const kx = closestTarget.position.x - c00lkidd.position.x;
                         const kz = closestTarget.position.z - c00lkidd.position.z;
@@ -1282,10 +1376,10 @@
                                 if (closestTarget === playerNoob) {
                                     cancelC00lgui();
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                    if (playerNoob.hp <= 0) killPlayer();
-                                } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
+                                    if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
+                                } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
                             }
-                            setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
+                            setTimeout(() => { if(c00lState !== "KILLING") c00lkidd.parts.rArm.rotation.x = 0; }, 300);
                         }
 
                         c00lAbilitiesTimer++;
@@ -1298,12 +1392,14 @@
                     const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
                     moveWithCollision(c00lkidd, fwd.x * 1.15, fwd.z * 1.15);
                     targets.forEach(t => {
-                        if (checkHitbox(t)) {
-                            t.hp -= 32; if (t.hp <= 0) { t.alive = false; t.visible = false; }
-                            c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0;
+                        if (t.alive && checkHitbox(t)) {
+                            t.hp -= 32;
+                            if (t.hp <= 0) playKillAnimation(t);
+                            else c00lState = "IDLE";
+                            c00lkidd.parts.torso.rotation.x = 0;
                         }
                     });
-                    if (dashTimer <= 0) { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
+                    if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
@@ -1327,8 +1423,8 @@
                                 hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
                                 setTimeout(() => { hasSlowness = false; }, 3000);
                                 applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                if (playerNoob.hp <= 0) killPlayer();
-                            } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
+                                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
+                            } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
                         }
                     }
                 }
