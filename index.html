@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Shadows, Torches & Full Effects</title>
+    <title>Forsaken 3D - Play as Killer or Survivor</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -16,15 +16,23 @@
         /* HUD ATAS */
         #top-hud {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
             background: rgba(0, 0, 0, 0.75); padding: 8px 24px; border-radius: 8px;
             border: 2px solid #555; z-index: 10; color: #fff;
         }
         #round-timer { font-size: 24px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
 
-        /* STATUS EFFECTS DI KIRI TENGAH (BERTUMPUK KE BAWAH) */
+        /* TOMBOL PILIH ROLE DI LOBBY */
+        #role-btn {
+            background: #0055ff; color: #fff; border: 2px solid #fff;
+            padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px;
+            cursor: pointer; display: block;
+        }
+        #role-btn.killer { background: #cc0000; }
+
+        /* STATUS EFFECTS DI KIRI TENGAH */
         #status-effects {
-            position: absolute; top: 32%; left: 20px;
+            position: absolute; top: 30%; left: 20px;
             display: flex; flex-direction: column; gap: 8px;
             z-index: 15; pointer-events: none;
         }
@@ -36,7 +44,7 @@
         }
 
         #highlight-warning {
-            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 200, 0, 0.85); color: #000; font-weight: 900;
             padding: 6px 16px; border-radius: 20px; font-size: 13px; letter-spacing: 1px;
             display: none; z-index: 12; animation: blink 0.5s infinite alternate;
@@ -54,16 +62,21 @@
         #stamina-bar { width: 100%; height: 100%; background: #ffaa00; transition: width 0.1s; }
         .bar-title { font-size: 10px; font-weight: bold; margin-top: 3px; }
 
+        /* PANEL SPECTATE & PERSENTASE DARAH AI */
+        #spectate-panel {
+            position: absolute; top: 48%; left: 20px; transform: translateY(-50%);
+            display: none; flex-direction: column; gap: 8px; z-index: 25;
+        }
         #spectate-btn {
-            position: absolute; top: 50%; left: 20px; transform: translateY(-50%);
             background: #111; color: #00e6ff; border: 2px solid #00e6ff;
             padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
-            cursor: pointer; z-index: 25; display: none; box-shadow: 0 0 10px rgba(0, 230, 255, 0.4);
+            cursor: pointer; box-shadow: 0 0 10px rgba(0, 230, 255, 0.4);
         }
         #spectate-btn:hover { background: #00e6ff; color: #000; }
-        #spectate-info {
-            position: absolute; top: calc(50% + 40px); left: 20px;
-            color: #fff; font-size: 12px; display: none; z-index: 25; text-shadow: 1px 1px 2px #000;
+        #spectate-info { color: #fff; font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        #ai-hp-list {
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #444; border-radius: 6px;
+            padding: 8px 12px; color: #fff; font-size: 12px; display: flex; flex-direction: column; gap: 4px;
         }
 
         #lms-banner {
@@ -74,6 +87,7 @@
         }
         @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.08); } }
 
+        /* SKILL UI SURVIVOR & KILLER */
         #skills-container {
             position: absolute; bottom: 20px; right: 25px; width: 220px; height: 210px;
             z-index: 10; display: none;
@@ -93,9 +107,9 @@
             background: rgba(0, 0, 0, 0.7); border-radius: 50%; pointer-events: none;
         }
 
-        #btn-burger { width: 56px; height: 56px; top: 5px; right: 8px; }
-        #btn-slate  { width: 60px; height: 60px; top: 5px; left: 55px; }
-        #btn-cola   { width: 56px; height: 56px; bottom: 35px; left: 5px; }
+        #btn-s1 { width: 56px; height: 56px; top: 5px; right: 8px; }
+        #btn-s2 { width: 60px; height: 60px; top: 5px; left: 55px; }
+        #btn-s3 { width: 56px; height: 56px; bottom: 35px; left: 5px; }
         #btn-sprint { width: 80px; height: 80px; bottom: 28px; right: 25px; }
         #btn-shiftlock { width: 36px; height: 36px; bottom: -6px; left: 82px; background: #111; }
         #btn-shiftlock.active { border-color: #00ffcc; box-shadow: 0 0 10px #00ffcc; }
@@ -118,16 +132,13 @@
     <div id="vignette"></div>
     <div id="crosshair"></div>
     <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
-
-    <!-- DAFTAR STATUS EFFECT DI KIRI TENGAH -->
     <div id="status-effects"></div>
 
-    <!-- 4 LAYER CHASE THEME -->
+    <!-- AUDIO ASSETS -->
     <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer4" loop preload="auto"><source src="layer4.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
-
     <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
     <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
     <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
@@ -135,60 +146,54 @@
     <audio id="sfx-burger" preload="auto"><source src="burger.mp3" type="audio/mpeg"></audio>
 
     <div id="player-bars">
-        <div class="bar-title">HEALTH</div>
-        <div class="bar-container"><div id="hp-bar"></div></div>
+        <div id="hp-title" class="bar-title">HEALTH</div>
+        <div id="hp-container" class="bar-container"><div id="hp-bar"></div></div>
         <div class="bar-title">STAMINA</div>
         <div class="bar-container"><div id="stamina-bar"></div></div>
     </div>
 
     <div id="top-hud">
         <div id="round-timer">LOBBY: 15s</div>
+        <button id="role-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR (Klik Ganti)</button>
     </div>
 
-    <button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button>
-    <div id="spectate-info">Spectating: AI Noob 1</div>
+    <div id="spectate-panel">
+        <button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button>
+        <div id="spectate-info">Spectating: AI Noob 1</div>
+        <div id="ai-hp-list"></div>
+    </div>
 
     <div id="lms-banner">LAST MAN STANDING!</div>
-    <div id="start-hint">🔊 KLIK UNTUK MAIN | Tekan [M] untuk Unlock Mouse</div>
+    <div id="start-hint">🔊 KLIK LAYAR UNTUK MULAI & SUARA | Tekan [M] Unlock Mouse</div>
 
     <div id="skills-container">
-        <div id="btn-burger" class="brush-circle" onclick="useBurger()">
+        <div id="btn-s1" class="brush-circle" onclick="useSkill1()">
             <div id="cd-q" class="cd-dark"></div>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M12 2a4 4 0 0 0-4 4c0 3 4 5 4 5s4-2 4-5a4 4 0 0 0-4-4z"/>
-                <path d="M4 16c0-3 3-5 8-5s8 2 8 5H4z"/>
-            </svg>
-            <div class="skill-name">Ghostburger [Q]</div>
+            <div id="icon-s1" style="font-size:18px;font-weight:bold;">Q</div>
+            <div id="label-s1" class="skill-name">Ghostburger [Q]</div>
         </div>
 
-        <div id="btn-slate" class="brush-circle" onclick="useSlate()">
+        <div id="btn-s2" class="brush-circle" onclick="useSkill2()">
             <div id="cd-e" class="cd-dark"></div>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M9 2h6v3H9zM10 5v4l-4 7v4h12v-4l-4-7V5"/>
-            </svg>
-            <div id="label-slate" class="skill-name">Slateskin [E]</div>
+            <div id="icon-s2" style="font-size:18px;font-weight:bold;">E</div>
+            <div id="label-s2" class="skill-name">Slateskin [E]</div>
         </div>
 
-        <div id="btn-cola" class="brush-circle" onclick="useCola()">
+        <div id="btn-s3" class="brush-circle" onclick="useSkill3()">
             <div id="cd-r" class="cd-dark"></div>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <rect x="7" y="4" width="10" height="16" rx="2"/>
-                <path d="M11 2h2"/>
-            </svg>
-            <div class="skill-name">Bloxy Cola [R]</div>
+            <div id="icon-s3" style="font-size:18px;font-weight:bold;">R</div>
+            <div id="label-s3" class="skill-name">Bloxy Cola [R]</div>
         </div>
 
-        <div id="btn-sprint" class="brush-circle">
-            <svg width="45" height="45" viewBox="0 0 24 24" fill="white">
-                <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7z"/>
-            </svg>
-            <div class="skill-name" style="bottom: 4px; font-size: 8px;">SPRINT [Shift]</div>
+        <div id="btn-sprint" class="brush-circle" onclick="useBasicAttack()">
+            <div id="cd-m1" class="cd-dark"></div>
+            <div id="icon-sprint" style="font-size:16px;font-weight:bold;">SHIFT</div>
+            <div id="label-sprint" class="skill-name" style="bottom: 4px; font-size: 9px;">SPRINT</div>
         </div>
 
         <div id="btn-shiftlock" class="brush-circle" onclick="toggleShiftlock()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-                <circle cx="12" cy="12" r="6"/>
-                <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+                <circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
             </svg>
         </div>
     </div>
@@ -197,8 +202,18 @@
 
     <script>
         // =========================================================================
-        // 1. SISTEM STATUS EFFECTS UI (KIRI TENGAH BERTUMPUK)
+        // 1. STATUS EFFECTS & ROLE TOGGLE
         // =========================================================================
+        let playerRole = "SURVIVOR"; // "SURVIVOR" atau "KILLER"
+
+        function togglePlayerRole() {
+            if (gameState !== "LOBBY") return;
+            playerRole = (playerRole === "SURVIVOR") ? "KILLER" : "SURVIVOR";
+            const btn = document.getElementById("role-btn");
+            btn.innerText = "PERAN: " + playerRole + " (Klik Ganti)";
+            btn.classList.toggle("killer", playerRole === "KILLER");
+        }
+
         const activeEffects = {};
         const effectsContainer = document.getElementById("status-effects");
 
@@ -207,7 +222,6 @@
                 clearInterval(activeEffects[key].interval);
                 activeEffects[key].el.remove();
             }
-
             const el = document.createElement("div");
             el.className = "effect-badge";
             el.style.borderLeftColor = color;
@@ -219,13 +233,9 @@
 
             const interval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft <= 0) {
-                    removeStatusEffect(key);
-                } else {
-                    el.innerText = `${label} (${timeLeft}s)`;
-                }
+                if (timeLeft <= 0) removeStatusEffect(key);
+                else el.innerText = `${label} (${timeLeft}s)`;
             }, 1000);
-
             activeEffects[key] = { el, interval };
         }
 
@@ -237,31 +247,40 @@
             }
         }
 
-        function clearAllEffects() {
-            Object.keys(activeEffects).forEach(removeStatusEffect);
-        }
+        function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
         // =========================================================================
-        // 2. AUDIO 4-LAYER CHASE EKSKLUSIF & SPECTATE
+        // 2. AUDIO ENGINE (UNLOCK ALL LAYERS ON CLICK -> LAYER 4 PASTI NYALA)
         // =========================================================================
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isAudioInit = false;
-
         const l1 = document.getElementById("chase-layer1");
         const l2 = document.getElementById("chase-layer2");
         const l3 = document.getElementById("chase-layer3");
         const l4 = document.getElementById("chase-layer4");
         const bgmLMS = document.getElementById("audio-lms");
         const bgmAmbience = document.getElementById("audio-ambience");
-
         const sfxCola = document.getElementById("sfx-cola");
         const sfxSlate = document.getElementById("sfx-slate");
         const sfxBurger = document.getElementById("sfx-burger");
 
         let activeLayerIndex = 0;
 
+        function unlockAllAudio() {
+            if (isAudioInit) return;
+            isAudioInit = true;
+            [l1, l2, l3, l4, bgmLMS, bgmAmbience, sfxCola, sfxSlate, sfxBurger].forEach(a => {
+                if (a) {
+                    a.volume = 0;
+                    a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{});
+                }
+            });
+            if (gameState === "INGAME") startRoundAudio();
+        }
+
         function playSFX(el) {
-            if (el && el.readyState >= 2) { el.currentTime = 0; el.play().catch(()=>{}); }
+            if (el && el.readyState >= 1) {
+                el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{});
+            }
         }
 
         function stopAndResetAllAudio() {
@@ -312,31 +331,31 @@
                 if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
             }
 
-            if (dist > 75) {
+            if (dist > 80) {
                 switchSingleLayer(0);
                 if (bgmAmbience) bgmAmbience.volume = 0.45;
                 vignette.style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
-            } else if (dist > 50) {
+            } else if (dist > 55) {
                 switchSingleLayer(1);
                 if (bgmAmbience) bgmAmbience.volume = 0.3;
                 vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)";
-            } else if (dist > 30) {
+            } else if (dist > 36) {
                 switchSingleLayer(2);
                 if (bgmAmbience) bgmAmbience.volume = 0.2;
                 vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)";
-            } else if (dist > 18) {
+            } else if (dist > 22) {
                 switchSingleLayer(3);
                 if (bgmAmbience) bgmAmbience.volume = 0.1;
                 vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)";
             } else {
-                switchSingleLayer(4);
+                switchSingleLayer(4); // Jarak <= 22: LAYER 4 PASTI MENYALA!
                 if (bgmAmbience) bgmAmbience.volume = 0.05;
                 vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)";
             }
         }
 
         // =========================================================================
-        // 3. 3D SCENE, BAYANGAN NYATA (SHADOWS), OBOR API & COLLISION
+        // 3. 3D SCENE, OPTIMIZED SHADOWS & OBOR (RINGAN 60 FPS DI CHROMEBOOK!)
         // =========================================================================
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x14151f, 0.008);
@@ -344,35 +363,29 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // AKTIFKAN BAYANGAN 3D NYATA!
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.PCFShadowMap; // Ringan & cepat untuk Chromebook
         document.body.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0x555566, 0.9);
+        const ambientLight = new THREE.AmbientLight(0x666677, 1.0);
         scene.add(ambientLight);
 
-        // Cahaya Bulan Penghasil Bayangan
-        const moonLight = new THREE.DirectionalLight(0xaabbff, 0.8);
+        const moonLight = new THREE.DirectionalLight(0xaaccff, 0.9);
         moonLight.position.set(60, 100, 60);
         moonLight.castShadow = true;
-        moonLight.shadow.mapSize.width = 2048;
-        moonLight.shadow.mapSize.height = 2048;
+        moonLight.shadow.mapSize.width = 1024;
+        moonLight.shadow.mapSize.height = 1024;
         moonLight.shadow.camera.near = 10;
         moonLight.shadow.camera.far = 300;
-        moonLight.shadow.camera.left = -125;
-        moonLight.shadow.camera.right = 125;
-        moonLight.shadow.camera.top = 125;
-        moonLight.shadow.camera.bottom = -125;
+        moonLight.shadow.camera.left = -125; moonLight.shadow.camera.right = 125;
+        moonLight.shadow.camera.top = 125; moonLight.shadow.camera.bottom = -125;
         scene.add(moonLight);
 
-        // Lantai Arena (Menerima Bayangan)
         const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x203220, roughness: 0.9 }));
         arenaFloor.rotation.x = -Math.PI / 2;
         arenaFloor.receiveShadow = true;
         scene.add(arenaFloor);
 
-        // Lobby Atas
         const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
         lobbyPlatform.position.set(0, 70, 0);
         lobbyPlatform.receiveShadow = true;
@@ -383,13 +396,11 @@
             solidBoxes.push({ minX: x - w/2 - 1.2, maxX: x + w/2 + 1.2, minZ: z - d/2 - 1.2, maxZ: z + d/2 + 1.2 });
         }
 
-        // TEMBOK PEMBATAS RAKSASA
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 });
         function createBorderWall(x, z, w, d) {
             const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
             wall.position.set(x, 11, z);
-            wall.castShadow = true;
-            wall.receiveShadow = true;
+            wall.castShadow = true; wall.receiveShadow = true;
             scene.add(wall);
             registerBox(x, z, w, d);
         }
@@ -398,21 +409,17 @@
         createBorderWall(-125, 0, 6, 250);
         createBorderWall(125, 0, 6, 250);
 
-        // OBOR API BERKEDIP DI TEMBOK
         const torchLights = [];
         function attachTorchToWall(wx, wy, wz) {
             const torchGroup = new THREE.Group();
             const stick = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.4, 0.25), new THREE.MeshStandardMaterial({ color: 0x4d3319 }));
-            stick.rotation.x = 0.4;
-            torchGroup.add(stick);
+            stick.rotation.x = 0.4; torchGroup.add(stick);
 
             const flame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 }));
-            flame.position.set(0, 0.7, 0.3);
-            torchGroup.add(flame);
+            flame.position.set(0, 0.7, 0.3); torchGroup.add(flame);
 
             const light = new THREE.PointLight(0xff6600, 2.2, 28);
             light.position.set(0, 0.8, 0.5);
-            light.castShadow = true;
             torchGroup.add(light);
             torchLights.push(light);
 
@@ -420,41 +427,29 @@
             scene.add(torchGroup);
         }
 
-        // GEDUNG / DINDING + OBOR DI BEBERAPA TEMBOK
-        for(let i = 0; i < 22; i++) {
+        for(let i = 0; i < 20; i++) {
             const h = 8 + Math.random() * 8;
             const b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({ color: 0x333340 }));
-            const bx = (Math.random() - 0.5) * 170;
-            const bz = (Math.random() - 0.5) * 170;
+            const bx = (Math.random() - 0.5) * 165;
+            const bz = (Math.random() - 0.5) * 165;
             b.position.set(bx, h/2, bz);
-            b.castShadow = true;
-            b.receiveShadow = true;
+            b.castShadow = true; b.receiveShadow = true;
             scene.add(b);
             registerBox(bx, bz, 8, 8);
 
-            // Pasang obor di beberapa tembok gedung (setiap 2-3 tembok)
-            if (i % 2 === 0) {
-                attachTorchToWall(bx, 5, bz + 4.2);
-            }
+            if (i % 3 === 0) attachTorchToWall(bx, 5, bz + 4.2);
         }
 
-        // POHON KLASIK (DENGAN BAYANGAN)
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
         const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
-        for(let i = 0; i < 35; i++) {
-            const tx = (Math.random() - 0.5) * 190;
-            const tz = (Math.random() - 0.5) * 190;
+        for(let i = 0; i < 30; i++) {
+            const tx = (Math.random() - 0.5) * 185;
+            const tz = (Math.random() - 0.5) * 185;
             const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), trunkMat);
-            trunk.position.set(tx, 3.5, tz);
-            trunk.castShadow = true;
-            trunk.receiveShadow = true;
-            scene.add(trunk);
+            trunk.position.set(tx, 3.5, tz); trunk.castShadow = true; scene.add(trunk);
 
             const foliage = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), foliageMat);
-            foliage.position.set(tx, 8, tz);
-            foliage.castShadow = true;
-            foliage.receiveShadow = true;
-            scene.add(foliage);
+            foliage.position.set(tx, 8, tz); foliage.castShadow = true; scene.add(foliage);
             registerBox(tx, tz, 1.2, 1.2);
         }
 
@@ -468,10 +463,8 @@
         function moveWithCollision(entity, vx, vz) {
             const nextX = entity.position.x + vx;
             const nextZ = entity.position.z + vz;
-
             if (canMoveTo(nextX, nextZ)) {
-                entity.position.x = nextX;
-                entity.position.z = nextZ;
+                entity.position.x = nextX; entity.position.z = nextZ;
             } else if (canMoveTo(nextX, entity.position.z)) {
                 entity.position.x = nextX;
             } else if (canMoveTo(entity.position.x, nextZ)) {
@@ -480,7 +473,7 @@
         }
 
         // ==========================================
-        // 4. MODEL R6 NOOB & C00LKIDD (BERBAYANG)
+        // 4. MODEL R6 NOOB & C00LKIDD
         // ==========================================
         function createFace(isRed) {
             const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -496,11 +489,8 @@
         function createC00lkiddTorsoTexture() {
             const c = document.createElement("canvas"); c.width = 256; c.height = 256;
             const ctx = c.getContext("2d");
-            ctx.fillStyle = "#cc0000";
-            ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = "#111111";
-            ctx.font = "bold 26px sans-serif";
-            ctx.textAlign = "center";
+            ctx.fillStyle = "#cc0000"; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = "#111111"; ctx.font = "bold 26px sans-serif"; ctx.textAlign = "center";
             ctx.fillText("team c00lkidd", 128, 100);
             ctx.fillText("join today!", 128, 150);
             return new THREE.CanvasTexture(c);
@@ -509,14 +499,11 @@
         function createSword() {
             const sword = new THREE.Group();
             const blade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
-            blade.position.y = 1.3; blade.castShadow = true;
-            sword.add(blade);
+            blade.position.y = 1.3; blade.castShadow = true; sword.add(blade);
             const cross = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.2), new THREE.MeshStandardMaterial({ color: 0x880000 }));
-            cross.position.y = 0.1;
-            sword.add(cross);
+            cross.position.y = 0.1; sword.add(cross);
             const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-            handle.position.y = -0.25;
-            sword.add(handle);
+            handle.position.y = -0.25; sword.add(handle);
             return sword;
         }
 
@@ -527,9 +514,7 @@
             const mLeg  = new THREE.MeshStandardMaterial({ color: isRed ? 0x990000 : 0x287f46 });
 
             let torsoMat = mBody;
-            if (isRed) {
-                torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })];
-            }
+            if (isRed) torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })];
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; torso.castShadow = true; g.add(torso);
             const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(isRed) })];
@@ -541,20 +526,14 @@
             const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true; g.add(rLeg);
 
             const highlightMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 }));
-            highlightMesh.position.y = 2.6;
-            highlightMesh.visible = false;
-            g.add(highlightMesh);
+            highlightMesh.position.y = 2.6; highlightMesh.visible = false; g.add(highlightMesh);
 
             const heldItem = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6), new THREE.MeshStandardMaterial({ color: 0xaa2222 }));
-            heldItem.position.set(0, -0.9, -0.3);
-            heldItem.visible = false;
-            rArm.add(heldItem);
+            heldItem.position.set(0, -0.9, -0.3); heldItem.visible = false; rArm.add(heldItem);
 
             if (isRed) {
                 const sw = createSword();
-                sw.position.set(0, -1, -0.4);
-                sw.rotation.x = Math.PI / 2;
-                rArm.add(sw);
+                sw.position.set(0, -1, -0.4); sw.rotation.x = Math.PI / 2; rArm.add(sw);
             }
 
             g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh };
@@ -566,6 +545,7 @@
         }
 
         const playerNoob = createR6(false);
+        playerNoob.name = "Kamu (Noob)";
         playerNoob.position.set(0, 72, 0);
         scene.add(playerNoob);
 
@@ -573,9 +553,7 @@
         for(let i = 0; i < 3; i++) {
             const ai = createR6(false);
             ai.position.set((i - 1) * 6, 72, 5);
-            ai.alive = true;
-            ai.hp = 100;
-            ai.isInvulnerable = false;
+            ai.alive = true; ai.hp = 100; ai.isInvulnerable = false;
             ai.name = "AI Noob " + (i + 1);
             ai.patrolTarget = new THREE.Vector3();
             scene.add(ai);
@@ -586,24 +564,26 @@
         c00lkidd.name = "c00lkidd";
         const redGlow = new THREE.PointLight(0xff0000, 2.5, 18);
         c00lkidd.add(redGlow);
-        c00lkidd.position.set(0, 0, -80);
+        c00lkidd.position.set(0, 72, -10);
         scene.add(c00lkidd);
 
         const minions = [];
 
         // ==========================================
-        // 5. KAMERA 360 & CONTROLS [M]
+        // 5. KAMERA 360 & UNLOCK MOUSE [M]
         // ==========================================
         let camYaw = 0, camPitch = 0.2;
         let isPointerLocked = false, isMouseDown = false;
         let prevMouseX = 0, prevMouseY = 0;
 
-        document.body.addEventListener("click", () => {
+        document.body.addEventListener("click", (e) => {
+            if (e.target.tagName === "BUTTON") return;
             document.body.requestPointerLock();
             document.getElementById("start-hint").style.display = "none";
-            if (audioCtx.state === "suspended") audioCtx.resume();
-            isAudioInit = true;
-            if (gameState === "INGAME" && activeLayerIndex === 0) startRoundAudio();
+            unlockAllAudio();
+            if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) {
+                useBasicAttack();
+            }
         });
 
         document.addEventListener("pointerlockchange", () => {
@@ -611,6 +591,9 @@
         });
 
         window.addEventListener("mousedown", (e) => {
+            if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) {
+                useBasicAttack();
+            }
             isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY;
         });
         window.addEventListener("mouseup", () => { isMouseDown = false; });
@@ -629,7 +612,7 @@
         });
 
         // ==========================================
-        // 6. ROUND, BURNING DOT & SPECTATE
+        // 6. ROUND, SPECTATE HP LIST & BURNING
         // =========================================================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
@@ -660,14 +643,47 @@
             }, 1000);
         }
 
+        function updateSkillButtonsForRole() {
+            if (playerRole === "KILLER") {
+                document.getElementById("hp-title").style.display = "none";
+                document.getElementById("hp-container").style.display = "none";
+                document.getElementById("label-s1").innerText = "Override [Q]";
+                document.getElementById("label-s2").innerText = "Corrupt [E]";
+                document.getElementById("label-s3").innerText = "Pizza [R]";
+                document.getElementById("icon-sprint").innerText = "M1 / F";
+                document.getElementById("label-sprint").innerText = "TAG (26.5)";
+            } else {
+                document.getElementById("hp-title").style.display = "block";
+                document.getElementById("hp-container").style.display = "block";
+                document.getElementById("label-s1").innerText = "Ghostburger [Q]";
+                document.getElementById("label-s2").innerText = "Slateskin [E]";
+                document.getElementById("label-s3").innerText = "Bloxy Cola [R]";
+                document.getElementById("icon-sprint").innerText = "SHIFT";
+                document.getElementById("label-sprint").innerText = "SPRINT";
+            }
+        }
+
         function updateUIState() {
-            const showHUD = (gameState === "INGAME" && !isPlayerDead);
+            document.getElementById("role-btn").style.display = (gameState === "LOBBY") ? "block" : "none";
+
+            const showHUD = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
             document.getElementById("player-bars").style.display = showHUD ? "block" : "none";
             document.getElementById("skills-container").style.display = showHUD ? "block" : "none";
+            updateSkillButtonsForRole();
             
-            const showSpectate = (gameState === "INGAME" && isPlayerDead);
-            document.getElementById("spectate-btn").style.display = showSpectate ? "block" : "none";
-            document.getElementById("spectate-info").style.display = showSpectate ? "block" : "none";
+            const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR");
+            document.getElementById("spectate-panel").style.display = showSpectate ? "flex" : "none";
+        }
+
+        function updateSpectateHPList() {
+            if (gameState !== "INGAME" || !isPlayerDead || playerRole !== "SURVIVOR") return;
+            const listEl = document.getElementById("ai-hp-list");
+            let html = "<b>DARAH SURVIVOR:</b>";
+            aiSurvivors.forEach(ai => {
+                let status = ai.alive ? `${Math.ceil(ai.hp)}% HP` : `<span style="color:#ff4444;">MATI</span>`;
+                html += `<div>${ai.name}: ${status}</div>`;
+            });
+            listEl.innerHTML = html;
         }
 
         function cycleSpectate() {
@@ -683,6 +699,7 @@
         }
 
         function killPlayer() {
+            if (playerRole === "KILLER") return;
             isPlayerDead = true;
             playerNoob.hp = 0;
             playerNoob.position.set(0, 72, 0);
@@ -707,20 +724,19 @@
                     timerSeconds = 180;
                     isPlayerDead = false;
                     isSpectating = false;
-                    playerNoob.hp = 100;
-                    playerNoob.isInvulnerable = false;
                     clearAllEffects();
+
+                    playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
+                    playerNoob.isInvulnerable = false;
                     document.getElementById("hp-bar").style.width = "100%";
                     playerNoob.position.set(0, 0, 0);
 
                     aiSurvivors.forEach((ai, idx) => {
-                        ai.alive = true;
-                        ai.hp = 100;
-                        ai.isInvulnerable = false;
-                        ai.visible = true;
+                        ai.alive = true; ai.hp = 100; ai.isInvulnerable = false; ai.visible = true;
                         ai.position.set((idx - 1) * 15, 0, 20);
                         pickNewPatrol(ai);
                     });
+
                     c00lkidd.position.set(0, 0, -80);
                     updateUIState();
                     startRoundAudio();
@@ -730,10 +746,14 @@
                 const secs = timerSeconds % 60;
                 timerEl.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
 
-                let aliveCount = (isPlayerDead ? 0 : 1);
+                let aliveCount = 0;
+                if (playerRole === "SURVIVOR" && !isPlayerDead) aliveCount++;
+                if (playerRole === "KILLER" && playerNoob.alive) aliveCount++; // Bot player noob jika jadi killer
                 aiSurvivors.forEach(ai => { if (ai.alive) aliveCount++; });
 
-                if (aliveCount === 1 && !isPlayerDead && !lmsTriggered) {
+                updateSpectateHPList();
+
+                if (aliveCount === 1 && !lmsTriggered && ((playerRole === "SURVIVOR" && !isPlayerDead) || playerRole === "KILLER")) {
                     lmsTriggered = true;
                     timerSeconds = 75;
                     document.getElementById("lms-banner").style.display = "block";
@@ -747,6 +767,7 @@
                     isSpectating = false;
                     clearAllEffects();
                     playerNoob.position.set(0, 72, 0);
+                    c00lkidd.position.set(0, 72, -10);
                     minions.forEach(m => scene.remove(m));
                     minions.length = 0;
                     updateUIState();
@@ -756,7 +777,7 @@
         }, 1000);
 
         // =========================================================================
-        // 7. ABILITIES NOOB (SLATESKIN 10 DETIK & INTERAKSI COLA)
+        // 7. ABILITIES (SURVIVOR NOOB DAN KILLER C00LKIDD!)
         // =========================================================================
         let keys = {};
         let isShiftlock = false;
@@ -768,9 +789,7 @@
         let speedBoostMultiplier = 1.0;
         let hasSlowness = false;
 
-        let cdQ = false;
-        let cdE = false;
-        let cdR = false;
+        let cdQ = false, cdE = false, cdR = false, cdM1 = false;
 
         function toggleShiftlock() {
             isShiftlock = !isShiftlock;
@@ -782,9 +801,10 @@
             keys[e.code] = true;
             if (e.code === "KeyM") document.exitPointerLock();
             if (e.code === "ShiftLeft") isSprinting = true;
-            if (e.code === "KeyQ") useBurger();
-            if (e.code === "KeyE") useSlate();
-            if (e.code === "KeyR") useCola();
+            if (e.code === "KeyQ") useSkill1();
+            if (e.code === "KeyE") useSkill2();
+            if (e.code === "KeyR") useSkill3();
+            if (e.code === "KeyF" && playerRole === "KILLER") useBasicAttack();
         });
 
         window.addEventListener("keyup", (e) => { 
@@ -792,134 +812,126 @@
             if (e.code === "ShiftLeft") isSprinting = false;
         });
 
+        // Dispatcer Skill berdasarkan Role
+        function useSkill1() { if (playerRole === "SURVIVOR") useBurger(); else killerWalkspeedOverride(); }
+        function useSkill2() { if (playerRole === "SURVIVOR") useSlate(); else killerCorruptNature(); }
+        function useSkill3() { if (playerRole === "SURVIVOR") useCola(); else killerPizzaDelivery(); }
+        function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
+
+        // --- SKILL SURVIVOR ---
         function playConsumeAnimation(itemColor, onComplete) {
             isDrinkingOrEating = true;
             playerNoob.parts.heldItem.material.color.setHex(itemColor);
             playerNoob.parts.heldItem.visible = true;
-
-            playerNoob.parts.rArm.rotation.x = 2.2;
-            playerNoob.parts.rArm.rotation.z = -0.4;
-            playerNoob.parts.lArm.rotation.x = 2.2;
-            playerNoob.parts.lArm.rotation.z = 0.4;
+            playerNoob.parts.rArm.rotation.x = 2.2; playerNoob.parts.rArm.rotation.z = -0.4;
+            playerNoob.parts.lArm.rotation.x = 2.2; playerNoob.parts.lArm.rotation.z = 0.4;
 
             setTimeout(() => {
                 playerNoob.parts.heldItem.visible = false;
-                playerNoob.parts.rArm.rotation.x = 0;
-                playerNoob.parts.rArm.rotation.z = 0;
-                playerNoob.parts.lArm.rotation.x = 0;
-                playerNoob.parts.lArm.rotation.z = 0;
+                playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.rArm.rotation.z = 0;
+                playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.lArm.rotation.z = 0;
                 isDrinkingOrEating = false;
                 if (onComplete) onComplete();
             }, 1400);
         }
 
-        // GHOSTBURGER [Q]
         function useBurger() {
             if (cdQ || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
-            cdQ = true;
-            animateCD("cd-q", 40, () => { cdQ = false; });
+            cdQ = true; animateCD("cd-q", 40, () => { cdQ = false; });
             playSFX(sfxBurger);
-
             playConsumeAnimation(0xd4a373, () => {
-                const missingHp = 100 - playerNoob.hp;
-                const healAmount = Math.max(6, missingHp * 0.25);
+                const healAmount = Math.max(6, (100 - playerNoob.hp) * 0.25);
                 playerNoob.hp = Math.min(100, playerNoob.hp + healAmount);
                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-
                 addStatusEffect("invis", "INVISIBLE", "#00ccff", 7);
-                Object.values(playerNoob.parts).forEach(p => { 
-                    if (p.material) { p.material.transparent = true; p.material.opacity = 0.15; }
-                });
-                setTimeout(() => {
-                    Object.values(playerNoob.parts).forEach(p => { 
-                        if (p.material) p.material.opacity = 1; 
-                    });
-                }, 7000);
+                Object.values(playerNoob.parts).forEach(p => { if (p.material) { p.material.transparent = true; p.material.opacity = 0.15; } });
+                setTimeout(() => { Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; }); }, 7000);
             });
         }
 
         function revertSlateAppearance() {
             playerNoob.parts.torso.material.color.setHex(0x0055ff);
             playerNoob.parts.head.material.color.setHex(0xffd200);
-            playerNoob.parts.lArm.material.color.setHex(0xffd200);
-            playerNoob.parts.rArm.material.color.setHex(0xffd200);
-            playerNoob.parts.lLeg.material.color.setHex(0x287f46);
-            playerNoob.parts.rLeg.material.color.setHex(0x287f46);
-            document.getElementById("label-slate").innerText = "Slateskin [E]";
+            playerNoob.parts.lArm.material.color.setHex(0xffd200); playerNoob.parts.rArm.material.color.setHex(0xffd200);
+            playerNoob.parts.lLeg.material.color.setHex(0x287f46); playerNoob.parts.rLeg.material.color.setHex(0x287f46);
+            document.getElementById("label-s2").innerText = "Slateskin [E]";
         }
 
-        // SLATESKIN POTION [E] (DURASI 10 DETIK, LALU SPEED KEMBALI NORMAL)
         function useSlate() {
             if (playerNoob.isInvulnerable) {
-                clearTimeout(slateTimerId);
-                playerNoob.isInvulnerable = false;
-                removeStatusEffect("slate");
-                revertSlateAppearance();
-
-                const distToKiller = playerNoob.position.distanceTo(c00lkidd.position);
-                if (distToKiller < 18) {
+                clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
+                if (playerNoob.position.distanceTo(c00lkidd.position) < 18) {
                     const pushDir = c00lkidd.position.clone().sub(playerNoob.position).normalize();
                     c00lkidd.position.addScaledVector(pushDir, 9);
                 }
-
-                speedBoostMultiplier = 1.5;
-                addStatusEffect("speed", "SPEED I", "#00ffcc", 2);
+                speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 2);
                 setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
                 return;
             }
-
             if (cdE || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
-            cdE = true;
-            animateCD("cd-e", 44, () => { cdE = false; });
+            cdE = true; animateCD("cd-e", 44, () => { cdE = false; });
             playSFX(sfxSlate);
-
             playConsumeAnimation(0x4a6572, () => {
                 playerNoob.isInvulnerable = true;
-                document.getElementById("label-slate").innerText = "CANCEL [E]";
+                document.getElementById("label-s2").innerText = "CANCEL [E]";
                 addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10);
-
                 const slateColor = 0x4a5568;
-                playerNoob.parts.torso.material.color.setHex(slateColor);
-                playerNoob.parts.head.material.color.setHex(slateColor);
-                playerNoob.parts.lArm.material.color.setHex(slateColor);
-                playerNoob.parts.rArm.material.color.setHex(slateColor);
-                playerNoob.parts.lLeg.material.color.setHex(slateColor);
-                playerNoob.parts.rLeg.material.color.setHex(slateColor);
-
-                // BERHENTI DI DETIK 10, LALU SPEED KEMBALI NORMAL!
+                [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg].forEach(p => p.material.color.setHex(slateColor));
                 slateTimerId = setTimeout(() => {
-                    playerNoob.isInvulnerable = false;
-                    revertSlateAppearance();
-                    speedBoostMultiplier = 1.0; // Speed kembali normal
+                    playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1.0;
                 }, 10000);
             });
         }
 
-        // BLOXY COLA [R] (JIKA SAAT SLATESKIN: BATU HILANG & TIDAK DAPAT SPEED!)
         function useCola() {
             if (cdR || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
-            cdR = true;
-            animateCD("cd-r", 50, () => { cdR = false; });
+            cdR = true; animateCD("cd-r", 50, () => { cdR = false; });
             playSFX(sfxCola);
-
             playConsumeAnimation(0xaa1111, () => {
-                // CEK APAKAH SEDANG MEMAKAI SLATESKIN:
                 if (playerNoob.isInvulnerable) {
-                    clearTimeout(slateTimerId);
-                    playerNoob.isInvulnerable = false;
-                    removeStatusEffect("slate");
-                    revertSlateAppearance();
-                    speedBoostMultiplier = 1.0; // TIDAK MENDAPAT SPEED!
-                    return;
+                    clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
+                    speedBoostMultiplier = 1.0; return;
                 }
-
-                // Jika Normal: Hapus Slow & Dapat Speed I (7s)
-                hasSlowness = false;
-                removeStatusEffect("slow");
-                speedBoostMultiplier = 1.5;
-                addStatusEffect("speed", "SPEED I", "#00ffcc", 7);
+                hasSlowness = false; removeStatusEffect("slow");
+                speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 7);
                 setTimeout(() => { speedBoostMultiplier = 1.0; }, 7000);
             });
+        }
+
+        // --- SKILL PLAYER JIKA MEMILIH KILLER ---
+        function killerTagM1() {
+            if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return;
+            cdM1 = true; animateCD("cd-m1", 2, () => { cdM1 = false; });
+            c00lkidd.parts.rArm.rotation.x = -1.6;
+            setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
+
+            const allSurv = [playerNoob, ...aiSurvivors];
+            allSurv.forEach(s => {
+                if (s.alive && checkHitbox(s)) {
+                    s.hp -= 26.5;
+                    if (s.hp <= 0) { s.alive = false; s.visible = false; }
+                }
+            });
+        }
+
+        function killerWalkspeedOverride() {
+            if (cdQ || c00lState !== "IDLE" || gameState !== "INGAME") return;
+            cdQ = true; animateCD("cd-q", 20, () => { cdQ = false; });
+            triggerWalkspeedOverride();
+        }
+
+        function killerCorruptNature() {
+            if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return;
+            cdE = true; animateCD("cd-e", 12, () => { cdE = false; });
+            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+            const aimTarget = { position: c00lkidd.position.clone().addScaledVector(fwd, 20) };
+            triggerCorruptNature(aimTarget);
+        }
+
+        function killerPizzaDelivery() {
+            if (cdR || c00lState !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return;
+            cdR = true; animateCD("cd-r", 50, () => { cdR = false; });
+            triggerPizzaDelivery();
         }
 
         function animateCD(elemId, duration, onComplete) {
@@ -929,32 +941,22 @@
             const timer = setInterval(() => {
                 t += 0.2;
                 el.style.height = Math.max(0, (1 - (t / duration)) * 100) + "%";
-                if (t >= duration) {
-                    clearInterval(timer);
-                    if (onComplete) onComplete();
-                }
+                if (t >= duration) { clearInterval(timer); if (onComplete) onComplete(); }
             }, 200);
         }
 
         function applyHighlight(target) {
             target.isHighlighted = true;
             target.parts.highlightMesh.visible = true;
-
-            if (target === playerNoob) {
-                document.getElementById("highlight-warning").style.display = "block";
-            }
-
+            if (target === playerNoob && playerRole === "SURVIVOR") document.getElementById("highlight-warning").style.display = "block";
             setTimeout(() => {
-                target.isHighlighted = false;
-                target.parts.highlightMesh.visible = false;
-                if (target === playerNoob) {
-                    document.getElementById("highlight-warning").style.display = "none";
-                }
+                target.isHighlighted = false; target.parts.highlightMesh.visible = false;
+                if (target === playerNoob) document.getElementById("highlight-warning").style.display = "none";
             }, 7500);
         }
 
         // =========================================================================
-        // 8. ANIMASI C00LKIDD (PIZZA DELIVERY BERHENTI TOTAL + TUNGGU 0.5 DETIK)
+        // 8. ANIMASI C00LKIDD & ABILITIES SHARED (AI MAUPUN PLAYER)
         // =========================================================================
         let c00lState = "IDLE";
         let dashTimer = 0;
@@ -962,106 +964,77 @@
 
         function triggerWalkspeedOverride() {
             c00lState = "OVERRIDE_WINDUP";
-            c00lkidd.parts.torso.rotation.x = 0.5;
-            c00lkidd.parts.lArm.rotation.x = 0.8;
-            c00lkidd.parts.rArm.rotation.x = 0.8;
-
-            setTimeout(() => {
-                c00lState = "DASHING";
-                dashTimer = 45;
-                c00lkidd.parts.torso.rotation.x = 0;
-            }, 600);
+            c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = 0.8; c00lkidd.parts.rArm.rotation.x = 0.8;
+            setTimeout(() => { c00lState = "DASHING"; dashTimer = 40; c00lkidd.parts.torso.rotation.x = 0; }, 500);
         }
 
         function triggerCorruptNature(target) {
             c00lState = "CASTING";
             c00lkidd.parts.rArm.rotation.x = -2.2;
-
             setTimeout(() => {
                 c00lkidd.parts.rArm.rotation.x = -0.5;
-                
                 const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
-                proj.position.copy(c00lkidd.position);
-                proj.position.y += 3;
-                scene.add(proj);
+                proj.position.copy(c00lkidd.position); proj.position.y += 3; scene.add(proj);
 
                 const dir = target.position.clone().sub(c00lkidd.position).normalize();
-                let life = 120;
-                let hitDone = false;
+                let life = 120; let hitDone = false;
 
                 const intv = setInterval(() => {
-                    proj.position.addScaledVector(dir, 0.85);
-                    life--;
+                    proj.position.addScaledVector(dir, 1.1); life--;
+                    const allTargets = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : [playerNoob, ...aiSurvivors];
 
-                    if (!hitDone && !isPlayerDead && proj.position.distanceTo(playerNoob.position) < 3.2) {
-                        hitDone = true;
-                        if (!playerNoob.isInvulnerable) {
-                            playerNoob.hp = Math.max(0, playerNoob.hp - 15);
-                            hasSlowness = true;
-                            addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
-                            setTimeout(() => { hasSlowness = false; }, 4000);
-                            document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                            if (playerNoob.hp <= 0) killPlayer();
+                    for (let t of allTargets) {
+                        if (!hitDone && t.alive && proj.position.distanceTo(t.position) < 3.2) {
+                            hitDone = true;
+                            if (!t.isInvulnerable) {
+                                t.hp = Math.max(0, t.hp - 15);
+                                if (t === playerNoob && playerRole === "SURVIVOR") {
+                                    hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
+                                    setTimeout(() => { hasSlowness = false; }, 4000);
+                                    document.getElementById("hp-bar").style.width = t.hp + "%";
+                                    if (t.hp <= 0) killPlayer();
+                                } else if (t.hp <= 0) { t.alive = false; t.visible = false; }
+                            }
+                            scene.remove(proj); clearInterval(intv); break;
                         }
-                        scene.remove(proj);
-                        clearInterval(intv);
                     }
-                    if (life <= 0) {
-                        scene.remove(proj);
-                        clearInterval(intv);
-                    }
+                    if (life <= 0) { scene.remove(proj); clearInterval(intv); }
                 }, 16);
-
                 setTimeout(() => { c00lState = "IDLE"; }, 400);
-            }, 400);
+            }, 350);
         }
 
-        // PIZZA DELIVERY: C00LKIDD BERHENTI TOTAL -> MINION NAIK -> TUNGGU 0.5 DETIK -> LANJUT!
         function triggerPizzaDelivery() {
             if (minions.length >= 2) return;
-
-            c00lState = "SUMMONING"; // c00lkidd berhenti total
-            c00lkidd.parts.lArm.rotation.x = -2.5;
-            c00lkidd.parts.rArm.rotation.x = -2.5;
+            c00lState = "SUMMONING";
+            c00lkidd.parts.lArm.rotation.x = -2.5; c00lkidd.parts.rArm.rotation.x = -2.5;
 
             const needed = 2 - minions.length;
-            let minionsFinishedRising = 0;
+            let minionsFinished = 0;
 
             for(let i = 0; i < needed; i++) {
                 const offset = (i === 0) ? -4 : 4;
                 const m = createR6(true);
-                m.scale.set(0.65, 0.65, 0.65);
-                m.isRising = true;
+                m.scale.set(0.65, 0.65, 0.65); m.isRising = true;
                 m.position.set(c00lkidd.position.x + offset, -3, c00lkidd.position.z);
-                scene.add(m);
-                minions.push(m);
+                scene.add(m); minions.push(m);
 
-                // Minion naik ke atas permukaan
                 let riseT = 0;
                 const riseInterval = setInterval(() => {
-                    m.position.y += 0.15;
-                    riseT++;
+                    m.position.y += 0.15; riseT++;
                     if (riseT >= 20) {
-                        m.position.y = 0;
-                        m.isRising = false;
-                        clearInterval(riseInterval);
-                        minionsFinishedRising++;
-
-                        // Setelah semua minion selesai naik: TUNGGU 0.5 DETIK BARU C00LKIDD LANJUT!
-                        if (minionsFinishedRising === needed) {
+                        m.position.y = 0; m.isRising = false; clearInterval(riseInterval);
+                        minionsFinished++;
+                        if (minionsFinished === needed) {
                             setTimeout(() => {
-                                c00lkidd.parts.lArm.rotation.x = 0;
-                                c00lkidd.parts.rArm.rotation.x = 0;
-                                c00lState = "IDLE";
-                            }, 500); // Tunggu tepat 0.5 detik!
+                                c00lkidd.parts.lArm.rotation.x = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE";
+                            }, 500);
                         }
                     }
                 }, 40);
 
                 m.despawnTimeout = setTimeout(() => {
-                    const idx = minions.indexOf(m);
-                    if (idx > -1) minions.splice(idx, 1);
-                    scene.remove(m);
+                    const idx = minions.indexOf(m); if (idx > -1) minions.splice(idx, 1); scene.remove(m);
                 }, 30000);
             }
         }
@@ -1069,10 +1042,9 @@
         function checkHitbox(target) {
             const relPos = target.position.clone().sub(c00lkidd.position);
             relPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), -c00lkidd.rotation.y);
-            return (Math.abs(relPos.x) <= 1.8 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0 && relPos.z >= -5);
+            return (Math.abs(relPos.x) <= 2.2 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0.5 && relPos.z >= -5.5);
         }
 
-        // Helper Animasi Jalan Karakter (Untuk Noob, AI, c00lkidd, Minion)
         function animateWalkingLimbs(charGroup, cycleSpeed) {
             charGroup.walkCycle += cycleSpeed;
             charGroup.parts.lArm.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
@@ -1082,74 +1054,56 @@
         }
 
         // =========================================================================
-        // 9. GAME LOOP UTAMA
+        // 9. GAME LOOP UTAMA (NGEBUT & RINGAN!)
         // =========================================================================
         let c00lAttackTimer = 0;
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Efek Kedip Api Obor Tembok
-            torchLights.forEach(tl => {
-                tl.intensity = 1.8 + Math.random() * 0.8;
-            });
+            torchLights.forEach(tl => { tl.intensity = 1.8 + Math.random() * 0.6; });
+            if (keys["ArrowLeft"]) camYaw += 0.05;
+            if (keys["ArrowRight"]) camYaw -= 0.05;
 
-            if (keys["ArrowLeft"]) camYaw += 0.04;
-            if (keys["ArrowRight"]) camYaw -= 0.04;
+            // Tentukan karakter mana yang dikontrol Player (Noob atau c00lkidd)
+            const controlledChar = (playerRole === "KILLER") ? c00lkidd : playerNoob;
+            const canMove = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
 
-            // GERAK PLAYER
-            if (!isPlayerDead && gameState === "INGAME") {
-                let spd = 0.16 * speedBoostMultiplier;
+            if (canMove && !(playerRole === "KILLER" && c00lState !== "IDLE")) {
+                // KECEPATAN NGEBUT NYAMAN!
+                let spd = (playerRole === "KILLER" ? 0.25 : 0.23) * speedBoostMultiplier;
                 
-                if (playerNoob.isInvulnerable) {
-                    spd *= 0.45;
-                } else if (isDrinkingOrEating) {
-                    spd *= 0.35;
-                } else if (hasSlowness) {
-                    spd *= 0.65;
+                if (playerRole === "SURVIVOR") {
+                    if (playerNoob.isInvulnerable) spd *= 0.45;
+                    else if (isDrinkingOrEating) spd *= 0.35;
+                    else if (hasSlowness) spd *= 0.65;
                 }
 
                 if (isSprinting && stamina > 0 && !isDrinkingOrEating && !playerNoob.isInvulnerable) {
-                    spd *= 1.6;
-                    stamina = Math.max(0, stamina - 0.35);
+                    spd *= 1.6; stamina = Math.max(0, stamina - 0.4);
                 } else {
-                    stamina = Math.min(100, stamina + 0.2);
+                    stamina = Math.min(100, stamina + 0.25);
                 }
                 document.getElementById("stamina-bar").style.width = stamina + "%";
 
                 let mx = 0, mz = 0;
-                if (keys["KeyW"]) mz -= 1;
-                if (keys["KeyS"]) mz += 1;
-                if (keys["KeyA"]) mx -= 1;
-                if (keys["KeyD"]) mx += 1;
+                if (keys["KeyW"]) mz -= 1; if (keys["KeyS"]) mz += 1;
+                if (keys["KeyA"]) mx -= 1; if (keys["KeyD"]) mx += 1;
 
-                playerNoob.rotation.y = camYaw;
+                controlledChar.rotation.y = camYaw;
 
                 if (mx !== 0 || mz !== 0) {
                     const angle = Math.atan2(mx, mz);
-                    const vx = Math.sin(camYaw + angle) * spd;
-                    const vz = Math.cos(camYaw + angle) * spd;
-                    moveWithCollision(playerNoob, vx, vz);
-
-                    playerNoob.walkCycle += (playerNoob.isInvulnerable ? 0.08 : 0.18);
-                    if (!isDrinkingOrEating) {
-                        playerNoob.parts.lArm.rotation.x = Math.sin(playerNoob.walkCycle) * 0.7;
-                        playerNoob.parts.rArm.rotation.x = -Math.sin(playerNoob.walkCycle) * 0.7;
-                    }
-                    playerNoob.parts.lLeg.rotation.x = -Math.sin(playerNoob.walkCycle) * 0.7;
-                    playerNoob.parts.rLeg.rotation.x = Math.sin(playerNoob.walkCycle) * 0.7;
-                } else {
-                    if (!isDrinkingOrEating) {
-                        playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.rArm.rotation.x = 0;
-                    }
-                    playerNoob.parts.lLeg.rotation.x = 0; playerNoob.parts.rLeg.rotation.x = 0;
+                    moveWithCollision(controlledChar, Math.sin(camYaw + angle) * spd, Math.cos(camYaw + angle) * spd);
+                    animateWalkingLimbs(controlledChar, 0.22);
+                } else if (!isDrinkingOrEating) {
+                    controlledChar.parts.lArm.rotation.x = 0; controlledChar.parts.rArm.rotation.x = 0;
+                    controlledChar.parts.lLeg.rotation.x = 0; controlledChar.parts.rLeg.rotation.x = 0;
                 }
             }
 
-            let camFocus = playerNoob;
-            if (isSpectating && spectateList[spectateIdx]) {
-                camFocus = spectateList[spectateIdx];
-            }
+            let camFocus = controlledChar;
+            if (isSpectating && spectateList[spectateIdx]) camFocus = spectateList[spectateIdx];
 
             const cDist = 9;
             camera.position.x = camFocus.position.x + Math.sin(camYaw) * Math.cos(camPitch) * cDist;
@@ -1158,20 +1112,27 @@
             camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
 
             if (gameState === "INGAME") {
+                // HITUNG JARAK AUDIO
                 let audioDistance = 9999;
-                if (!isPlayerDead) audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
-                else if (isSpectating && camFocus) audioDistance = camFocus.position.distanceTo(c00lkidd.position);
+                if (playerRole === "SURVIVOR") {
+                    if (!isPlayerDead) audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
+                    else if (isSpectating && camFocus) audioDistance = camFocus.position.distanceTo(c00lkidd.position);
+                } else {
+                    // Jika kamu jadi killer, jarak ke survivor terdekat
+                    let minD = 9999;
+                    [playerNoob, ...aiSurvivors].forEach(s => { if (s.alive) minD = Math.min(minD, s.position.distanceTo(c00lkidd.position)); });
+                    audioDistance = minD;
+                }
                 update4LayerChase(audioDistance);
 
+                // KUMPULKAN TARGET SURVIVOR
                 let targets = [];
-                if (!isPlayerDead) targets.push(playerNoob);
+                if (playerRole === "SURVIVOR" && !isPlayerDead) targets.push(playerNoob);
+                if (playerRole === "KILLER" && playerNoob.alive) targets.push(playerNoob); // Jika jadi killer, playerNoob jadi AI bot
                 aiSurvivors.forEach(ai => { if (ai.alive) targets.push(ai); });
 
                 let closestTarget = null;
-                for (let t of targets) {
-                    if (t.isHighlighted) { closestTarget = t; break; }
-                }
-
+                for (let t of targets) { if (t.isHighlighted) { closestTarget = t; break; } }
                 if (!closestTarget) {
                     let minDist = 9999;
                     targets.forEach(t => {
@@ -1180,7 +1141,8 @@
                     });
                 }
 
-                if (closestTarget) {
+                // JIKA C00LKIDD DIKENDALIKAN AI (SAAT KAMU JADI SURVIVOR)
+                if (playerRole === "SURVIVOR" && closestTarget) {
                     if (c00lState !== "SUMMONING") {
                         c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
                         c00lkidd.rotation.y += Math.PI;
@@ -1189,45 +1151,36 @@
                     if (c00lState === "DASHING") {
                         dashTimer--;
                         const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                        moveWithCollision(c00lkidd, fwd.x * 0.7, fwd.z * 0.7);
-
-                        if (checkHitbox(closestTarget)) {
-                            if (!closestTarget.isInvulnerable) {
-                                closestTarget.hp -= 32;
-                                if (closestTarget === playerNoob) {
-                                    applyBurningToPlayer(8); // Burning 8 detik + UI
-                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                    if (playerNoob.hp <= 0) killPlayer();
-                                } else if (closestTarget.hp <= 0) {
-                                    closestTarget.alive = false; closestTarget.visible = false;
-                                }
-                            }
+                        moveWithCollision(c00lkidd, fwd.x * 0.9, fwd.z * 0.9);
+                        if (checkHitbox(closestTarget) && !closestTarget.isInvulnerable) {
+                            closestTarget.hp -= 32;
+                            if (closestTarget === playerNoob) {
+                                applyBurningToPlayer(8); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                if (playerNoob.hp <= 0) killPlayer();
+                            } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
                             c00lState = "IDLE";
                         }
                         if (dashTimer <= 0) c00lState = "IDLE";
-                    } 
-                    else if (c00lState === "IDLE") {
+                    } else if (c00lState === "IDLE") {
                         const kx = closestTarget.position.x - c00lkidd.position.x;
                         const kz = closestTarget.position.z - c00lkidd.position.z;
                         const kd = Math.sqrt(kx*kx + kz*kz);
 
-                        if (kd > 4) {
-                            moveWithCollision(c00lkidd, (kx / kd) * 0.13, (kz / kd) * 0.13);
-                            animateWalkingLimbs(c00lkidd, 0.18);
+                        // C00LKIDD LEBIH CEPAT (0.25) DARI AI (0.21) -> PASTI TERKEJAR!
+                        if (kd > 3.5) {
+                            moveWithCollision(c00lkidd, (kx / kd) * 0.25, (kz / kd) * 0.25);
+                            animateWalkingLimbs(c00lkidd, 0.22);
                         }
 
                         if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
-                            c00lAttackTimer = 120;
+                            c00lAttackTimer = 110;
                             c00lkidd.parts.rArm.rotation.x = -1.6;
-
                             if (!closestTarget.isInvulnerable) {
                                 closestTarget.hp -= 26.5;
                                 if (closestTarget === playerNoob) {
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
-                                } else if (closestTarget.hp <= 0) {
-                                    closestTarget.alive = false; closestTarget.visible = false;
-                                }
+                                } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
                             }
                             setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
                         }
@@ -1237,75 +1190,69 @@
                         if (c00lAbilitiesTimer === 900) triggerCorruptNature(closestTarget);
                         if (c00lAbilitiesTimer === 1350) { triggerPizzaDelivery(); c00lAbilitiesTimer = 0; }
                     }
+                } else if (playerRole === "KILLER" && c00lState === "DASHING") {
+                    // DASH SAAT PLAYER JADI KILLER
+                    dashTimer--;
+                    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+                    moveWithCollision(c00lkidd, fwd.x * 0.9, fwd.z * 0.9);
+                    targets.forEach(t => {
+                        if (checkHitbox(t)) {
+                            t.hp -= 32; if (t.hp <= 0) { t.alive = false; t.visible = false; }
+                            c00lState = "IDLE";
+                        }
+                    });
+                    if (dashTimer <= 0) c00lState = "IDLE";
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
-                // MINIONS (ANIMASI JALAN & TIDAK BERGERAK SAAT SEDANG NAIK)
+                // MINIONS
                 for (let i = minions.length - 1; i >= 0; i--) {
                     const m = minions[i];
-                    if (m.isRising) continue; // Tunggu selesai naik dulu!
+                    if (m.isRising || !closestTarget) continue;
+                    m.lookAt(closestTarget.position.x, 0, closestTarget.position.z); m.rotation.y += Math.PI;
+                    const mx = closestTarget.position.x - m.position.x, mz = closestTarget.position.z - m.position.z;
+                    const md = Math.sqrt(mx*mx + mz*mz);
 
-                    if (closestTarget) {
-                        m.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
-                        m.rotation.y += Math.PI;
-                        const mx = closestTarget.position.x - m.position.x;
-                        const mz = closestTarget.position.z - m.position.z;
-                        const md = Math.sqrt(mx*mx + mz*mz);
-
-                        if (md > 2.5) {
-                            moveWithCollision(m, (mx / md) * 0.085, (mz / md) * 0.085);
-                            animateWalkingLimbs(m, 0.22);
-                        } else {
-                            clearTimeout(m.despawnTimeout);
-                            scene.remove(m);
-                            minions.splice(i, 1);
-
-                            applyHighlight(closestTarget);
-
-                            if (!closestTarget.isInvulnerable) {
-                                closestTarget.hp -= 15;
-                                if (closestTarget === playerNoob) {
-                                    hasSlowness = true;
-                                    addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
-                                    setTimeout(() => { hasSlowness = false; }, 3000);
-                                    applyBurningToPlayer(3); // Burning 3 detik
-                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                    if (playerNoob.hp <= 0) killPlayer();
-                                } else if (closestTarget.hp <= 0) {
-                                    closestTarget.alive = false; closestTarget.visible = false;
-                                }
-                            }
+                    if (md > 2.5) {
+                        moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14);
+                        animateWalkingLimbs(m, 0.24);
+                    } else {
+                        clearTimeout(m.despawnTimeout); scene.remove(m); minions.splice(i, 1);
+                        applyHighlight(closestTarget);
+                        if (!closestTarget.isInvulnerable) {
+                            closestTarget.hp -= 15;
+                            if (closestTarget === playerNoob && playerRole === "SURVIVOR") {
+                                hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
+                                setTimeout(() => { hasSlowness = false; }, 3000);
+                                applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                if (playerNoob.hp <= 0) killPlayer();
+                            } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
                         }
                     }
                 }
 
-                // AI SURVIVOR: ANIMASI BERJALAN LENGKAP & GERAK REALISTIS
-                aiSurvivors.forEach(ai => {
+                // AI SURVIVOR MOVEMENT (TERMASUK PLAYERNOOB BOT SAAT JADI KILLER)
+                const botList = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : aiSurvivors;
+                botList.forEach(ai => {
                     if (ai.alive) {
                         const distToKiller = ai.position.distanceTo(c00lkidd.position);
-                        let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.14 : 0.08;
+                        let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.13; // Lebih lambat dari c00lkidd (0.25)
 
                         if (distToKiller < 35 || ai.isHighlighted) {
-                            const adx = ai.position.x - c00lkidd.position.x;
-                            const adz = ai.position.z - c00lkidd.position.z;
+                            const adx = ai.position.x - c00lkidd.position.x, adz = ai.position.z - c00lkidd.position.z;
                             const dist = Math.sqrt(adx*adx + adz*adz);
                             moveWithCollision(ai, (adx / dist) * aiSpeed, (adz / dist) * aiSpeed);
-                            ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz);
-                            ai.rotation.y += Math.PI; // Wajah menghadap arah lari
-                            animateWalkingLimbs(ai, 0.22); // Animasi lari AI!
+                            ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz); ai.rotation.y += Math.PI;
+                            animateWalkingLimbs(ai, 0.24);
                         } else {
-                            const pdx = ai.patrolTarget.x - ai.position.x;
-                            const pdz = ai.patrolTarget.z - ai.position.z;
+                            if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
+                            const pdx = ai.patrolTarget.x - ai.position.x, pdz = ai.patrolTarget.z - ai.position.z;
                             const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
-
                             if (pdist > 2) {
                                 moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
-                                ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z);
-                                ai.rotation.y += Math.PI;
-                                animateWalkingLimbs(ai, 0.14); // Animasi jalan AI!
-                            } else {
-                                pickNewPatrol(ai);
-                            }
+                                ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI;
+                                animateWalkingLimbs(ai, 0.16);
+                            } else { pickNewPatrol(ai); }
                         }
                     }
                 });
