@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+window.onerror = function(msg, url, line, col) {
+  setTimeout(function() {
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:14px;z-index:99999;font-size:14px;font-family:monospace;";
+    d.innerText = "ERROR Baris " + line + " (Kolom " + col + "): " + msg;
+    document.body.appendChild(d);
+  }, 150);
+};
+</script>
 <meta charset="UTF-8">
 <title>Forsaken 3D - Lobby, NPC, Puzzle & Cutscene</title>
 <style>
