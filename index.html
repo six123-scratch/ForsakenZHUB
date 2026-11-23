@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Generators, Items & Smart AI</title>
+    <title>Forsaken 3D - Complete Loop & Hitbox</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -49,7 +49,6 @@
             display: none; z-index: 20;
         }
 
-        /* PROMPT INTERAKSI GENERATOR */
         #interact-prompt {
             position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85); color: #fff; border: 2px solid #ffcc00;
@@ -57,7 +56,6 @@
             display: none; z-index: 15;
         }
 
-        /* UI GENERATOR PUZZLE (5 TAHAP) */
         #puzzle-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #111827; border: 3px solid #ffcc00; border-radius: 12px;
@@ -71,13 +69,12 @@
         }
         .puz-btn.target { background: #10b981; box-shadow: 0 0 15px #10b981; border-color: #fff; }
 
-        /* INVENTORY ITEM DI BAWAH TENGAH */
         #inventory-bar {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             display: none; gap: 12px; z-index: 15;
         }
         .inv-slot {
-            width: 75px; height: 60px; background: rgba(0, 0, 0, 0.8);
+            width: 82px; height: 60px; background: rgba(0, 0, 0, 0.8);
             border: 2px solid #777; border-radius: 8px; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-size: 11px; font-weight: bold; cursor: pointer;
@@ -166,7 +163,6 @@
     <div id="status-effects"></div>
     <div id="interact-prompt">Tekan [F] untuk Memperbaiki Generator</div>
 
-    <!-- MODAL GENERATOR PUZZLE (5 TAHAP) -->
     <div id="puzzle-modal">
         <div style="font-size:18px;font-weight:bold;color:#ffcc00;">PERBAIKI GENERATOR</div>
         <div id="puzzle-stage-text">Tahap: 1 / 5</div>
@@ -180,7 +176,6 @@
         <button onclick="closePuzzle()" style="background:#aa2222;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Batal [ESC]</button>
     </div>
 
-    <!-- AUDIO ASSETS -->
     <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
@@ -200,10 +195,9 @@
         <div class="bar-container"><div id="stamina-bar"></div></div>
     </div>
 
-    <!-- INVENTORY ITEM PUNGUTAN (COLA & MEDKIT) -->
     <div id="inventory-bar">
-        <div id="slot-cola" class="inv-slot" onclick="usePickedCola()">[1] COLA<br><span id="count-cola">Kosong</span></div>
-        <div id="slot-medkit" class="inv-slot" onclick="usePickedMedkit()">[2] MEDKIT<br><span id="count-medkit">Kosong</span></div>
+        <div id="slot-cola" class="inv-slot" onclick="usePickedCola()">[1] COLA<br><span id="count-cola">0 / 1</span></div>
+        <div id="slot-medkit" class="inv-slot" onclick="usePickedMedkit()">[2] MEDKIT<br><span id="count-medkit">0 / 1</span></div>
     </div>
 
     <div id="top-hud">
@@ -230,25 +224,21 @@
             <div id="icon-s1" style="font-size:18px;font-weight:bold;">Q</div>
             <div id="label-s1" class="skill-name">Ghostburger [Q]</div>
         </div>
-
         <div id="btn-s2" class="brush-circle" onclick="useSkill2()">
             <div id="cd-e" class="cd-dark"></div>
             <div id="icon-s2" style="font-size:18px;font-weight:bold;">E</div>
             <div id="label-s2" class="skill-name">Slateskin [E]</div>
         </div>
-
         <div id="btn-s3" class="brush-circle" onclick="useSkill3()">
             <div id="cd-r" class="cd-dark"></div>
             <div id="icon-s3" style="font-size:18px;font-weight:bold;">R</div>
             <div id="label-s3" class="skill-name">Bloxy Cola [R]</div>
         </div>
-
         <div id="btn-sprint" class="brush-circle" onclick="useBasicAttack()">
             <div id="cd-m1" class="cd-dark"></div>
             <div id="icon-sprint" style="font-size:16px;font-weight:bold;">SHIFT</div>
             <div id="label-sprint" class="skill-name" style="bottom: 4px; font-size: 9px;">SPRINT</div>
         </div>
-
         <div id="btn-shiftlock" class="brush-circle" onclick="toggleShiftlock()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
                 <circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
@@ -259,9 +249,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // =========================================================================
-        // 1. PILIHAN ROLE, KARAKTER & TOAST
-        // =========================================================================
         let playerRole = "SURVIVOR";
         let survivorChar = "NOOB";
 
@@ -310,33 +297,20 @@
         }
         function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
-        // =========================================================================
-        // 2. AUDIO ENGINE (TERMASUK SFX C00LGUI)
-        // =========================================================================
         let isAudioInit = false;
-        const l1 = document.getElementById("chase-layer1");
-        const l2 = document.getElementById("chase-layer2");
-        const l3 = document.getElementById("chase-layer3");
-        const l4 = document.getElementById("chase-layer4");
-        const bgmLMS = document.getElementById("audio-lms");
-        const bgmPlead = document.getElementById("audio-plead");
+        const l1 = document.getElementById("chase-layer1"), l2 = document.getElementById("chase-layer2");
+        const l3 = document.getElementById("chase-layer3"), l4 = document.getElementById("chase-layer4");
+        const bgmLMS = document.getElementById("audio-lms"), bgmPlead = document.getElementById("audio-plead");
         const bgmAmbience = document.getElementById("audio-ambience");
-        const sfxCola = document.getElementById("sfx-cola");
-        const sfxSlate = document.getElementById("sfx-slate");
-        const sfxBurger = document.getElementById("sfx-burger");
-        const sfxC00lgui = document.getElementById("sfx-c00lgui");
-
+        const sfxCola = document.getElementById("sfx-cola"), sfxSlate = document.getElementById("sfx-slate");
+        const sfxBurger = document.getElementById("sfx-burger"), sfxC00lgui = document.getElementById("sfx-c00lgui");
         let activeLayerIndex = 0;
 
         function unlockAllAudio() {
             if (isAudioInit) return;
             isAudioInit = true;
             [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxCola, sfxSlate, sfxBurger, sfxC00lgui].forEach(a => {
-                if (a) {
-                    a.load(); a.volume = 0;
-                    const p = a.play();
-                    if (p !== undefined) p.then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{});
-                }
+                if (a) { a.load(); a.volume = 0; const p = a.play(); if (p !== undefined) p.then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); }
             });
             if (gameState === "INGAME") startRoundAudio();
         }
@@ -395,9 +369,6 @@
             else { switchSingleLayer(4); if (bgmAmbience) bgmAmbience.volume = 0.05; vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)"; }
         }
 
-        // =========================================================================
-        // 3. 3D SCENE, MAP, 5 GENERATORS & 6 ITEMS (4 COLA, 2 MEDKIT)
-        // =========================================================================
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x14151f, 0.008);
 
@@ -482,25 +453,19 @@
             registerBox(tx, tz, 1.2, 1.2);
         }
 
-        // --- 5 GENERATOR PUZZLE ---
         const generators = [];
-        const genPositions = [
-            [-55, -55], [55, -55], [-55, 55], [55, 55], [0, 45]
-        ];
+        const genPositions = [[-55, -55], [55, -55], [-55, 55], [55, 55], [0, 45]];
         genPositions.forEach((pos, idx) => {
             const gGroup = new THREE.Group();
             const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x444444 }));
             body.position.y = 1.25; body.castShadow = true; gGroup.add(body);
             const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
             lamp.position.y = 3.2; gGroup.add(lamp);
-
-            gGroup.position.set(pos[0], 0, pos[1]);
-            scene.add(gGroup);
+            gGroup.position.set(pos[0], 0, pos[1]); scene.add(gGroup);
             registerBox(pos[0], pos[1], 3.5, 2.5);
             generators.push({ group: gGroup, lamp: lamp, stage: 0, done: false, id: idx + 1 });
         });
 
-        // --- 4 BLOXY COLA & 2 MEDKIT BERTEBARAN DI MAP ---
         const mapItems = [];
         const itemCoords = [
             { type: "COLA", x: -30, z: 25 }, { type: "COLA", x: 30, z: -25 },
@@ -511,7 +476,6 @@
         function spawnAllMapItems() {
             mapItems.forEach(it => scene.remove(it.mesh));
             mapItems.length = 0;
-
             itemCoords.forEach(ic => {
                 let mesh;
                 if (ic.type === "COLA") {
@@ -522,8 +486,7 @@
                     const cross = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.95, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
                     mesh.add(box, cross);
                 }
-                mesh.position.set(ic.x, 1.0, ic.z);
-                scene.add(mesh);
+                mesh.position.set(ic.x, 1.0, ic.z); scene.add(mesh);
                 mapItems.push({ type: ic.type, mesh: mesh, active: true });
             });
         }
@@ -541,9 +504,6 @@
             else if (canMoveTo(entity.position.x, nextZ)) entity.position.z = nextZ;
         }
 
-        // ==========================================
-        // 4. MODEL R6: NOOB, 007n7 & C00LKIDD
-        // ==========================================
         function createFace(bgHex) {
             const c = document.createElement("canvas"); c.width = 128; c.height = 128;
             const ctx = c.getContext("2d");
@@ -554,13 +514,22 @@
             return new THREE.CanvasTexture(c);
         }
 
-        function createC00lkiddTorsoTexture() {
-            const c = document.createElement("canvas"); c.width = 256; c.height = 256;
-            const ctx = c.getContext("2d");
-            ctx.fillStyle = "#cc0000"; ctx.fillRect(0, 0, 256, 256);
-            ctx.fillStyle = "#111111"; ctx.font = "bold 26px sans-serif"; ctx.textAlign = "center";
-            ctx.fillText("team c00lkidd", 128, 100); ctx.fillText("join today!", 128, 150);
-            return new THREE.CanvasTexture(c);
+        function createC00lkiddSpanningTextures() {
+            const master = document.createElement("canvas");
+            master.width = 400; master.height = 200;
+            const ctx = master.getContext("2d");
+            ctx.fillStyle = "#cc0000"; ctx.fillRect(0, 0, 400, 200);
+            ctx.fillStyle = "#111111"; ctx.font = "bold 46px sans-serif"; ctx.textAlign = "center";
+            ctx.fillText("team c00lkidd", 200, 85);
+            ctx.fillText("join today!", 200, 145);
+
+            function sliceTex(sx, sw) {
+                const sub = document.createElement("canvas"); sub.width = sw; sub.height = 200;
+                sub.getContext("2d").drawImage(master, sx, 0, sw, 200, 0, 0, sw, 200);
+                return new THREE.CanvasTexture(sub);
+            }
+
+            return { rArmTex: sliceTex(0, 100), torsoTex: sliceTex(100, 200), lArmTex: sliceTex(300, 100) };
         }
 
         function createSword() {
@@ -591,23 +560,28 @@
         function createR6(isRed, is007 = false) {
             const g = new THREE.Group();
             const bodyCol = isRed ? 0xcc0000 : (is007 ? 0x2a66cc : 0x0055ff);
-            const limbCol = isRed ? 0x990000 : (is007 ? 0xe0e0e0 : 0xffd200);
+            const limbCol = isRed ? 0xcc0000 : (is007 ? 0xe0e0e0 : 0xffd200);
             const legCol  = isRed ? 0x990000 : (is007 ? 0x1a3366 : 0x287f46);
 
             const mBody = new THREE.MeshStandardMaterial({ color: bodyCol });
             const mLimb = new THREE.MeshStandardMaterial({ color: limbCol });
             const mLeg  = new THREE.MeshStandardMaterial({ color: legCol });
 
-            let torsoMat = mBody;
-            if (isRed) torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })];
+            let torsoMat = mBody, lArmMat = mLimb, rArmMat = mLimb;
+            if (isRed) {
+                const spanTex = createC00lkiddSpanningTextures();
+                torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: spanTex.torsoTex })];
+                rArmMat  = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: spanTex.rArmTex })];
+                lArmMat  = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: spanTex.lArmTex })];
+            }
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; torso.castShadow = true; g.add(torso);
             const faceColorHex = isRed ? "#ff0000" : (is007 ? "#eeeeee" : "#ffd200");
             const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(faceColorHex) })];
             const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; head.castShadow = true; g.add(head);
             
-            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true; g.add(lArm);
-            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); rArm.position.set(1.5, 3, 0); rArm.castShadow = true; g.add(rArm);
+            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), lArmMat); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true; g.add(lArm);
+            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), rArmMat); rArm.position.set(1.5, 3, 0); rArm.castShadow = true; g.add(rArm);
             const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true; g.add(lLeg);
             const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true; g.add(rLeg);
 
@@ -631,20 +605,17 @@
             g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh, burgerHat, c00lguiTab };
             g.is007 = is007; g.isHighlighted = false; g.isUndetectable = false; g.hp = 100; g.isInvulnerable = false; g.walkCycle = 0;
             g.cdQ = false; g.cdE = false; g.cdR = false; g.isCastingGui = false;
+            g.invCola = 0; g.invMedkit = 0; g.isHealingMedkit = false; g.genWorkTimer = 0;
             return g;
         }
 
         const playerNoob = createR6(false, false);
-        playerNoob.name = "Kamu";
-        playerNoob.position.set(0, 72, 0);
-        scene.add(playerNoob);
+        playerNoob.name = "Kamu"; playerNoob.position.set(0, 72, 0); scene.add(playerNoob);
 
         function applyPlayerAppearance() {
             const is007 = (survivorChar === "007n7");
-            playerNoob.is007 = is007;
-            playerNoob.parts.burgerHat.visible = is007;
-            const limbCol = is007 ? 0xe0e0e0 : 0xffd200;
-            const legCol = is007 ? 0x1a3366 : 0x287f46;
+            playerNoob.is007 = is007; playerNoob.parts.burgerHat.visible = is007;
+            const limbCol = is007 ? 0xe0e0e0 : 0xffd200, legCol = is007 ? 0x1a3366 : 0x287f46;
             playerNoob.parts.lArm.material.color.setHex(limbCol); playerNoob.parts.rArm.material.color.setHex(limbCol);
             playerNoob.parts.lLeg.material.color.setHex(legCol); playerNoob.parts.rLeg.material.color.setHex(legCol);
         }
@@ -657,31 +628,46 @@
             ai.alive = true; ai.hp = 100; ai.isInvulnerable = false;
             ai.name = isBot007 ? "007n7 (AI)" : ("AI Noob " + (i + 1));
             ai.patrolTarget = new THREE.Vector3();
-            scene.add(ai);
-            aiSurvivors.push(ai);
+            scene.add(ai); aiSurvivors.push(ai);
         }
 
         const c00lkidd = createR6(true, false);
         c00lkidd.name = "c00lkidd";
-        const redGlow = new THREE.PointLight(0xff0000, 2.5, 18);
-        c00lkidd.add(redGlow);
+        c00lkidd.add(new THREE.PointLight(0xff0000, 2.5, 18));
         c00lkidd.position.set(0, 72, -10);
         scene.add(c00lkidd);
 
-        const minions = [];
-        const clones = [];
-        const corpses = [];
+        const minions = [], clones = [], corpses = [];
 
-        // ==========================================
-        // 5. ANIMASI KILL (+30 DETIK SAAT SURVIVOR GUGUR)
-        // ==========================================
+        function spawnVisualHitbox() {
+            const hbGeo = new THREE.BoxGeometry(4.4, 6.0, 5.5);
+            const hbMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.35, wireframe: false });
+            const hb = new THREE.Mesh(hbGeo, hbMat);
+            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+            hb.position.copy(c00lkidd.position).addScaledVector(fwd, 3.0);
+            hb.position.y = 3.0; hb.rotation.y = c00lkidd.rotation.y;
+            scene.add(hb);
+            setTimeout(() => { scene.remove(hb); }, 300);
+        }
+
+        function playC00lkiddPunchAnimation() {
+            c00lkidd.parts.torso.rotation.y = -0.3; c00lkidd.parts.rArm.rotation.x = -0.6;
+            setTimeout(() => {
+                if (c00lState === "KILLING") return;
+                c00lkidd.parts.torso.rotation.y = 0.4; c00lkidd.parts.rArm.rotation.x = 1.8;
+                spawnVisualHitbox();
+                setTimeout(() => {
+                    if (c00lState !== "KILLING") { c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; }
+                }, 250);
+            }, 100);
+        }
+
         let camFocusOverride = null;
 
         function playKillAnimation(victim) {
             if (c00lState === "KILLING") return;
             c00lState = "KILLING";
 
-            // JIKA SURVIVOR ASLI MATI (BUKAN KLON): TIMER BERTAMBAH +30 DETIK!
             if (clones.indexOf(victim) === -1) {
                 timerSeconds += 30;
                 showToast("+30 DETIK (SURVIVOR GUGUR!)", "#ff4444");
@@ -693,13 +679,13 @@
             scene.add(corpse); corpses.push(corpse);
 
             victim.alive = false; victim.visible = false;
-            victim.isInvulnerable = false; victim.isCastingGui = false;
+            victim.isInvulnerable = false; victim.isCastingGui = false; victim.isHealingMedkit = false;
             victim.parts.c00lguiTab.visible = false;
 
             if (victim === playerNoob && playerRole === "SURVIVOR") {
-                closePuzzle();
+                closePuzzle(); cancelMedkit(); cancelC00lgui();
                 camFocusOverride = corpse; isPlayerDead = true; playerNoob.hp = 0;
-                playerNoob.position.set(0, 72, 0); clearAllEffects(); cancelC00lgui();
+                playerNoob.position.set(0, 72, 0); clearAllEffects();
             }
 
             c00lkidd.parts.rArm.rotation.x = 2.0;
@@ -717,7 +703,6 @@
 
             setTimeout(() => {
                 clearInterval(struggleIntv);
-
                 if (is007Victim) {
                     let stepT = 0;
                     const gentleIntv = setInterval(() => {
@@ -754,25 +739,19 @@
                     }, 30);
                 }
             }, 1200);
-        }
-
-        // ==========================================
-        // 6. PUZZLE GENERATOR & INVENTORY SYSTEM
-        // ==========================================
-        let activeGen = null;
-        let currentPuzzleTarget = 1;
-        let invCola = 0;
-        let invMedkit = 0;
+            let activeGen = null, currentPuzzleTarget = 1;
+        let invCola = 0, invMedkit = 0;
+        let medkitTimeout = null, isUsingMedkit = false;
 
         function updateInventoryUI() {
-            document.getElementById("count-cola").innerText = invCola > 0 ? ("Ada " + invCola) : "Kosong";
+            document.getElementById("count-cola").innerText = `${invCola} / 1`;
             document.getElementById("slot-cola").classList.toggle("has-item", invCola > 0);
-            document.getElementById("count-medkit").innerText = invMedkit > 0 ? ("Ada " + invMedkit) : "Kosong";
+            document.getElementById("count-medkit").innerText = `${invMedkit} / 1`;
             document.getElementById("slot-medkit").classList.toggle("has-item", invMedkit > 0);
         }
 
         function usePickedCola() {
-            if (invCola <= 0 || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+            if (invCola <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
             invCola--; updateInventoryUI();
             playSFX(sfxCola);
             playConsumeAnimation(0xaa1111, () => {
@@ -786,47 +765,63 @@
             });
         }
 
-        function usePickedMedkit() {
-            if (invMedkit <= 0 || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
-            invMedkit--; updateInventoryUI();
-            playConsumeAnimation(0xffffff, () => {
-                playerNoob.hp = Math.min(100, playerNoob.hp + 80);
-                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                showToast("MEDKIT DIGUNAKAN (+80 HP)", "#00e64d");
-            });
+        function cancelMedkit() {
+            if (!isUsingMedkit) return;
+            clearTimeout(medkitTimeout); isUsingMedkit = false;
+            playerNoob.parts.heldItem.visible = false;
+            playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
+            removeStatusEffect("medkit");
         }
 
-        function getNearestIncompleteGen() {
-            let best = null, minD = 5.5;
+        function usePickedMedkit() {
+            if (invMedkit <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+            invMedkit--; updateInventoryUI();
+            isUsingMedkit = true;
+            playerNoob.parts.heldItem.material.color.setHex(0xffffff);
+            playerNoob.parts.heldItem.visible = true;
+            playerNoob.parts.rArm.rotation.x = 1.6; playerNoob.parts.lArm.rotation.x = 1.6;
+            addStatusEffect("medkit", "HEALING MEDKIT", "#00ff88", 8);
+
+            medkitTimeout = setTimeout(() => {
+                isUsingMedkit = false;
+                playerNoob.parts.heldItem.visible = false;
+                playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
+                playerNoob.hp = Math.min(100, playerNoob.hp + 80);
+                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                showToast("MEDKIT SELESAI (+80 HP)", "#00e64d");
+            }, 8000);
+        }
+
+        function getNearestIncompleteGen(pos) {
+            let best = null, minD = 6.0;
             generators.forEach(g => {
-                if (!g.done) {
-                    const d = playerNoob.position.distanceTo(g.group.position);
-                    if (d < minD) { minD = d; best = g; }
-                }
+                if (!g.done) { const d = pos.distanceTo(g.group.position); if (d < minD) { minD = d; best = g; } }
             });
             return best;
         }
 
+        function completeGenerator(gen, finisherName) {
+            if (gen.done) return;
+            gen.done = true; gen.lamp.material.color.setHex(0x00ff00);
+            timerSeconds = Math.max(1, timerSeconds - 10);
+            showToast(`${finisherName} MENYELESAIKAN GENERATOR! (-10 DETIK)`, "#00ff88");
+            let doneCount = generators.filter(g => g.done).length;
+            document.getElementById("gen-status").innerText = `Generator Selesai: ${doneCount} / 5`;
+        }
+
         function openPuzzle(gen) {
-            activeGen = gen;
-            document.exitPointerLock();
+            activeGen = gen; document.exitPointerLock();
             document.getElementById("puzzle-modal").style.display = "flex";
             nextPuzzleStage();
         }
-
-        function closePuzzle() {
-            activeGen = null;
-            document.getElementById("puzzle-modal").style.display = "none";
-        }
+        function closePuzzle() { activeGen = null; document.getElementById("puzzle-modal").style.display = "none"; }
 
         function nextPuzzleStage() {
             if (!activeGen) return;
+            if (activeGen.done) { closePuzzle(); return; }
             document.getElementById("puzzle-stage-text").innerText = `Tahap: ${activeGen.stage + 1} / 5`;
             currentPuzzleTarget = Math.floor(Math.random() * 4) + 1;
-            const btns = document.querySelectorAll(".puz-btn");
-            btns.forEach((b, i) => {
-                b.classList.toggle("target", (i + 1) === currentPuzzleTarget);
-            });
+            document.querySelectorAll(".puz-btn").forEach((b, i) => b.classList.toggle("target", (i + 1) === currentPuzzleTarget));
         }
 
         function hitPuzzleBtn(num) {
@@ -834,25 +829,12 @@
             if (num === currentPuzzleTarget) {
                 activeGen.stage++;
                 if (activeGen.stage >= 5) {
-                    activeGen.done = true;
-                    activeGen.lamp.material.color.setHex(0x00ff00); // Lampu jadi Hijau!
-                    timerSeconds = Math.max(1, timerSeconds - 10); // KURANGI TIMER 10 DETIK!
-                    showToast("GENERATOR SELESAI! (-10 DETIK)", "#00ff88");
-
-                    let doneCount = generators.filter(g => g.done).length;
-                    document.getElementById("gen-status").innerText = `Generator Selesai: ${doneCount} / 5`;
-
-                    closePuzzle();
-                    document.body.requestPointerLock();
-                } else {
-                    nextPuzzleStage();
-                }
+                    completeGenerator(activeGen, "KAMU");
+                    closePuzzle(); document.body.requestPointerLock();
+                } else nextPuzzleStage();
             }
         }
 
-        // ==========================================
-        // 7. KAMERA 360 & CONTROLS
-        // ==========================================
         let camYaw = 0, camPitch = 0.2;
         let isPointerLocked = false, isMouseDown = false;
         let prevMouseX = 0, prevMouseY = 0;
@@ -876,22 +858,13 @@
             if (activeGen) return;
             let dx = 0, dy = 0;
             if (isPointerLocked) { dx = e.movementX; dy = e.movementY; }
-            else if (isMouseDown) {
-                dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY;
-                prevMouseX = e.clientX; prevMouseY = e.clientY;
-            }
+            else if (isMouseDown) { dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY; prevMouseX = e.clientX; prevMouseY = e.clientY; }
             if (dx !== 0 || dy !== 0) {
-                camYaw -= dx * 0.0035;
-                camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
+                camYaw -= dx * 0.0035; camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
             }
         });
 
-        // ==========================================
-        // 8. ROUND, SPECTATE & SPECIAL LMS "PLEAD"
-        // ==========================================
-        let gameState = "LOBBY";
-        let timerSeconds = 15;
-        let lmsTriggered = false, isPleadLMS = false, isPlayerDead = false;
+        let gameState = "LOBBY", timerSeconds = 15, lmsTriggered = false, isPleadLMS = false, isPlayerDead = false;
         let spectateList = [], spectateIdx = 0, isSpectating = false;
 
         let burnTimer = null;
@@ -899,13 +872,10 @@
             if (playerNoob.isInvulnerable || isPlayerDead) return;
             addStatusEffect("burn", "BURNING I", "#ff4400", durationSec);
             if (burnTimer) clearInterval(burnTimer);
-
             let ticks = 0;
             burnTimer = setInterval(() => {
                 ticks++;
-                if (ticks > durationSec || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) {
-                    clearInterval(burnTimer); removeStatusEffect("burn"); return;
-                }
+                if (ticks > durationSec || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) { clearInterval(burnTimer); removeStatusEffect("burn"); return; }
                 playerNoob.hp = Math.max(0, playerNoob.hp - 1.5);
                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                 if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
@@ -914,28 +884,19 @@
 
         function updateSkillButtonsForRole() {
             if (playerRole === "KILLER") {
-                document.getElementById("hp-title").style.display = "none";
-                document.getElementById("hp-container").style.display = "none";
-                document.getElementById("label-s1").innerText = "Override [Q]";
-                document.getElementById("label-s2").innerText = "Corrupt [E]";
-                document.getElementById("label-s3").innerText = "Pizza [R]";
-                document.getElementById("icon-sprint").innerText = "M1 / F";
+                document.getElementById("hp-title").style.display = "none"; document.getElementById("hp-container").style.display = "none";
+                document.getElementById("label-s1").innerText = "Override [Q]"; document.getElementById("label-s2").innerText = "Corrupt [E]";
+                document.getElementById("label-s3").innerText = "Pizza [R]"; document.getElementById("icon-sprint").innerText = "M1 / F";
                 document.getElementById("label-sprint").innerText = "TAG (26.5)";
             } else if (survivorChar === "007n7") {
-                document.getElementById("hp-title").style.display = "block";
-                document.getElementById("hp-container").style.display = "block";
-                document.getElementById("label-s1").innerText = "Clone [Q]";
-                document.getElementById("label-s2").innerText = "c00lgui [E]";
-                document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
-                document.getElementById("icon-sprint").innerText = "SHIFT";
+                document.getElementById("hp-title").style.display = "block"; document.getElementById("hp-container").style.display = "block";
+                document.getElementById("label-s1").innerText = "Clone [Q]"; document.getElementById("label-s2").innerText = "c00lgui [E]";
+                document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx]; document.getElementById("icon-sprint").innerText = "SHIFT";
                 document.getElementById("label-sprint").innerText = "SPRINT";
             } else {
-                document.getElementById("hp-title").style.display = "block";
-                document.getElementById("hp-container").style.display = "block";
-                document.getElementById("label-s1").innerText = "Ghostburger [Q]";
-                document.getElementById("label-s2").innerText = "Slateskin [E]";
-                document.getElementById("label-s3").innerText = "Bloxy Cola [R]";
-                document.getElementById("icon-sprint").innerText = "SHIFT";
+                document.getElementById("hp-title").style.display = "block"; document.getElementById("hp-container").style.display = "block";
+                document.getElementById("label-s1").innerText = "Ghostburger [Q]"; document.getElementById("label-s2").innerText = "Slateskin [E]";
+                document.getElementById("label-s3").innerText = "Bloxy Cola [R]"; document.getElementById("icon-sprint").innerText = "SHIFT";
                 document.getElementById("label-sprint").innerText = "SPRINT";
             }
         }
@@ -943,14 +904,12 @@
         function updateUIState() {
             document.getElementById("lobby-controls").style.display = (gameState === "LOBBY") ? "flex" : "none";
             document.getElementById("gen-status").style.display = (gameState === "INGAME") ? "block" : "none";
-
             const showHUD = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
             document.getElementById("player-bars").style.display = showHUD ? "block" : "none";
             document.getElementById("skills-container").style.display = showHUD ? "block" : "none";
             document.getElementById("inventory-bar").style.display = (gameState === "INGAME" && !isPlayerDead && playerRole === "SURVIVOR") ? "flex" : "none";
             dexMarker.visible = (gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead);
             updateSkillButtonsForRole();
-            
             const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride);
             document.getElementById("spectate-panel").style.display = showSpectate ? "flex" : "none";
         }
@@ -971,8 +930,7 @@
             aiSurvivors.forEach(ai => { if (ai.alive) spectateList.push(ai); });
             spectateList.push(c00lkidd);
             if (spectateList.length > 0) {
-                isSpectating = true;
-                spectateIdx = (spectateIdx + 1) % spectateList.length;
+                isSpectating = true; spectateIdx = (spectateIdx + 1) % spectateList.length;
                 document.getElementById("spectate-info").innerText = "Spectating: " + spectateList[spectateIdx].name;
             }
         }
@@ -987,11 +945,9 @@
             if (gameState === "LOBBY") {
                 timerEl.innerText = "LOBBY: " + timerSeconds + "s";
                 if (timerSeconds <= 0) {
-                    gameState = "INGAME";
-                    timerSeconds = 180;
+                    gameState = "INGAME"; timerSeconds = 180;
                     isPlayerDead = false; isSpectating = false; isPleadLMS = false; camFocusOverride = null;
-                    clearAllEffects(); cancelC00lgui(); closePuzzle();
-                    c00lState = "IDLE";
+                    clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle(); c00lState = "IDLE";
 
                     invCola = 0; invMedkit = 0; updateInventoryUI();
                     spawnAllMapItems();
@@ -1000,37 +956,32 @@
 
                     playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
                     playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false;
-                    document.getElementById("hp-bar").style.width = "100%";
-                    playerNoob.position.set(0, 0, 0);
+                    document.getElementById("hp-bar").style.width = "100%"; playerNoob.position.set(0, 0, 0);
 
                     aiSurvivors.forEach((ai, idx) => {
                         ai.alive = true; ai.hp = 100; ai.isInvulnerable = false; ai.visible = true;
                         ai.cdQ = false; ai.cdE = false; ai.cdR = false; ai.isCastingGui = false;
+                        ai.invCola = 0; ai.invMedkit = 0; ai.isHealingMedkit = false; ai.genWorkTimer = 0;
                         ai.parts.c00lguiTab.visible = false;
                         ai.position.set((idx - 1) * 15, 0, 20);
                         pickNewPatrol(ai);
                     });
 
                     c00lkidd.position.set(0, 0, -80);
-                    updateUIState();
-                    startRoundAudio();
+                    updateUIState(); startRoundAudio();
                 }
             } else if (gameState === "INGAME") {
-                const mins = Math.floor(timerSeconds / 60);
-                const secs = timerSeconds % 60;
+                const mins = Math.floor(timerSeconds / 60), secs = timerSeconds % 60;
                 timerEl.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
 
                 let aliveList = [];
                 if (playerRole === "SURVIVOR" && !isPlayerDead) aliveList.push(playerNoob);
                 if (playerRole === "KILLER" && playerNoob.alive) aliveList.push(playerNoob);
                 aiSurvivors.forEach(ai => { if (ai.alive) aliveList.push(ai); });
-
                 updateSpectateHPList();
 
                 if (aliveList.length === 1 && !lmsTriggered) {
-                    lmsTriggered = true;
-                    const lastSurvivor = aliveList[0];
-
+                    lmsTriggered = true; const lastSurvivor = aliveList[0];
                     if (lastSurvivor.is007) {
                         isPleadLMS = true; timerSeconds = 90;
                         const b = document.getElementById("lms-banner");
@@ -1045,31 +996,23 @@
                 }
 
                 if (timerSeconds <= 0 || (aliveList.length === 0 && c00lState !== "KILLING")) {
-                    gameState = "LOBBY";
-                    timerSeconds = 15;
+                    gameState = "LOBBY"; timerSeconds = 15;
                     lmsTriggered = false; isPleadLMS = false; isSpectating = false; camFocusOverride = null;
-                    clearAllEffects(); cancelC00lgui(); closePuzzle();
+                    clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle();
                     playerNoob.position.set(0, 72, 0); c00lkidd.position.set(0, 72, -10);
                     minions.forEach(m => scene.remove(m)); minions.length = 0;
                     clones.forEach(c => scene.remove(c)); clones.length = 0;
                     corpses.forEach(cp => scene.remove(cp)); corpses.length = 0;
-                    updateUIState();
-                    stopAndResetAllAudio();
+                    updateUIState(); stopAndResetAllAudio();
                 }
             }
         }, 1000);
 
-        // =========================================================================
-        // 9. ABILITIES & KEYBOARD INPUTS
-        // ==========================================
-        let keys = {};
-        let isShiftlock = false, stamina = 100, isSprinting = false;
+        let keys = {}, isShiftlock = false, stamina = 100, isSprinting = false;
         let isDrinkingOrEating = false, slateTimerId = null, speedBoostMultiplier = 1.0, hasSlowness = false;
         let cdQ = false, cdE = false, cdR = false, cdM1 = false;
-
         const injectModes = ["Wander", "Pathfind", "Cursor"];
-        let injectIdx = 0;
-        let isCastingC00lgui = false, c00lguiTimeout = null;
+        let injectIdx = 0, isCastingC00lgui = false, c00lguiTimeout = null;
 
         function toggleShiftlock() {
             isShiftlock = !isShiftlock;
@@ -1081,50 +1024,32 @@
             keys[e.code] = true;
             if (e.code === "Escape" && activeGen) { closePuzzle(); return; }
             if (activeGen) {
-                if (e.code === "Digit1") hitPuzzleBtn(1);
-                if (e.code === "Digit2") hitPuzzleBtn(2);
-                if (e.code === "Digit3") hitPuzzleBtn(3);
-                if (e.code === "Digit4") hitPuzzleBtn(4);
+                if (e.code === "Digit1") hitPuzzleBtn(1); if (e.code === "Digit2") hitPuzzleBtn(2);
+                if (e.code === "Digit3") hitPuzzleBtn(3); if (e.code === "Digit4") hitPuzzleBtn(4);
                 return;
             }
             if (e.code === "KeyM") document.exitPointerLock();
             if (e.code === "ShiftLeft") isSprinting = true;
-            if (e.code === "KeyQ") useSkill1();
-            if (e.code === "KeyE") useSkill2();
-            if (e.code === "KeyR") useSkill3();
-            if (e.code === "Digit1") usePickedCola();
-            if (e.code === "Digit2") usePickedMedkit();
+            if (e.code === "KeyQ") useSkill1(); if (e.code === "KeyE") useSkill2(); if (e.code === "KeyR") useSkill3();
+            if (e.code === "Digit1") usePickedCola(); if (e.code === "Digit2") usePickedMedkit();
             if (e.code === "KeyF") {
                 if (playerRole === "KILLER") useBasicAttack();
                 else if (!isPlayerDead && gameState === "INGAME") {
-                    const g = getNearestIncompleteGen();
+                    const g = getNearestIncompleteGen(playerNoob.position);
                     if (g) openPuzzle(g);
                 }
             }
         });
         window.addEventListener("keyup", (e) => { keys[e.code] = false; if (e.code === "ShiftLeft") isSprinting = false; });
 
-        function useSkill1() {
-            if (playerRole === "KILLER") killerWalkspeedOverride();
-            else if (survivorChar === "007n7") use007Clone();
-            else useBurger();
-        }
-        function useSkill2() {
-            if (playerRole === "KILLER") killerCorruptNature();
-            else if (survivorChar === "007n7") use007C00lgui();
-            else useSlate();
-        }
-        function useSkill3() {
-            if (playerRole === "KILLER") killerPizzaDelivery();
-            else if (survivorChar === "007n7") use007Inject();
-            else useCola();
-        }
+        function useSkill1() { if (playerRole === "KILLER") killerWalkspeedOverride(); else if (survivorChar === "007n7") use007Clone(); else useBurger(); }
+        function useSkill2() { if (playerRole === "KILLER") killerCorruptNature(); else if (survivorChar === "007n7") use007C00lgui(); else useSlate(); }
+        function useSkill3() { if (playerRole === "KILLER") killerPizzaDelivery(); else if (survivorChar === "007n7") use007Inject(); else useCola(); }
         function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
 
         function use007Clone() {
             if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
             cdQ = true; animateCD("cd-q", 27, () => { cdQ = false; });
-
             const clone = createR6(false, true);
             clone.position.copy(playerNoob.position); clone.rotation.copy(playerNoob.rotation);
             clone.hp = 100; clone.alive = true; clone.mode = injectModes[injectIdx];
@@ -1132,18 +1057,11 @@
             scene.add(clone); clones.push(clone);
 
             const duration = (clone.mode === "Cursor") ? 5000 : 10000;
-            setTimeout(() => {
-                clone.alive = false; scene.remove(clone);
-                const idx = clones.indexOf(clone); if (idx > -1) clones.splice(idx, 1);
-            }, duration);
+            setTimeout(() => { clone.alive = false; scene.remove(clone); const idx = clones.indexOf(clone); if (idx > -1) clones.splice(idx, 1); }, duration);
 
-            playerNoob.isUndetectable = true;
-            addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#00ffcc", 5);
+            playerNoob.isUndetectable = true; addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#00ffcc", 5);
             Object.values(playerNoob.parts).forEach(p => { if (p.material) { p.material.transparent = true; p.material.opacity = 0.12; } });
-            setTimeout(() => {
-                playerNoob.isUndetectable = false;
-                Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; });
-            }, 5000);
+            setTimeout(() => { playerNoob.isUndetectable = false; Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; }); }, 5000);
         }
 
         function cancelC00lgui() {
@@ -1157,10 +1075,8 @@
             if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
             cdE = true; animateCD("cd-e", 50, () => { cdE = false; });
             playSFX(sfxC00lgui);
-
             isCastingC00lgui = true; playerNoob.parts.c00lguiTab.visible = true;
             addStatusEffect("c00lgui", "c00lgui TELEPORT", "#ff3333", 6);
-
             c00lguiTimeout = setTimeout(() => {
                 isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false;
                 const farSpawn = getFarthestSpawn(playerNoob.position);
@@ -1180,18 +1096,16 @@
             playerNoob.parts.heldItem.visible = true;
             playerNoob.parts.rArm.rotation.x = 2.2; playerNoob.parts.rArm.rotation.z = -0.4;
             playerNoob.parts.lArm.rotation.x = 2.2; playerNoob.parts.lArm.rotation.z = 0.4;
-
             setTimeout(() => {
                 playerNoob.parts.heldItem.visible = false;
                 playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.rArm.rotation.z = 0;
                 playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.lArm.rotation.z = 0;
-                isDrinkingOrEating = false;
-                if (onComplete) onComplete();
+                isDrinkingOrEating = false; if (onComplete) onComplete();
             }, 1400);
         }
 
         function useBurger() {
-            if (cdQ || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
             cdQ = true; animateCD("cd-q", 40, () => { cdQ = false; });
             playSFX(sfxBurger);
             playConsumeAnimation(0xd4a373, () => {
@@ -1223,23 +1137,20 @@
                 setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
                 return;
             }
-            if (cdE || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            if (cdE || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
             cdE = true; animateCD("cd-e", 44, () => { cdE = false; });
             playSFX(sfxSlate);
             playConsumeAnimation(0x4a6572, () => {
-                playerNoob.isInvulnerable = true;
-                document.getElementById("label-s2").innerText = "CANCEL [E]";
+                playerNoob.isInvulnerable = true; document.getElementById("label-s2").innerText = "CANCEL [E]";
                 addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10);
                 const slateColor = 0x4a5568;
                 [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg].forEach(p => p.material.color.setHex(slateColor));
-                slateTimerId = setTimeout(() => {
-                    playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1.0;
-                }, 10000);
+                slateTimerId = setTimeout(() => { playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1.0; }, 10000);
             });
         }
 
         function useCola() {
-            if (cdR || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
+            if (cdR || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
             cdR = true; animateCD("cd-r", 50, () => { cdR = false; });
             playSFX(sfxCola);
             playConsumeAnimation(0xaa1111, () => {
@@ -1256,47 +1167,26 @@
         function killerTagM1() {
             if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return;
             cdM1 = true; animateCD("cd-m1", 2, () => { cdM1 = false; });
-            c00lkidd.parts.rArm.rotation.x = -1.6;
-            setTimeout(() => { if(c00lState !== "KILLING") c00lkidd.parts.rArm.rotation.x = 0; }, 300);
-            [playerNoob, ...aiSurvivors, ...clones].forEach(s => {
-                if (s.alive && checkHitbox(s)) {
-                    if (!s.isInvulnerable) {
+            playC00lkiddPunchAnimation();
+
+            setTimeout(() => {
+                [playerNoob, ...aiSurvivors, ...clones].forEach(s => {
+                    if (s.alive && checkHitbox(s) && !s.isInvulnerable) {
                         s.hp -= 26.5;
                         if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; }
                         if (s.hp <= 0) playKillAnimation(s);
                     }
-                }
-            });
+                });
+            }, 120);
         }
 
-        function killerWalkspeedOverride() {
-            if (cdQ || c00lState !== "IDLE" || gameState !== "INGAME") return;
-            cdQ = true; animateCD("cd-q", 20, () => { cdQ = false; });
-            triggerWalkspeedOverride();
-        }
-
-        function killerCorruptNature() {
-            if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return;
-            cdE = true; animateCD("cd-e", 12, () => { cdE = false; });
-            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-            triggerCorruptNature({ position: c00lkidd.position.clone().addScaledVector(fwd, 20) });
-        }
-
-        function killerPizzaDelivery() {
-            if (cdR || c00lState !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return;
-            cdR = true; animateCD("cd-r", 50, () => { cdR = false; });
-            triggerPizzaDelivery();
-        }
+        function killerWalkspeedOverride() { if (cdQ || c00lState !== "IDLE" || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 20, () => { cdQ = false; }); triggerWalkspeedOverride(); }
+        function killerCorruptNature() { if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return; cdE = true; animateCD("cd-e", 12, () => { cdE = false; }); const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y); triggerCorruptNature({ position: c00lkidd.position.clone().addScaledVector(fwd, 20) }); }
+        function killerPizzaDelivery() { if (cdR || c00lState !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return; cdR = true; animateCD("cd-r", 50, () => { cdR = false; }); triggerPizzaDelivery(); }
 
         function animateCD(elemId, duration, onComplete) {
-            const el = document.getElementById(elemId);
-            el.style.height = "100%";
-            let t = 0;
-            const timer = setInterval(() => {
-                t += 0.2;
-                el.style.height = Math.max(0, (1 - (t / duration)) * 100) + "%";
-                if (t >= duration) { clearInterval(timer); if (onComplete) onComplete(); }
-            }, 200);
+            const el = document.getElementById(elemId); el.style.height = "100%"; let t = 0;
+            const timer = setInterval(() => { t += 0.2; el.style.height = Math.max(0, (1 - (t / duration)) * 100) + "%"; if (t >= duration) { clearInterval(timer); if (onComplete) onComplete(); } }, 200);
         }
 
         function applyHighlight(target) {
@@ -1305,29 +1195,26 @@
             setTimeout(() => { target.isHighlighted = false; target.parts.highlightMesh.visible = false; }, 7500);
         }
 
-        // =========================================================================
-        // 10. ANIMASI C00LKIDD
-        // =========================================================================
         let c00lState = "IDLE", dashTimer = 0, c00lAbilitiesTimer = 0;
 
         function triggerWalkspeedOverride() {
             c00lState = "OVERRIDE_WINDUP";
-            c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = 0.9; c00lkidd.parts.rArm.rotation.x = 0.9;
+            c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = -0.9; c00lkidd.parts.rArm.rotation.x = -0.9;
             setTimeout(() => { if(c00lState==="OVERRIDE_WINDUP"){ c00lState = "DASHING"; dashTimer = 80; c00lkidd.parts.torso.rotation.x = 0.2; } }, 450);
         }
 
         function triggerCorruptNature(target) {
             c00lState = "CASTING";
-            c00lkidd.parts.torso.rotation.y = -0.4; c00lkidd.parts.rArm.rotation.x = 1.2;
+            c00lkidd.parts.torso.rotation.y = -0.4; c00lkidd.parts.rArm.rotation.x = -1.2;
 
             setTimeout(() => {
                 if (c00lState === "KILLING") return;
-                c00lkidd.parts.torso.rotation.y = 0.3; c00lkidd.parts.rArm.rotation.x = -2.2;
+                c00lkidd.parts.torso.rotation.y = 0.3; c00lkidd.parts.rArm.rotation.x = 2.2;
                 const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
                 proj.position.copy(c00lkidd.position); proj.position.y += 3; scene.add(proj);
 
                 const dir = target.position.clone().sub(c00lkidd.position).normalize();
-                let life = 140; let hitDone = false;
+                let life = 140, hitDone = false;
 
                 const intv = setInterval(() => {
                     proj.position.addScaledVector(dir, 1.1); life--;
@@ -1340,7 +1227,8 @@
                                 t.hp = Math.max(0, t.hp - 15);
                                 if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; }
                                 if (t === playerNoob && playerRole === "SURVIVOR") {
-                                    closePuzzle(); cancelC00lgui(); hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
+                                    closePuzzle(); cancelMedkit(); cancelC00lgui();
+                                    hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
                                     setTimeout(() => { hasSlowness = false; }, 4000);
                                     document.getElementById("hp-bar").style.width = t.hp + "%";
                                     if (t.hp <= 0) playKillAnimation(t);
@@ -1359,7 +1247,7 @@
         function triggerPizzaDelivery() {
             if (minions.length >= 2) return;
             c00lState = "SUMMONING";
-            c00lkidd.parts.lArm.rotation.x = -2.5; c00lkidd.parts.rArm.rotation.x = -2.5;
+            c00lkidd.parts.lArm.rotation.x = 2.5; c00lkidd.parts.rArm.rotation.x = 2.5;
 
             const needed = 2 - minions.length;
             let minionsFinished = 0;
@@ -1383,16 +1271,14 @@
                     }
                 }, 40);
 
-                m.despawnTimeout = setTimeout(() => {
-                    const idx = minions.indexOf(m); if (idx > -1) minions.splice(idx, 1); scene.remove(m);
-                }, 30000);
+                m.despawnTimeout = setTimeout(() => { const idx = minions.indexOf(m); if (idx > -1) minions.splice(idx, 1); scene.remove(m); }, 30000);
             }
         }
 
         function checkHitbox(target) {
             const relPos = target.position.clone().sub(c00lkidd.position);
             relPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), -c00lkidd.rotation.y);
-            return (Math.abs(relPos.x) <= 2.2 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0.5 && relPos.z >= -5.5);
+            return (Math.abs(relPos.x) <= 2.3 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0.5 && relPos.z >= -5.5);
         }
 
         function animateWalkingLimbs(charGroup, cycleSpeed) {
@@ -1403,9 +1289,6 @@
             charGroup.parts.rLeg.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
         }
 
-        // =========================================================================
-        // 11. GAME LOOP UTAMA
-        // =========================================================================
         let c00lAttackTimer = 0;
 
         function animate() {
@@ -1415,7 +1298,6 @@
             if (keys["ArrowLeft"]) camYaw += 0.05;
             if (keys["ArrowRight"]) camYaw -= 0.05;
 
-            // Putar item di map
             mapItems.forEach(it => { if (it.active) it.mesh.rotation.y += 0.04; });
 
             const controlledChar = (playerRole === "KILLER") ? c00lkidd : playerNoob;
@@ -1425,11 +1307,11 @@
                 let spd = (playerRole === "KILLER" ? 0.25 : 0.23) * speedBoostMultiplier;
                 if (playerRole === "SURVIVOR") {
                     if (playerNoob.isInvulnerable) spd *= 0.45;
-                    else if (isDrinkingOrEating) spd *= 0.35;
+                    else if (isDrinkingOrEating || isUsingMedkit) spd *= 0.35;
                     else if (hasSlowness) spd *= 0.65;
                 }
 
-                if (isSprinting && stamina > 0 && !isDrinkingOrEating && !playerNoob.isInvulnerable) {
+                if (isSprinting && stamina > 0 && !isDrinkingOrEating && !isUsingMedkit && !playerNoob.isInvulnerable) {
                     spd *= 1.6; stamina = Math.max(0, stamina - 0.4);
                 } else { stamina = Math.min(100, stamina + 0.25); }
                 document.getElementById("stamina-bar").style.width = stamina + "%";
@@ -1444,34 +1326,31 @@
                     const angle = Math.atan2(mx, mz);
                     moveWithCollision(controlledChar, Math.sin(camYaw + angle) * spd, Math.cos(camYaw + angle) * spd);
                     animateWalkingLimbs(controlledChar, 0.22);
-                } else if (!isDrinkingOrEating) {
+                } else if (!isDrinkingOrEating && !isUsingMedkit) {
                     controlledChar.parts.lArm.rotation.x = 0; controlledChar.parts.rArm.rotation.x = 0;
                     controlledChar.parts.lLeg.rotation.x = 0; controlledChar.parts.rLeg.rotation.x = 0;
                 }
             }
 
-            // CEK PUNGUT ITEM & PROMPT GENERATOR
             if (gameState === "INGAME" && playerRole === "SURVIVOR" && !isPlayerDead) {
                 mapItems.forEach(it => {
                     if (it.active && playerNoob.position.distanceTo(it.mesh.position) < 3.0) {
-                        it.active = false; it.mesh.visible = false;
-                        if (it.type === "COLA") { invCola++; showToast("Pungut: Bloxy Cola [Tekan 1]"); }
-                        else { invMedkit++; showToast("Pungut: Medkit [Tekan 2]"); }
-                        updateInventoryUI();
+                        if (it.type === "COLA" && invCola < 1) {
+                            it.active = false; it.mesh.visible = false; invCola = 1;
+                            showToast("Pungut: Bloxy Cola [Tekan 1]"); updateInventoryUI();
+                        } else if (it.type === "MEDKIT" && invMedkit < 1) {
+                            it.active = false; it.mesh.visible = false; invMedkit = 1;
+                            showToast("Pungut: Medkit [Tekan 2]"); updateInventoryUI();
+                        }
                     }
                 });
 
-                const nearGen = getNearestIncompleteGen();
+                const nearGen = getNearestIncompleteGen(playerNoob.position);
                 const pEl = document.getElementById("interact-prompt");
                 if (nearGen && !activeGen) {
-                    pEl.innerText = `Tekan [F] Perbaiki Generator (Tahap ${nearGen.stage}/5)`;
-                    pEl.style.display = "block";
-                } else {
-                    pEl.style.display = "none";
-                }
-            } else {
-                document.getElementById("interact-prompt").style.display = "none";
-            }
+                    pEl.innerText = `Tekan [F] Perbaiki Generator (Tahap ${nearGen.stage}/5)`; pEl.style.display = "block";
+                } else pEl.style.display = "none";
+            } else { document.getElementById("interact-prompt").style.display = "none"; }
 
             if (dexMarker.visible) {
                 const farSp = getFarthestSpawn(playerNoob.position);
@@ -1502,7 +1381,7 @@
 
                 let targets = [];
                 if (playerRole === "SURVIVOR" && !isPlayerDead && !playerNoob.isUndetectable) targets.push(playerNoob);
-                if (playerRole === "KILLER" && playerNoob.alive) targets.push(playerNoob);
+                if (playerRole === "KILLER" && playerNoob.alive && !playerNoob.isUndetectable) targets.push(playerNoob);
                 aiSurvivors.forEach(ai => { if (ai.alive && !ai.isUndetectable) targets.push(ai); });
                 clones.forEach(cl => { if (cl.alive) targets.push(cl); });
 
@@ -1515,8 +1394,7 @@
 
                 if (playerRole === "SURVIVOR" && closestTarget && c00lState !== "KILLING") {
                     if (c00lState !== "SUMMONING" && c00lState !== "CASTING") {
-                        c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
-                        c00lkidd.rotation.y += Math.PI;
+                        c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z); c00lkidd.rotation.y += Math.PI;
                     }
 
                     if (c00lState === "DASHING") {
@@ -1527,7 +1405,7 @@
                             closestTarget.hp -= 32;
                             if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
                             if (closestTarget === playerNoob) {
-                                closePuzzle(); cancelC00lgui(); applyBurningToPlayer(8);
+                                closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToPlayer(8);
                                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                 if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
                             } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
@@ -1542,17 +1420,20 @@
                         if (kd > 3.5) { moveWithCollision(c00lkidd, (kx / kd) * 0.25, (kz / kd) * 0.25); animateWalkingLimbs(c00lkidd, 0.22); }
 
                         if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
-                            c00lAttackTimer = 110; c00lkidd.parts.rArm.rotation.x = -1.6;
-                            if (!closestTarget.isInvulnerable) {
-                                closestTarget.hp -= 26.5;
-                                if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
-                                if (closestTarget === playerNoob) {
-                                    closePuzzle(); cancelC00lgui();
-                                    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                    if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
-                                } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
-                            }
-                            setTimeout(() => { if(c00lState !== "KILLING") c00lkidd.parts.rArm.rotation.x = 0; }, 300);
+                            c00lAttackTimer = 110;
+                            playC00lkiddPunchAnimation();
+
+                            setTimeout(() => {
+                                if (closestTarget.alive && checkHitbox(closestTarget) && !closestTarget.isInvulnerable) {
+                                    closestTarget.hp -= 26.5;
+                                    if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
+                                    if (closestTarget === playerNoob) {
+                                        closePuzzle(); cancelMedkit(); cancelC00lgui();
+                                        document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                        if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
+                                    } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
+                                }
+                            }, 120);
                         }
 
                         c00lAbilitiesTimer++;
@@ -1592,7 +1473,8 @@
                             closestTarget.hp -= 15;
                             if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
                             if (closestTarget === playerNoob && playerRole === "SURVIVOR") {
-                                closePuzzle(); cancelC00lgui(); hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
+                                closePuzzle(); cancelMedkit(); cancelC00lgui();
+                                hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
                                 setTimeout(() => { hasSlowness = false; }, 3000);
                                 applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                 if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
@@ -1614,16 +1496,26 @@
                     else if (cl.mode === "Wander") cl.patrolTarget.set((Math.random()-0.5)*150, 0, (Math.random()-0.5)*150);
                 });
 
-                // AI SURVIVORS WITH ABILITIES (NOOB & 007n7)
                 const botList = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : aiSurvivors;
                 botList.forEach(ai => {
-                    if (!ai.alive) return;
-                    if (ai.isCastingGui) return; // AI 007n7 diam saat casting c00lgui
+                    if (!ai.alive || ai.isCastingGui || ai.isHealingMedkit) return;
+
+                    mapItems.forEach(it => {
+                        if (it.active && ai.position.distanceTo(it.mesh.position) < 3.0) {
+                            if (it.type === "COLA" && ai.invCola < 1) { it.active = false; it.mesh.visible = false; ai.invCola = 1; }
+                            else if (it.type === "MEDKIT" && ai.invMedkit < 1) { it.active = false; it.mesh.visible = false; ai.invMedkit = 1; }
+                        }
+                    });
 
                     const distToKiller = ai.position.distanceTo(c00lkidd.position);
 
+                    if (ai.invMedkit > 0 && ai.hp < 65 && distToKiller > 25) {
+                        ai.invMedkit--; ai.isHealingMedkit = true;
+                        setTimeout(() => { if (ai.alive) ai.hp = Math.min(100, ai.hp + 80); ai.isHealingMedkit = false; }, 8000);
+                        return;
+                    }
+
                     if (ai.is007) {
-                        // AI 007n7: Clone saat terancam (< 22 stud)
                         if (distToKiller < 22 && !ai.cdQ) {
                             ai.cdQ = true;
                             const cl = createR6(false, true);
@@ -1631,13 +1523,11 @@
                             cl.patrolTarget = new THREE.Vector3((Math.random()-0.5)*140, 0, (Math.random()-0.5)*140);
                             scene.add(cl); clones.push(cl);
                             setTimeout(() => { cl.alive = false; scene.remove(cl); const ix = clones.indexOf(cl); if(ix>-1) clones.splice(ix, 1); }, 10000);
-
                             ai.isUndetectable = true;
                             Object.values(ai.parts).forEach(p => { if(p.material){ p.material.transparent=true; p.material.opacity=0.15; } });
                             setTimeout(() => { ai.isUndetectable = false; Object.values(ai.parts).forEach(p => { if(p.material) p.material.opacity=1; }); }, 5000);
                             setTimeout(() => { ai.cdQ = false; }, 27000);
                         }
-                        // AI 007n7: c00lgui saat terluka & agak jauh
                         if (ai.hp < 80 && distToKiller > 25 && !ai.cdE) {
                             ai.cdE = true; ai.isCastingGui = true; ai.parts.c00lguiTab.visible = true;
                             setTimeout(() => {
@@ -1649,27 +1539,21 @@
                             }, 5500);
                         }
                     } else {
-                        // AI NOOB ABILITIES: Slateskin, Ghostburger, Bloxy Cola
                         if (distToKiller < 10 && !ai.cdE && !ai.isInvulnerable) {
                             ai.cdE = true; ai.isInvulnerable = true; ai.parts.torso.material.color.setHex(0x4a5568);
-                            setTimeout(() => {
-                                ai.isInvulnerable = false; ai.parts.torso.material.color.setHex(0x0055ff);
-                                setTimeout(() => { ai.cdE = false; }, 44000);
-                            }, 5000);
+                            setTimeout(() => { ai.isInvulnerable = false; ai.parts.torso.material.color.setHex(0x0055ff); setTimeout(() => { ai.cdE = false; }, 44000); }, 5000);
                         }
                         if (ai.hp < 60 && !ai.cdQ) {
                             ai.cdQ = true; ai.hp = Math.min(100, ai.hp + 20);
                             Object.values(ai.parts).forEach(p => { if(p.material){ p.material.transparent=true; p.material.opacity=0.2; } });
-                            setTimeout(() => {
-                                Object.values(ai.parts).forEach(p => { if(p.material) p.material.opacity=1; });
-                                setTimeout(() => { ai.cdQ = false; }, 40000);
-                            }, 7000);
+                            setTimeout(() => { Object.values(ai.parts).forEach(p => { if(p.material) p.material.opacity=1; }); setTimeout(() => { ai.cdQ = false; }, 40000); }, 7000);
                         }
                     }
 
-                    let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.13;
-                    if (!ai.is007 && distToKiller < 30 && !ai.cdR) { ai.cdR = true; aiSpeed = 0.28; setTimeout(() => { ai.cdR = false; }, 50000); }
-                    if (ai.isInvulnerable) aiSpeed = 0.10; // AI melambat saat jadi batu Slateskin!
+                    let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.14;
+                    if (distToKiller < 30 && ai.invCola > 0) { ai.invCola--; aiSpeed = 0.29; }
+                    else if (!ai.is007 && distToKiller < 30 && !ai.cdR) { ai.cdR = true; aiSpeed = 0.28; setTimeout(() => { ai.cdR = false; }, 50000); }
+                    if (ai.isInvulnerable) aiSpeed = 0.10;
 
                     if (distToKiller < 35 || ai.isHighlighted) {
                         const adx = ai.position.x - c00lkidd.position.x, adz = ai.position.z - c00lkidd.position.z;
@@ -1678,14 +1562,40 @@
                         ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz); ai.rotation.y += Math.PI;
                         animateWalkingLimbs(ai, 0.24);
                     } else {
-                        if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
-                        const pdx = ai.patrolTarget.x - ai.position.x, pdz = ai.patrolTarget.z - ai.position.z;
-                        const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
-                        if (pdist > 2) {
-                            moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
-                            ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI;
-                            animateWalkingLimbs(ai, 0.16);
-                        } else { pickNewPatrol(ai); }
+                        let targetGen = null, minGD = 9999;
+                        generators.forEach(g => {
+                            if (!g.done) { const d = ai.position.distanceTo(g.group.position); if (d < minGD) { minGD = d; targetGen = g; } }
+                        });
+
+                        if (targetGen) {
+                            if (minGD > 4.5) {
+                                const gx = targetGen.group.position.x - ai.position.x, gz = targetGen.group.position.z - ai.position.z;
+                                moveWithCollision(ai, (gx / minGD) * aiSpeed, (gz / minGD) * aiSpeed);
+                                ai.lookAt(targetGen.group.position.x, 0, targetGen.group.position.z); ai.rotation.y += Math.PI;
+                                animateWalkingLimbs(ai, 0.16);
+                            } else {
+                                ai.lookAt(targetGen.group.position.x, 0, targetGen.group.position.z); ai.rotation.y += Math.PI;
+                                ai.parts.rArm.rotation.x = 1.6 + Math.sin(Date.now() * 0.015) * 0.2;
+                                ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2;
+                                ai.genWorkTimer++;
+                                if (ai.genWorkTimer >= 220) {
+                                    ai.genWorkTimer = 0;
+                                    if (!targetGen.done) {
+                                        targetGen.stage++;
+                                        if (targetGen.stage >= 5) completeGenerator(targetGen, ai.name);
+                                    }
+                                }
+                            }
+                        } else {
+                            if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
+                            const pdx = ai.patrolTarget.x - ai.position.x, pdz = ai.patrolTarget.z - ai.position.z;
+                            const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
+                            if (pdist > 2) {
+                                moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
+                                ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI;
+                                animateWalkingLimbs(ai, 0.16);
+                            } else { pickNewPatrol(ai); }
+                        }
                     }
                 });
             }
@@ -1697,3 +1607,4 @@
     </script>
 </body>
 </html>
+        }
