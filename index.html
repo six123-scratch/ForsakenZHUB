@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Exclusive Layers & High Ground</title>
+    <title>Forsaken 3D - Shadows, Torches & Full Effects</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -13,6 +13,7 @@
             transition: box-shadow 0.3s ease;
         }
 
+        /* HUD ATAS */
         #top-hud {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center;
@@ -20,6 +21,19 @@
             border: 2px solid #555; z-index: 10; color: #fff;
         }
         #round-timer { font-size: 24px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
+
+        /* STATUS EFFECTS DI KIRI TENGAH (BERTUMPUK KE BAWAH) */
+        #status-effects {
+            position: absolute; top: 32%; left: 20px;
+            display: flex; flex-direction: column; gap: 8px;
+            z-index: 15; pointer-events: none;
+        }
+        .effect-badge {
+            background: rgba(0, 0, 0, 0.8); border-left: 5px solid #fff;
+            padding: 6px 14px; border-radius: 4px; color: #fff;
+            font-weight: bold; font-size: 13px; letter-spacing: 1px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6); min-width: 130px;
+        }
 
         #highlight-warning {
             position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
@@ -105,11 +119,14 @@
     <div id="crosshair"></div>
     <div id="highlight-warning">⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠</div>
 
+    <!-- DAFTAR STATUS EFFECT DI KIRI TENGAH -->
+    <div id="status-effects"></div>
+
     <!-- 4 LAYER CHASE THEME -->
-    <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
     <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
-    <audio id="chase-layer4" loop preload="auto"><source src="layer4.mp3" type="audio/mpeg"></audio>
+    <audio id="chase-layer4" loop preload="auto"><source src="layer4.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
 
     <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
     <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
@@ -180,7 +197,52 @@
 
     <script>
         // =========================================================================
-        // 1. SISTEM 4-LAYER BERGANTIAN (HANYA 1 LAYER AKTIF & RESET DARI DETIK 0)
+        // 1. SISTEM STATUS EFFECTS UI (KIRI TENGAH BERTUMPUK)
+        // =========================================================================
+        const activeEffects = {};
+        const effectsContainer = document.getElementById("status-effects");
+
+        function addStatusEffect(key, label, color, durationSec) {
+            if (activeEffects[key]) {
+                clearInterval(activeEffects[key].interval);
+                activeEffects[key].el.remove();
+            }
+
+            const el = document.createElement("div");
+            el.className = "effect-badge";
+            el.style.borderLeftColor = color;
+            el.style.color = color;
+            effectsContainer.appendChild(el);
+
+            let timeLeft = durationSec;
+            el.innerText = `${label} (${timeLeft}s)`;
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    removeStatusEffect(key);
+                } else {
+                    el.innerText = `${label} (${timeLeft}s)`;
+                }
+            }, 1000);
+
+            activeEffects[key] = { el, interval };
+        }
+
+        function removeStatusEffect(key) {
+            if (activeEffects[key]) {
+                clearInterval(activeEffects[key].interval);
+                activeEffects[key].el.remove();
+                delete activeEffects[key];
+            }
+        }
+
+        function clearAllEffects() {
+            Object.keys(activeEffects).forEach(removeStatusEffect);
+        }
+
+        // =========================================================================
+        // 2. AUDIO 4-LAYER CHASE EKSKLUSIF & SPECTATE
         // =========================================================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isAudioInit = false;
@@ -196,12 +258,10 @@
         const sfxSlate = document.getElementById("sfx-slate");
         const sfxBurger = document.getElementById("sfx-burger");
 
-        let activeLayerIndex = 0; // 0: None, 1: Layer1, 2: Layer2, 3: Layer3, 4: Layer4
+        let activeLayerIndex = 0;
 
         function playSFX(el) {
-            if (el && el.readyState >= 2) {
-                el.currentTime = 0; el.play().catch(()=>{});
-            }
+            if (el && el.readyState >= 2) { el.currentTime = 0; el.play().catch(()=>{}); }
         }
 
         function stopAndResetAllAudio() {
@@ -215,29 +275,20 @@
         function startRoundAudio() {
             if (!isAudioInit) return;
             stopAndResetAllAudio();
-
-            if (bgmAmbience) {
-                bgmAmbience.volume = 0.4;
-                bgmAmbience.play().catch(()=>{});
-            }
+            if (bgmAmbience) { bgmAmbience.volume = 0.4; bgmAmbience.play().catch(()=>{}); }
         }
 
-        // Beralih ke 1 layer saja: Layer lain dimatikan & layer baru diputar dari detik 0!
         function switchSingleLayer(targetLayer) {
             if (activeLayerIndex === targetLayer) return;
-
-            // Matikan layer lama
             [l1, l2, l3, l4].forEach(l => {
                 if (l && !l.paused) { l.pause(); l.currentTime = 0; }
             });
-
             activeLayerIndex = targetLayer;
 
             const layers = [null, l1, l2, l3, l4];
             const chosen = layers[targetLayer];
-
             if (chosen) {
-                chosen.currentTime = 0; // Mulai dari awal lagi!
+                chosen.currentTime = 0;
                 chosen.volume = 1.0;
                 chosen.play().catch(()=>{});
             }
@@ -247,16 +298,13 @@
             if (!isAudioInit || gameState !== "INGAME") return;
             const vignette = document.getElementById("vignette");
 
-            // JIKA LMS
             if (lmsTriggered) {
                 [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
                 activeLayerIndex = 0;
                 if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
 
                 if (bgmLMS && bgmLMS.paused) {
-                    bgmLMS.currentTime = 0;
-                    bgmLMS.volume = 1.0;
-                    bgmLMS.play().catch(()=>{});
+                    bgmLMS.currentTime = 0; bgmLMS.volume = 1.0; bgmLMS.play().catch(()=>{});
                 }
                 vignette.style.boxShadow = "inset 0 0 120px rgba(255, 0, 0, 0.7)";
                 return;
@@ -264,55 +312,70 @@
                 if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
             }
 
-            // PERGANTIAN LAYER EKSKLUSIF BERDASARKAN JARAK
             if (dist > 75) {
-                switchSingleLayer(0); // Jauh = Hening
+                switchSingleLayer(0);
                 if (bgmAmbience) bgmAmbience.volume = 0.45;
                 vignette.style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
             } else if (dist > 50) {
-                switchSingleLayer(1); // Hanya Layer 1
+                switchSingleLayer(1);
                 if (bgmAmbience) bgmAmbience.volume = 0.3;
                 vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)";
             } else if (dist > 30) {
-                switchSingleLayer(2); // Hanya Layer 2
+                switchSingleLayer(2);
                 if (bgmAmbience) bgmAmbience.volume = 0.2;
                 vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)";
             } else if (dist > 18) {
-                switchSingleLayer(3); // Hanya Layer 3
+                switchSingleLayer(3);
                 if (bgmAmbience) bgmAmbience.volume = 0.1;
                 vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)";
             } else {
-                switchSingleLayer(4); // Hanya Layer 4 (Pasti Berbunyi Saat Dekat!)
+                switchSingleLayer(4);
                 if (bgmAmbience) bgmAmbience.volume = 0.05;
                 vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)";
             }
         }
 
-        // ==========================================
-        // 2. 3D SCENE, MAP, COLLISION & TEMPAT TINGGI
-        // ==========================================
+        // =========================================================================
+        // 3. 3D SCENE, BAYANGAN NYATA (SHADOWS), OBOR API & COLLISION
+        // =========================================================================
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x181a24, 0.007);
+        scene.fog = new THREE.FogExp2(0x14151f, 0.008);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        // AKTIFKAN BAYANGAN 3D NYATA!
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0x888899, 1.3);
+        const ambientLight = new THREE.AmbientLight(0x555566, 0.9);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xaaccff, 0.9);
-        dirLight.position.set(40, 80, 40);
-        scene.add(dirLight);
 
-        // Lantai Arena
-        const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x223522 }));
+        // Cahaya Bulan Penghasil Bayangan
+        const moonLight = new THREE.DirectionalLight(0xaabbff, 0.8);
+        moonLight.position.set(60, 100, 60);
+        moonLight.castShadow = true;
+        moonLight.shadow.mapSize.width = 2048;
+        moonLight.shadow.mapSize.height = 2048;
+        moonLight.shadow.camera.near = 10;
+        moonLight.shadow.camera.far = 300;
+        moonLight.shadow.camera.left = -125;
+        moonLight.shadow.camera.right = 125;
+        moonLight.shadow.camera.top = 125;
+        moonLight.shadow.camera.bottom = -125;
+        scene.add(moonLight);
+
+        // Lantai Arena (Menerima Bayangan)
+        const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x203220, roughness: 0.9 }));
         arenaFloor.rotation.x = -Math.PI / 2;
+        arenaFloor.receiveShadow = true;
         scene.add(arenaFloor);
 
         // Lobby Atas
         const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
         lobbyPlatform.position.set(0, 70, 0);
+        lobbyPlatform.receiveShadow = true;
         scene.add(lobbyPlatform);
 
         const solidBoxes = [];
@@ -321,10 +384,12 @@
         }
 
         // TEMBOK PEMBATAS RAKSASA
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1f1f2e, roughness: 0.9 });
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 });
         function createBorderWall(x, z, w, d) {
             const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
             wall.position.set(x, 11, z);
+            wall.castShadow = true;
+            wall.receiveShadow = true;
             scene.add(wall);
             registerBox(x, z, w, d);
         }
@@ -333,18 +398,47 @@
         createBorderWall(-125, 0, 6, 250);
         createBorderWall(125, 0, 6, 250);
 
-        // GEDUNG & DINDING
-        for(let i = 0; i < 24; i++) {
+        // OBOR API BERKEDIP DI TEMBOK
+        const torchLights = [];
+        function attachTorchToWall(wx, wy, wz) {
+            const torchGroup = new THREE.Group();
+            const stick = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.4, 0.25), new THREE.MeshStandardMaterial({ color: 0x4d3319 }));
+            stick.rotation.x = 0.4;
+            torchGroup.add(stick);
+
+            const flame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 }));
+            flame.position.set(0, 0.7, 0.3);
+            torchGroup.add(flame);
+
+            const light = new THREE.PointLight(0xff6600, 2.2, 28);
+            light.position.set(0, 0.8, 0.5);
+            light.castShadow = true;
+            torchGroup.add(light);
+            torchLights.push(light);
+
+            torchGroup.position.set(wx, wy, wz);
+            scene.add(torchGroup);
+        }
+
+        // GEDUNG / DINDING + OBOR DI BEBERAPA TEMBOK
+        for(let i = 0; i < 22; i++) {
             const h = 8 + Math.random() * 8;
-            const b = new THREE.Mesh(new THREE.BoxGeometry(7, h, 7), new THREE.MeshStandardMaterial({ color: 0x333340 }));
+            const b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({ color: 0x333340 }));
             const bx = (Math.random() - 0.5) * 170;
             const bz = (Math.random() - 0.5) * 170;
             b.position.set(bx, h/2, bz);
+            b.castShadow = true;
+            b.receiveShadow = true;
             scene.add(b);
-            registerBox(bx, bz, 7, 7);
+            registerBox(bx, bz, 8, 8);
+
+            // Pasang obor di beberapa tembok gedung (setiap 2-3 tembok)
+            if (i % 2 === 0) {
+                attachTorchToWall(bx, 5, bz + 4.2);
+            }
         }
 
-        // POHON
+        // POHON KLASIK (DENGAN BAYANGAN)
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
         const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
         for(let i = 0; i < 35; i++) {
@@ -352,27 +446,18 @@
             const tz = (Math.random() - 0.5) * 190;
             const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), trunkMat);
             trunk.position.set(tx, 3.5, tz);
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
             scene.add(trunk);
+
             const foliage = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), foliageMat);
             foliage.position.set(tx, 8, tz);
+            foliage.castShadow = true;
+            foliage.receiveShadow = true;
             scene.add(foliage);
             registerBox(tx, tz, 1.2, 1.2);
         }
 
-        // TEMPAT TINGGI: BUKIT / PLATFORM DENGAN TANJAKAN (RAMP)
-        const hillPlatform = new THREE.Mesh(new THREE.BoxGeometry(26, 6, 26), new THREE.MeshStandardMaterial({ color: 0x444455 }));
-        hillPlatform.position.set(40, 3, 40);
-        scene.add(hillPlatform);
-
-        // Tanjakan Menuju Bukit
-        const rampGeo = new THREE.BoxGeometry(10, 1, 20);
-        const rampMat = new THREE.MeshStandardMaterial({ color: 0x666677 });
-        const ramp = new THREE.Mesh(rampGeo, rampMat);
-        ramp.position.set(40, 3, 18);
-        ramp.rotation.x = 0.32; // Kemiringan tanjakan
-        scene.add(ramp);
-
-        // Fungsi Deteksi Tabrakan untuk Semua Karakter
         function canMoveTo(x, z) {
             for (let b of solidBoxes) {
                 if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
@@ -380,7 +465,6 @@
             return true;
         }
 
-        // Gerakkan Entitas dengan Sistem Tabrakan (Tidak Bisa Tembus Dinding/Pohon!)
         function moveWithCollision(entity, vx, vz) {
             const nextX = entity.position.x + vx;
             const nextZ = entity.position.z + vz;
@@ -393,19 +477,10 @@
             } else if (canMoveTo(entity.position.x, nextZ)) {
                 entity.position.z = nextZ;
             }
-
-            // Ketinggian Bukit
-            if (entity.position.x >= 27 && entity.position.x <= 53 && entity.position.z >= 27 && entity.position.z <= 53) {
-                entity.position.y = 6; // Di atas bukit
-            } else if (entity.position.x >= 35 && entity.position.x <= 45 && entity.position.z >= 8 && entity.position.z <= 28) {
-                entity.position.y = (entity.position.z - 8) * 0.3; // Di atas tanjakan
-            } else if (gameState === "INGAME") {
-                entity.position.y = 0; // Di tanah
-            }
         }
 
         // ==========================================
-        // 3. MODEL R6 NOOB & C00LKIDD
+        // 4. MODEL R6 NOOB & C00LKIDD (BERBAYANG)
         // ==========================================
         function createFace(isRed) {
             const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -434,7 +509,7 @@
         function createSword() {
             const sword = new THREE.Group();
             const blade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
-            blade.position.y = 1.3;
+            blade.position.y = 1.3; blade.castShadow = true;
             sword.add(blade);
             const cross = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.2), new THREE.MeshStandardMaterial({ color: 0x880000 }));
             cross.position.y = 0.1;
@@ -453,26 +528,17 @@
 
             let torsoMat = mBody;
             if (isRed) {
-                torsoMat = [
-                    mBody, mBody, mBody, mBody,
-                    mBody,
-                    new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })
-                ];
+                torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })];
             }
 
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; g.add(torso);
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; torso.castShadow = true; g.add(torso);
+            const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(isRed) })];
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; head.castShadow = true; g.add(head);
             
-            const headMaterials = [
-                mLimb, mLimb, mLimb, mLimb,
-                mLimb,
-                new THREE.MeshStandardMaterial({ map: createFace(isRed) })
-            ];
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; g.add(head);
-            
-            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); lArm.position.set(-1.5, 3, 0); g.add(lArm);
-            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); rArm.position.set(1.5, 3, 0); g.add(rArm);
-            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); g.add(lLeg);
-            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); g.add(rLeg);
+            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true; g.add(lArm);
+            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); rArm.position.set(1.5, 3, 0); rArm.castShadow = true; g.add(rArm);
+            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true; g.add(lLeg);
+            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true; g.add(rLeg);
 
             const highlightMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 }));
             highlightMesh.position.y = 2.6;
@@ -494,7 +560,8 @@
             g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh };
             g.isHighlighted = false;
             g.hp = 100;
-            g.isInvulnerable = false; // Player saja yang bisa pakai Slateskin
+            g.isInvulnerable = false;
+            g.walkCycle = 0;
             return g;
         }
 
@@ -502,7 +569,6 @@
         playerNoob.position.set(0, 72, 0);
         scene.add(playerNoob);
 
-        // AI SURVIVOR: DIBERSIHKAN TOTAL DARI BUG KEBAL!
         const aiSurvivors = [];
         for(let i = 0; i < 3; i++) {
             const ai = createR6(false);
@@ -518,7 +584,7 @@
 
         const c00lkidd = createR6(true);
         c00lkidd.name = "c00lkidd";
-        const redGlow = new THREE.PointLight(0xff0000, 3, 20);
+        const redGlow = new THREE.PointLight(0xff0000, 2.5, 18);
         c00lkidd.add(redGlow);
         c00lkidd.position.set(0, 0, -80);
         scene.add(c00lkidd);
@@ -526,7 +592,7 @@
         const minions = [];
 
         // ==========================================
-        // 4. KAMERA 360 & UNLOCK MOUSE [M]
+        // 5. KAMERA 360 & CONTROLS [M]
         // ==========================================
         let camYaw = 0, camPitch = 0.2;
         let isPointerLocked = false, isMouseDown = false;
@@ -551,13 +617,11 @@
 
         window.addEventListener("mousemove", (e) => {
             let dx = 0, dy = 0;
-            if (isPointerLocked) {
-                dx = e.movementX; dy = e.movementY;
-            } else if (isMouseDown) {
+            if (isPointerLocked) { dx = e.movementX; dy = e.movementY; }
+            else if (isMouseDown) {
                 dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY;
                 prevMouseX = e.clientX; prevMouseY = e.clientY;
             }
-
             if (dx !== 0 || dy !== 0) {
                 camYaw -= dx * 0.0035;
                 camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
@@ -565,8 +629,8 @@
         });
 
         // ==========================================
-        // 5. ROUND & LMS LOGIC
-        // ==========================================
+        // 6. ROUND, BURNING DOT & SPECTATE
+        // =========================================================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
         let lmsTriggered = false;
@@ -575,6 +639,26 @@
         let spectateList = [];
         let spectateIdx = 0;
         let isSpectating = false;
+
+        let burnTimer = null;
+        function applyBurningToPlayer(durationSec) {
+            if (playerNoob.isInvulnerable) return;
+            addStatusEffect("burn", "BURNING I", "#ff4400", durationSec);
+            if (burnTimer) clearInterval(burnTimer);
+
+            let ticks = 0;
+            burnTimer = setInterval(() => {
+                ticks++;
+                if (ticks > durationSec || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) {
+                    clearInterval(burnTimer);
+                    removeStatusEffect("burn");
+                    return;
+                }
+                playerNoob.hp = Math.max(0, playerNoob.hp - 1.5);
+                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                if (playerNoob.hp <= 0) killPlayer();
+            }, 1000);
+        }
 
         function updateUIState() {
             const showHUD = (gameState === "INGAME" && !isPlayerDead);
@@ -602,6 +686,7 @@
             isPlayerDead = true;
             playerNoob.hp = 0;
             playerNoob.position.set(0, 72, 0);
+            clearAllEffects();
             updateUIState();
             cycleSpectate();
         }
@@ -624,10 +709,10 @@
                     isSpectating = false;
                     playerNoob.hp = 100;
                     playerNoob.isInvulnerable = false;
+                    clearAllEffects();
                     document.getElementById("hp-bar").style.width = "100%";
                     playerNoob.position.set(0, 0, 0);
 
-                    // RESET SEMUA AI: PASTI BISA DIBUNUH DAN TIDAK KEBAL!
                     aiSurvivors.forEach((ai, idx) => {
                         ai.alive = true;
                         ai.hp = 100;
@@ -638,7 +723,7 @@
                     });
                     c00lkidd.position.set(0, 0, -80);
                     updateUIState();
-                    startRoundAudio(); // LAGU MULAI DARI DETIK 0!
+                    startRoundAudio();
                 }
             } else if (gameState === "INGAME") {
                 const mins = Math.floor(timerSeconds / 60);
@@ -655,23 +740,23 @@
                     setTimeout(() => { document.getElementById("lms-banner").style.display = "none"; }, 5000);
                 }
 
-                // RONDE BERAKHIR: STOP LAGU & RESET KE AWAL!
                 if (timerSeconds <= 0 || aliveCount === 0) {
                     gameState = "LOBBY";
                     timerSeconds = 15;
                     lmsTriggered = false;
                     isSpectating = false;
+                    clearAllEffects();
                     playerNoob.position.set(0, 72, 0);
                     minions.forEach(m => scene.remove(m));
                     minions.length = 0;
                     updateUIState();
-                    stopAndResetAllAudio(); // STOP LAGU!
+                    stopAndResetAllAudio();
                 }
             }
         }, 1000);
 
         // =========================================================================
-        // 6. ABILITIES & TOMBOL UNLOCK MOUSE [M]
+        // 7. ABILITIES NOOB (SLATESKIN 10 DETIK & INTERAKSI COLA)
         // =========================================================================
         let keys = {};
         let isShiftlock = false;
@@ -695,7 +780,7 @@
 
         window.addEventListener("keydown", (e) => { 
             keys[e.code] = true;
-            if (e.code === "KeyM") document.exitPointerLock(); // TOMBOL UNLOCK MOUSE!
+            if (e.code === "KeyM") document.exitPointerLock();
             if (e.code === "ShiftLeft") isSprinting = true;
             if (e.code === "KeyQ") useBurger();
             if (e.code === "KeyE") useSlate();
@@ -728,6 +813,7 @@
             }, 1400);
         }
 
+        // GHOSTBURGER [Q]
         function useBurger() {
             if (cdQ || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
             cdQ = true;
@@ -740,6 +826,7 @@
                 playerNoob.hp = Math.min(100, playerNoob.hp + healAmount);
                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
 
+                addStatusEffect("invis", "INVISIBLE", "#00ccff", 7);
                 Object.values(playerNoob.parts).forEach(p => { 
                     if (p.material) { p.material.transparent = true; p.material.opacity = 0.15; }
                 });
@@ -761,10 +848,12 @@
             document.getElementById("label-slate").innerText = "Slateskin [E]";
         }
 
+        // SLATESKIN POTION [E] (DURASI 10 DETIK, LALU SPEED KEMBALI NORMAL)
         function useSlate() {
             if (playerNoob.isInvulnerable) {
                 clearTimeout(slateTimerId);
                 playerNoob.isInvulnerable = false;
+                removeStatusEffect("slate");
                 revertSlateAppearance();
 
                 const distToKiller = playerNoob.position.distanceTo(c00lkidd.position);
@@ -774,6 +863,7 @@
                 }
 
                 speedBoostMultiplier = 1.5;
+                addStatusEffect("speed", "SPEED I", "#00ffcc", 2);
                 setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
                 return;
             }
@@ -786,6 +876,7 @@
             playConsumeAnimation(0x4a6572, () => {
                 playerNoob.isInvulnerable = true;
                 document.getElementById("label-slate").innerText = "CANCEL [E]";
+                addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10);
 
                 const slateColor = 0x4a5568;
                 playerNoob.parts.torso.material.color.setHex(slateColor);
@@ -795,15 +886,16 @@
                 playerNoob.parts.lLeg.material.color.setHex(slateColor);
                 playerNoob.parts.rLeg.material.color.setHex(slateColor);
 
+                // BERHENTI DI DETIK 10, LALU SPEED KEMBALI NORMAL!
                 slateTimerId = setTimeout(() => {
                     playerNoob.isInvulnerable = false;
                     revertSlateAppearance();
-                    speedBoostMultiplier = 1.7;
-                    setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
-                }, 6000);
+                    speedBoostMultiplier = 1.0; // Speed kembali normal
+                }, 10000);
             });
         }
 
+        // BLOXY COLA [R] (JIKA SAAT SLATESKIN: BATU HILANG & TIDAK DAPAT SPEED!)
         function useCola() {
             if (cdR || isDrinkingOrEating || isPlayerDead || gameState !== "INGAME") return;
             cdR = true;
@@ -811,8 +903,21 @@
             playSFX(sfxCola);
 
             playConsumeAnimation(0xaa1111, () => {
+                // CEK APAKAH SEDANG MEMAKAI SLATESKIN:
+                if (playerNoob.isInvulnerable) {
+                    clearTimeout(slateTimerId);
+                    playerNoob.isInvulnerable = false;
+                    removeStatusEffect("slate");
+                    revertSlateAppearance();
+                    speedBoostMultiplier = 1.0; // TIDAK MENDAPAT SPEED!
+                    return;
+                }
+
+                // Jika Normal: Hapus Slow & Dapat Speed I (7s)
                 hasSlowness = false;
+                removeStatusEffect("slow");
                 speedBoostMultiplier = 1.5;
+                addStatusEffect("speed", "SPEED I", "#00ffcc", 7);
                 setTimeout(() => { speedBoostMultiplier = 1.0; }, 7000);
             });
         }
@@ -849,7 +954,7 @@
         }
 
         // =========================================================================
-        // 7. ANIMASI C00LKIDD
+        // 8. ANIMASI C00LKIDD (PIZZA DELIVERY BERHENTI TOTAL + TUNGGU 0.5 DETIK)
         // =========================================================================
         let c00lState = "IDLE";
         let dashTimer = 0;
@@ -893,6 +998,8 @@
                         if (!playerNoob.isInvulnerable) {
                             playerNoob.hp = Math.max(0, playerNoob.hp - 15);
                             hasSlowness = true;
+                            addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
+                            setTimeout(() => { hasSlowness = false; }, 4000);
                             document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                             if (playerNoob.hp <= 0) killPlayer();
                         }
@@ -909,29 +1016,45 @@
             }, 400);
         }
 
+        // PIZZA DELIVERY: C00LKIDD BERHENTI TOTAL -> MINION NAIK -> TUNGGU 0.5 DETIK -> LANJUT!
         function triggerPizzaDelivery() {
             if (minions.length >= 2) return;
 
-            c00lState = "SUMMONING";
+            c00lState = "SUMMONING"; // c00lkidd berhenti total
             c00lkidd.parts.lArm.rotation.x = -2.5;
             c00lkidd.parts.rArm.rotation.x = -2.5;
 
             const needed = 2 - minions.length;
+            let minionsFinishedRising = 0;
+
             for(let i = 0; i < needed; i++) {
                 const offset = (i === 0) ? -4 : 4;
                 const m = createR6(true);
                 m.scale.set(0.65, 0.65, 0.65);
+                m.isRising = true;
                 m.position.set(c00lkidd.position.x + offset, -3, c00lkidd.position.z);
                 scene.add(m);
                 minions.push(m);
 
+                // Minion naik ke atas permukaan
                 let riseT = 0;
                 const riseInterval = setInterval(() => {
                     m.position.y += 0.15;
                     riseT++;
                     if (riseT >= 20) {
                         m.position.y = 0;
+                        m.isRising = false;
                         clearInterval(riseInterval);
+                        minionsFinishedRising++;
+
+                        // Setelah semua minion selesai naik: TUNGGU 0.5 DETIK BARU C00LKIDD LANJUT!
+                        if (minionsFinishedRising === needed) {
+                            setTimeout(() => {
+                                c00lkidd.parts.lArm.rotation.x = 0;
+                                c00lkidd.parts.rArm.rotation.x = 0;
+                                c00lState = "IDLE";
+                            }, 500); // Tunggu tepat 0.5 detik!
+                        }
                     }
                 }, 40);
 
@@ -941,12 +1064,6 @@
                     scene.remove(m);
                 }, 30000);
             }
-
-            setTimeout(() => {
-                c00lkidd.parts.lArm.rotation.x = 0;
-                c00lkidd.parts.rArm.rotation.x = 0;
-                c00lState = "IDLE";
-            }, 1200);
         }
 
         function checkHitbox(target) {
@@ -955,19 +1072,32 @@
             return (Math.abs(relPos.x) <= 1.8 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0 && relPos.z >= -5);
         }
 
+        // Helper Animasi Jalan Karakter (Untuk Noob, AI, c00lkidd, Minion)
+        function animateWalkingLimbs(charGroup, cycleSpeed) {
+            charGroup.walkCycle += cycleSpeed;
+            charGroup.parts.lArm.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
+            charGroup.parts.rArm.rotation.x = -Math.sin(charGroup.walkCycle) * 0.7;
+            charGroup.parts.lLeg.rotation.x = -Math.sin(charGroup.walkCycle) * 0.7;
+            charGroup.parts.rLeg.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
+        }
+
         // =========================================================================
-        // 8. GAME LOOP (SEMUA ENTITAS MEMAKAI FISIKA COLLISION TABRAKAN)
+        // 9. GAME LOOP UTAMA
         // =========================================================================
-        let walkCycle = 0;
         let c00lAttackTimer = 0;
 
         function animate() {
             requestAnimationFrame(animate);
 
+            // Efek Kedip Api Obor Tembok
+            torchLights.forEach(tl => {
+                tl.intensity = 1.8 + Math.random() * 0.8;
+            });
+
             if (keys["ArrowLeft"]) camYaw += 0.04;
             if (keys["ArrowRight"]) camYaw -= 0.04;
 
-            // GERAK PLAYER (DENGAN COLLISION)
+            // GERAK PLAYER
             if (!isPlayerDead && gameState === "INGAME") {
                 let spd = 0.16 * speedBoostMultiplier;
                 
@@ -999,16 +1129,15 @@
                     const angle = Math.atan2(mx, mz);
                     const vx = Math.sin(camYaw + angle) * spd;
                     const vz = Math.cos(camYaw + angle) * spd;
+                    moveWithCollision(playerNoob, vx, vz);
 
-                    moveWithCollision(playerNoob, vx, vz); // Tabrakan aktif!
-
-                    walkCycle += (playerNoob.isInvulnerable ? 0.08 : 0.18);
+                    playerNoob.walkCycle += (playerNoob.isInvulnerable ? 0.08 : 0.18);
                     if (!isDrinkingOrEating) {
-                        playerNoob.parts.lArm.rotation.x = Math.sin(walkCycle) * 0.7;
-                        playerNoob.parts.rArm.rotation.x = -Math.sin(walkCycle) * 0.7;
+                        playerNoob.parts.lArm.rotation.x = Math.sin(playerNoob.walkCycle) * 0.7;
+                        playerNoob.parts.rArm.rotation.x = -Math.sin(playerNoob.walkCycle) * 0.7;
                     }
-                    playerNoob.parts.lLeg.rotation.x = -Math.sin(walkCycle) * 0.7;
-                    playerNoob.parts.rLeg.rotation.x = Math.sin(walkCycle) * 0.7;
+                    playerNoob.parts.lLeg.rotation.x = -Math.sin(playerNoob.walkCycle) * 0.7;
+                    playerNoob.parts.rLeg.rotation.x = Math.sin(playerNoob.walkCycle) * 0.7;
                 } else {
                     if (!isDrinkingOrEating) {
                         playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.rArm.rotation.x = 0;
@@ -1017,7 +1146,6 @@
                 }
             }
 
-            // KAMERA & FOKUS AUDIO SPECTATE
             let camFocus = playerNoob;
             if (isSpectating && spectateList[spectateIdx]) {
                 camFocus = spectateList[spectateIdx];
@@ -1030,13 +1158,9 @@
             camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
 
             if (gameState === "INGAME") {
-                // JARAK AUDIO SPECTATE
                 let audioDistance = 9999;
-                if (!isPlayerDead) {
-                    audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
-                } else if (isSpectating && camFocus) {
-                    audioDistance = camFocus.position.distanceTo(c00lkidd.position);
-                }
+                if (!isPlayerDead) audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
+                else if (isSpectating && camFocus) audioDistance = camFocus.position.distanceTo(c00lkidd.position);
                 update4LayerChase(audioDistance);
 
                 let targets = [];
@@ -1057,8 +1181,10 @@
                 }
 
                 if (closestTarget) {
-                    c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
-                    c00lkidd.rotation.y += Math.PI;
+                    if (c00lState !== "SUMMONING") {
+                        c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
+                        c00lkidd.rotation.y += Math.PI;
+                    }
 
                     if (c00lState === "DASHING") {
                         dashTimer--;
@@ -1069,6 +1195,7 @@
                             if (!closestTarget.isInvulnerable) {
                                 closestTarget.hp -= 32;
                                 if (closestTarget === playerNoob) {
+                                    applyBurningToPlayer(8); // Burning 8 detik + UI
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
                                 } else if (closestTarget.hp <= 0) {
@@ -1085,22 +1212,21 @@
                         const kd = Math.sqrt(kx*kx + kz*kz);
 
                         if (kd > 4) {
-                            // C00LKIDD TIDAK TEMBUS TEMBOK LAGI!
                             moveWithCollision(c00lkidd, (kx / kd) * 0.13, (kz / kd) * 0.13);
+                            animateWalkingLimbs(c00lkidd, 0.18);
                         }
 
-                        // TAG M1 (26.5 DMG)
                         if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
                             c00lAttackTimer = 120;
                             c00lkidd.parts.rArm.rotation.x = -1.6;
 
                             if (!closestTarget.isInvulnerable) {
-                                closestTarget.hp -= 26.5; // AI PASTI BISA KENA HIT!
+                                closestTarget.hp -= 26.5;
                                 if (closestTarget === playerNoob) {
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
                                 } else if (closestTarget.hp <= 0) {
-                                    closestTarget.alive = false; closestTarget.visible = false; // AI MATI!
+                                    closestTarget.alive = false; closestTarget.visible = false;
                                 }
                             }
                             setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
@@ -1114,9 +1240,11 @@
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
-                // MINIONS TIDAK TEMBUS TEMBOK
+                // MINIONS (ANIMASI JALAN & TIDAK BERGERAK SAAT SEDANG NAIK)
                 for (let i = minions.length - 1; i >= 0; i--) {
                     const m = minions[i];
+                    if (m.isRising) continue; // Tunggu selesai naik dulu!
+
                     if (closestTarget) {
                         m.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
                         m.rotation.y += Math.PI;
@@ -1126,6 +1254,7 @@
 
                         if (md > 2.5) {
                             moveWithCollision(m, (mx / md) * 0.085, (mz / md) * 0.085);
+                            animateWalkingLimbs(m, 0.22);
                         } else {
                             clearTimeout(m.despawnTimeout);
                             scene.remove(m);
@@ -1137,6 +1266,9 @@
                                 closestTarget.hp -= 15;
                                 if (closestTarget === playerNoob) {
                                     hasSlowness = true;
+                                    addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
+                                    setTimeout(() => { hasSlowness = false; }, 3000);
+                                    applyBurningToPlayer(3); // Burning 3 detik
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
                                 } else if (closestTarget.hp <= 0) {
@@ -1147,11 +1279,10 @@
                     }
                 }
 
-                // AI SURVIVOR: GERAK TIDAK TEMBUS TEMBOK
+                // AI SURVIVOR: ANIMASI BERJALAN LENGKAP & GERAK REALISTIS
                 aiSurvivors.forEach(ai => {
                     if (ai.alive) {
                         const distToKiller = ai.position.distanceTo(c00lkidd.position);
-
                         let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.14 : 0.08;
 
                         if (distToKiller < 35 || ai.isHighlighted) {
@@ -1160,6 +1291,8 @@
                             const dist = Math.sqrt(adx*adx + adz*adz);
                             moveWithCollision(ai, (adx / dist) * aiSpeed, (adz / dist) * aiSpeed);
                             ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz);
+                            ai.rotation.y += Math.PI; // Wajah menghadap arah lari
+                            animateWalkingLimbs(ai, 0.22); // Animasi lari AI!
                         } else {
                             const pdx = ai.patrolTarget.x - ai.position.x;
                             const pdz = ai.patrolTarget.z - ai.position.z;
@@ -1168,6 +1301,8 @@
                             if (pdist > 2) {
                                 moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
                                 ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z);
+                                ai.rotation.y += Math.PI;
+                                animateWalkingLimbs(ai, 0.14); // Animasi jalan AI!
                             } else {
                                 pickNewPatrol(ai);
                             }
