@@ -249,7 +249,7 @@ window.onerror = function(msg, url, line, col) {
   <div id="slot-gear" class="inv-slot">[⚙] GERIGI<br><span id="count-gear">0</span></div>
 </div>
 <div id="top-hud">
-  <div id="round-info">RONDE 1 (1v8)</div><div id="round-timer">LOBBY: 15s</div><div id="gen-status">Generator Selesai: 0 / 5</div>
+  <div id="round-info">RONDE 1 (1v8)</div><div id="round-timer">LOBBY: 40s</div><div id="gen-status">Generator Selesai: 0 / 5</div>
   <div id="lobby-controls">
     <button id="role-btn" class="lobby-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR</button>
     <button id="char-btn" class="lobby-btn" onclick="toggleSurvivorChar()">SURVIVOR: NOOB</button>
@@ -274,7 +274,7 @@ window.onerror = function(msg, url, line, col) {
   const LOBBY_FLOOR_Y = 71;
 let roundCount = 1, doubleTroubleEnabled = false, isDoubleTrouble = false;
 let playerRole = "SURVIVOR", survivorChar = "NOOB", killerType = "c00lkidd";
-let gameState = "LOBBY", timerSeconds = 15;
+let gameState = "LOBBY", timerSeconds = 40;
 let lmsTriggered = false, lmsMode = "NORMAL", isPlayerDead = false;
 let spectateList = [], spectateIdx = 0, isSpectating = false, camFocusOverride = null;
 let activeGen = null, activeNPC = null, invCola = 0, invMedkit = 0, invGears = 0, isUsingMedkit = false;
@@ -757,17 +757,23 @@ function spawnAllMapItems() {
 }
 
 function canMoveTo(x, z) {
+  if (x < -109.5 || x > 109.5 || z < -109.5 || z > 109.5) return false;
   for (let i = 0; i < solidBoxes.length; i++) {
     const b = solidBoxes[i];
     if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
   }
   return true;
 }
+
 function moveWithCollision(e, vx, vz) {
-  const nx = e.position.x + vx, nz = e.position.z + vz;
-  if (canMoveTo(nx, nz)) { e.position.x = nx; e.position.z = nz; }
-  else if (canMoveTo(nx, e.position.z)) e.position.x = nx;
-  else if (canMoveTo(e.position.x, nz)) e.position.z = nz;
+  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(vx), Math.abs(vz)) / 0.8));
+  const sx = vx / steps, sz = vz / steps;
+  for (let s = 0; s < steps; s++) {
+    const nx = e.position.x + sx, nz = e.position.z + sz;
+    if (canMoveTo(nx, nz)) { e.position.x = nx; e.position.z = nz; }
+    else if (canMoveTo(nx, e.position.z)) e.position.x = nx;
+    else if (canMoveTo(e.position.x, nz)) e.position.z = nz;
+  }
 }
   // === KOTAK 2: KARAKTER R6, LOBBY & NPC, ROSTER, CUTSCENE ===
 function createFace(bg, mode) {
@@ -2156,7 +2162,7 @@ function endRoundToLobby(killerWon) {
   clearRoundTimers(); closePuzzle(); closeNPCModal(); clearAllEffects(); stopAndResetAllAudio();
   document.getElementById("blind-overlay").style.display = "none";
   function finalizeLobby() {
-    gameState = "LOBBY"; timerSeconds = 15; roundCount++; updateRoundInfoText();
+    gameState = "LOBBY"; timerSeconds = 40; roundCount++; updateRoundInfoText();
     lmsTriggered = false; isSpectating = false; camFocusOverride = null; playerVY = 0; isGrounded = true;
     playerNoob.position.set(0, LOBBY_FLOOR_Y, 14);
     playerNoob.visible = true; playerNoob.parts.fireMesh.visible = false; applyPlayerAppearance();
