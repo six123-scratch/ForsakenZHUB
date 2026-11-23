@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forsaken 3D - Play as Killer or Survivor</title>
+    <title>Forsaken 3D - 007n7, c00lkidd & Full Mechanics</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
 
@@ -22,17 +22,17 @@
         }
         #round-timer { font-size: 24px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
 
-        /* TOMBOL PILIH ROLE DI LOBBY */
-        #role-btn {
+        #lobby-controls { display: flex; gap: 8px; }
+        .lobby-btn {
             background: #0055ff; color: #fff; border: 2px solid #fff;
-            padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px;
-            cursor: pointer; display: block;
+            padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
         }
-        #role-btn.killer { background: #cc0000; }
+        .lobby-btn.killer { background: #cc0000; }
+        .lobby-btn.char007 { background: #009977; }
 
         /* STATUS EFFECTS DI KIRI TENGAH */
         #status-effects {
-            position: absolute; top: 30%; left: 20px;
+            position: absolute; top: 28%; left: 20px;
             display: flex; flex-direction: column; gap: 8px;
             z-index: 15; pointer-events: none;
         }
@@ -44,7 +44,7 @@
         }
 
         #highlight-warning {
-            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 95px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 200, 0, 0.85); color: #000; font-weight: 900;
             padding: 6px 16px; border-radius: 20px; font-size: 13px; letter-spacing: 1px;
             display: none; z-index: 12; animation: blink 0.5s infinite alternate;
@@ -62,7 +62,7 @@
         #stamina-bar { width: 100%; height: 100%; background: #ffaa00; transition: width 0.1s; }
         .bar-title { font-size: 10px; font-weight: bold; margin-top: 3px; }
 
-        /* PANEL SPECTATE & PERSENTASE DARAH AI */
+        /* SPECTATE PANEL */
         #spectate-panel {
             position: absolute; top: 48%; left: 20px; transform: translateY(-50%);
             display: none; flex-direction: column; gap: 8px; z-index: 25;
@@ -87,7 +87,7 @@
         }
         @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.08); } }
 
-        /* SKILL UI SURVIVOR & KILLER */
+        /* SKILL UI */
         #skills-container {
             position: absolute; bottom: 20px; right: 25px; width: 220px; height: 210px;
             z-index: 10; display: none;
@@ -154,7 +154,10 @@
 
     <div id="top-hud">
         <div id="round-timer">LOBBY: 15s</div>
-        <button id="role-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR (Klik Ganti)</button>
+        <div id="lobby-controls">
+            <button id="role-btn" class="lobby-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR</button>
+            <button id="char-btn" class="lobby-btn" onclick="toggleSurvivorChar()">SURVIVOR: NOOB</button>
+        </div>
     </div>
 
     <div id="spectate-panel">
@@ -202,16 +205,27 @@
 
     <script>
         // =========================================================================
-        // 1. STATUS EFFECTS & ROLE TOGGLE
+        // 1. PILIHAN ROLE & KARAKTER (NOOB / 007n7 / KILLER)
         // =========================================================================
-        let playerRole = "SURVIVOR"; // "SURVIVOR" atau "KILLER"
+        let playerRole = "SURVIVOR"; // "SURVIVOR" / "KILLER"
+        let survivorChar = "NOOB";   // "NOOB" / "007n7"
 
         function togglePlayerRole() {
             if (gameState !== "LOBBY") return;
             playerRole = (playerRole === "SURVIVOR") ? "KILLER" : "SURVIVOR";
-            const btn = document.getElementById("role-btn");
-            btn.innerText = "PERAN: " + playerRole + " (Klik Ganti)";
-            btn.classList.toggle("killer", playerRole === "KILLER");
+            const rBtn = document.getElementById("role-btn");
+            rBtn.innerText = "PERAN: " + playerRole;
+            rBtn.classList.toggle("killer", playerRole === "KILLER");
+            document.getElementById("char-btn").style.display = (playerRole === "SURVIVOR") ? "block" : "none";
+        }
+
+        function toggleSurvivorChar() {
+            if (gameState !== "LOBBY") return;
+            survivorChar = (survivorChar === "NOOB") ? "007n7" : "NOOB";
+            const cBtn = document.getElementById("char-btn");
+            cBtn.innerText = "SURVIVOR: " + survivorChar;
+            cBtn.classList.toggle("char007", survivorChar === "007n7");
+            applyPlayerAppearance();
         }
 
         const activeEffects = {};
@@ -246,11 +260,10 @@
                 delete activeEffects[key];
             }
         }
-
         function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
         // =========================================================================
-        // 2. AUDIO ENGINE (UNLOCK ALL LAYERS ON CLICK -> LAYER 4 PASTI NYALA)
+        // 2. AUDIO ENGINE: FIX LAYER 4 & KHUSUS KILLER HANYA LAYER 4
         // =========================================================================
         let isAudioInit = false;
         const l1 = document.getElementById("chase-layer1");
@@ -278,9 +291,7 @@
         }
 
         function playSFX(el) {
-            if (el && el.readyState >= 1) {
-                el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{});
-            }
+            if (el && el.readyState >= 1) { el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{}); }
         }
 
         function stopAndResetAllAudio() {
@@ -298,18 +309,26 @@
         }
 
         function switchSingleLayer(targetLayer) {
-            if (activeLayerIndex === targetLayer) return;
-            [l1, l2, l3, l4].forEach(l => {
-                if (l && !l.paused) { l.pause(); l.currentTime = 0; }
-            });
-            activeLayerIndex = targetLayer;
-
             const layers = [null, l1, l2, l3, l4];
             const chosen = layers[targetLayer];
-            if (chosen) {
-                chosen.currentTime = 0;
-                chosen.volume = 1.0;
-                chosen.play().catch(()=>{});
+
+            // Jika layer berubah, reset & matikan yang lama
+            if (activeLayerIndex !== targetLayer) {
+                [l1, l2, l3, l4].forEach(l => {
+                    if (l && !l.paused) { l.pause(); l.currentTime = 0; }
+                });
+                activeLayerIndex = targetLayer;
+                if (chosen) {
+                    chosen.currentTime = 0;
+                    chosen.volume = 1.0;
+                    chosen.play().catch(()=>{});
+                }
+            } else {
+                // Pastikan tetap menyala jika sebelumnya gagal buffer!
+                if (chosen && chosen.paused) {
+                    chosen.volume = 1.0;
+                    chosen.play().catch(()=>{});
+                }
             }
         }
 
@@ -321,7 +340,6 @@
                 [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
                 activeLayerIndex = 0;
                 if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
-
                 if (bgmLMS && bgmLMS.paused) {
                     bgmLMS.currentTime = 0; bgmLMS.volume = 1.0; bgmLMS.play().catch(()=>{});
                 }
@@ -331,6 +349,21 @@
                 if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
             }
 
+            // KHUSUS JIKA JADI KILLER: HANYA LAYER 4 SAJA YANG NYALA SAAT DEKAT!
+            if (playerRole === "KILLER") {
+                if (dist <= 28) {
+                    switchSingleLayer(4);
+                    if (bgmAmbience) bgmAmbience.volume = 0.1;
+                    vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.45)";
+                } else {
+                    switchSingleLayer(0);
+                    if (bgmAmbience) bgmAmbience.volume = 0.4;
+                    vignette.style.boxShadow = "inset 0 0 0px rgba(255, 0, 0, 0)";
+                }
+                return;
+            }
+
+            // JIKA SURVIVOR: 4 LAYER NORMAL
             if (dist > 80) {
                 switchSingleLayer(0);
                 if (bgmAmbience) bgmAmbience.volume = 0.45;
@@ -348,14 +381,14 @@
                 if (bgmAmbience) bgmAmbience.volume = 0.1;
                 vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)";
             } else {
-                switchSingleLayer(4); // Jarak <= 22: LAYER 4 PASTI MENYALA!
+                switchSingleLayer(4);
                 if (bgmAmbience) bgmAmbience.volume = 0.05;
                 vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)";
             }
         }
 
         // =========================================================================
-        // 3. 3D SCENE, OPTIMIZED SHADOWS & OBOR (RINGAN 60 FPS DI CHROMEBOOK!)
+        // 3. 3D SCENE, BAYANGAN, OBOR & SPAWN POINTS (UNTUK PASSIVE 007n7)
         // =========================================================================
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x14151f, 0.008);
@@ -364,7 +397,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFShadowMap; // Ringan & cepat untuk Chromebook
+        renderer.shadowMap.type = THREE.PCFShadowMap;
         document.body.appendChild(renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0x666677, 1.0);
@@ -375,21 +408,41 @@
         moonLight.castShadow = true;
         moonLight.shadow.mapSize.width = 1024;
         moonLight.shadow.mapSize.height = 1024;
-        moonLight.shadow.camera.near = 10;
-        moonLight.shadow.camera.far = 300;
+        moonLight.shadow.camera.near = 10; moonLight.shadow.camera.far = 300;
         moonLight.shadow.camera.left = -125; moonLight.shadow.camera.right = 125;
         moonLight.shadow.camera.top = 125; moonLight.shadow.camera.bottom = -125;
         scene.add(moonLight);
 
         const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x203220, roughness: 0.9 }));
-        arenaFloor.rotation.x = -Math.PI / 2;
-        arenaFloor.receiveShadow = true;
-        scene.add(arenaFloor);
+        arenaFloor.rotation.x = -Math.PI / 2; arenaFloor.receiveShadow = true; scene.add(arenaFloor);
 
         const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
-        lobbyPlatform.position.set(0, 70, 0);
-        lobbyPlatform.receiveShadow = true;
-        scene.add(lobbyPlatform);
+        lobbyPlatform.position.set(0, 70, 0); lobbyPlatform.receiveShadow = true; scene.add(lobbyPlatform);
+
+        // Titik Spawn Survivor (Untuk Teleport c00lgui & Passive Dex 007n7)
+        const survivorSpawns = [
+            new THREE.Vector3(-85, 0, -85),
+            new THREE.Vector3(85, 0, -85),
+            new THREE.Vector3(-85, 0, 85),
+            new THREE.Vector3(85, 0, 85)
+        ];
+
+        // Penanda Beacon Passive "Dex" (Terlihat oleh 007n7)
+        const dexMarker = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.5, 1.5, 40, 8),
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, wireframe: true })
+        );
+        dexMarker.visible = false;
+        scene.add(dexMarker);
+
+        function getFarthestSpawn(pos) {
+            let far = survivorSpawns[0], maxD = -1;
+            survivorSpawns.forEach(sp => {
+                const d = pos.distanceTo(sp);
+                if (d > maxD) { maxD = d; far = sp; }
+            });
+            return far;
+        }
 
         const solidBoxes = [];
         function registerBox(x, z, w, d) {
@@ -399,55 +452,39 @@
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 });
         function createBorderWall(x, z, w, d) {
             const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
-            wall.position.set(x, 11, z);
-            wall.castShadow = true; wall.receiveShadow = true;
-            scene.add(wall);
-            registerBox(x, z, w, d);
+            wall.position.set(x, 11, z); wall.castShadow = true; wall.receiveShadow = true;
+            scene.add(wall); registerBox(x, z, w, d);
         }
-        createBorderWall(0, -125, 250, 6);
-        createBorderWall(0, 125, 250, 6);
-        createBorderWall(-125, 0, 6, 250);
-        createBorderWall(125, 0, 6, 250);
+        createBorderWall(0, -125, 250, 6); createBorderWall(0, 125, 250, 6);
+        createBorderWall(-125, 0, 6, 250); createBorderWall(125, 0, 6, 250);
 
         const torchLights = [];
         function attachTorchToWall(wx, wy, wz) {
             const torchGroup = new THREE.Group();
             const stick = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.4, 0.25), new THREE.MeshStandardMaterial({ color: 0x4d3319 }));
             stick.rotation.x = 0.4; torchGroup.add(stick);
-
             const flame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 }));
             flame.position.set(0, 0.7, 0.3); torchGroup.add(flame);
-
             const light = new THREE.PointLight(0xff6600, 2.2, 28);
-            light.position.set(0, 0.8, 0.5);
-            torchGroup.add(light);
-            torchLights.push(light);
-
-            torchGroup.position.set(wx, wy, wz);
-            scene.add(torchGroup);
+            light.position.set(0, 0.8, 0.5); torchGroup.add(light); torchLights.push(light);
+            torchGroup.position.set(wx, wy, wz); scene.add(torchGroup);
         }
 
         for(let i = 0; i < 20; i++) {
             const h = 8 + Math.random() * 8;
             const b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({ color: 0x333340 }));
-            const bx = (Math.random() - 0.5) * 165;
-            const bz = (Math.random() - 0.5) * 165;
-            b.position.set(bx, h/2, bz);
-            b.castShadow = true; b.receiveShadow = true;
-            scene.add(b);
-            registerBox(bx, bz, 8, 8);
-
+            const bx = (Math.random() - 0.5) * 150, bz = (Math.random() - 0.5) * 150;
+            b.position.set(bx, h/2, bz); b.castShadow = true; b.receiveShadow = true;
+            scene.add(b); registerBox(bx, bz, 8, 8);
             if (i % 3 === 0) attachTorchToWall(bx, 5, bz + 4.2);
         }
 
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
         const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
-        for(let i = 0; i < 30; i++) {
-            const tx = (Math.random() - 0.5) * 185;
-            const tz = (Math.random() - 0.5) * 185;
+        for(let i = 0; i < 28; i++) {
+            const tx = (Math.random() - 0.5) * 170, tz = (Math.random() - 0.5) * 170;
             const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), trunkMat);
             trunk.position.set(tx, 3.5, tz); trunk.castShadow = true; scene.add(trunk);
-
             const foliage = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), foliageMat);
             foliage.position.set(tx, 8, tz); foliage.castShadow = true; scene.add(foliage);
             registerBox(tx, tz, 1.2, 1.2);
@@ -461,28 +498,22 @@
         }
 
         function moveWithCollision(entity, vx, vz) {
-            const nextX = entity.position.x + vx;
-            const nextZ = entity.position.z + vz;
-            if (canMoveTo(nextX, nextZ)) {
-                entity.position.x = nextX; entity.position.z = nextZ;
-            } else if (canMoveTo(nextX, entity.position.z)) {
-                entity.position.x = nextX;
-            } else if (canMoveTo(entity.position.x, nextZ)) {
-                entity.position.z = nextZ;
-            }
+            const nextX = entity.position.x + vx, nextZ = entity.position.z + vz;
+            if (canMoveTo(nextX, nextZ)) { entity.position.x = nextX; entity.position.z = nextZ; }
+            else if (canMoveTo(nextX, entity.position.z)) entity.position.x = nextX;
+            else if (canMoveTo(entity.position.x, nextZ)) entity.position.z = nextZ;
         }
 
         // ==========================================
-        // 4. MODEL R6 NOOB & C00LKIDD
+        // 4. MODEL R6: NOOB, 007n7 (TOPI BURGER) & C00LKIDD
         // ==========================================
-        function createFace(isRed) {
+        function createFace(bgHex) {
             const c = document.createElement("canvas"); c.width = 128; c.height = 128;
             const ctx = c.getContext("2d");
-            ctx.fillStyle = isRed ? "#ff0000" : "#ffd200";
-            ctx.fillRect(0,0,128,128);
+            ctx.fillStyle = bgHex; ctx.fillRect(0,0,128,128);
             ctx.fillStyle = "#000";
             ctx.beginPath(); ctx.arc(40, 45, 8, 0, Math.PI*2); ctx.arc(88, 45, 8, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(64, 75, isRed ? 30 : 22, 0, Math.PI, false); ctx.lineWidth = 6; ctx.stroke();
+            ctx.beginPath(); ctx.arc(64, 75, 24, 0, Math.PI, false); ctx.lineWidth = 6; ctx.stroke();
             return new THREE.CanvasTexture(c);
         }
 
@@ -491,8 +522,7 @@
             const ctx = c.getContext("2d");
             ctx.fillStyle = "#cc0000"; ctx.fillRect(0, 0, 256, 256);
             ctx.fillStyle = "#111111"; ctx.font = "bold 26px sans-serif"; ctx.textAlign = "center";
-            ctx.fillText("team c00lkidd", 128, 100);
-            ctx.fillText("join today!", 128, 150);
+            ctx.fillText("team c00lkidd", 128, 100); ctx.fillText("join today!", 128, 150);
             return new THREE.CanvasTexture(c);
         }
 
@@ -507,23 +537,58 @@
             return sword;
         }
 
-        function createR6(isRed) {
+        // Topi Burger 007n7
+        function createBurgerHat() {
+            const hat = new THREE.Group();
+            const bunMat = new THREE.MeshStandardMaterial({ color: 0xd99b43 });
+            const meatMat = new THREE.MeshStandardMaterial({ color: 0x5c2c16 });
+            const letMat = new THREE.MeshStandardMaterial({ color: 0x44aa22 });
+
+            const botBun = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.25, 12), bunMat);
+            const meat = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.22, 12), meatMat); meat.position.y = 0.22;
+            const lettuce = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.1, 12), letMat); lettuce.position.y = 0.36;
+            const topBun = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.7, 0.35, 12), bunMat); topBun.position.y = 0.58;
+            // Kepala mini kuning di atas burger (khas topi 007n7)
+            const miniHead = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xffd200 })); miniHead.position.y = 0.95;
+
+            hat.add(botBun, meat, lettuce, topBun, miniHead);
+            return hat;
+        }
+
+        function createR6(isRed, is007 = false) {
             const g = new THREE.Group();
-            const mBody = isRed ? new THREE.MeshStandardMaterial({ color: 0xcc0000 }) : new THREE.MeshStandardMaterial({ color: 0x0055ff });
-            const mLimb = new THREE.MeshStandardMaterial({ color: isRed ? 0x990000 : 0xffd200 });
-            const mLeg  = new THREE.MeshStandardMaterial({ color: isRed ? 0x990000 : 0x287f46 });
+            const bodyCol = isRed ? 0xcc0000 : (is007 ? 0x2a66cc : 0x0055ff);
+            const limbCol = isRed ? 0x990000 : (is007 ? 0xe0e0e0 : 0xffd200);
+            const legCol  = isRed ? 0x990000 : (is007 ? 0x1a3366 : 0x287f46);
+
+            const mBody = new THREE.MeshStandardMaterial({ color: bodyCol });
+            const mLimb = new THREE.MeshStandardMaterial({ color: limbCol });
+            const mLeg  = new THREE.MeshStandardMaterial({ color: legCol });
 
             let torsoMat = mBody;
             if (isRed) torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: createC00lkiddTorsoTexture() })];
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; torso.castShadow = true; g.add(torso);
-            const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(isRed) })];
+            const faceColorHex = isRed ? "#ff0000" : (is007 ? "#eeeeee" : "#ffd200");
+            const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(faceColorHex) })];
             const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; head.castShadow = true; g.add(head);
             
             const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true; g.add(lArm);
             const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLimb); rArm.position.set(1.5, 3, 0); rArm.castShadow = true; g.add(rArm);
             const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true; g.add(lLeg);
             const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true; g.add(rLeg);
+
+            // Topi Burger 007n7
+            const burgerHat = createBurgerHat();
+            burgerHat.position.set(0, 0.7, 0);
+            burgerHat.visible = is007;
+            head.add(burgerHat);
+
+            // Tablet c00lgui melayang di depan dada (untuk 007n7)
+            const c00lguiTab = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.1), new THREE.MeshBasicMaterial({ color: 0xff2222, wireframe: true }));
+            c00lguiTab.position.set(0, 3.2, -1.0);
+            c00lguiTab.visible = false;
+            g.add(c00lguiTab);
 
             const highlightMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 }));
             highlightMesh.position.y = 2.6; highlightMesh.visible = false; g.add(highlightMesh);
@@ -536,22 +601,30 @@
                 sw.position.set(0, -1, -0.4); sw.rotation.x = Math.PI / 2; rArm.add(sw);
             }
 
-            g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh };
-            g.isHighlighted = false;
-            g.hp = 100;
-            g.isInvulnerable = false;
-            g.walkCycle = 0;
+            g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh, burgerHat, c00lguiTab };
+            g.isHighlighted = false; g.isUndetectable = false; g.hp = 100; g.isInvulnerable = false; g.walkCycle = 0;
             return g;
         }
 
-        const playerNoob = createR6(false);
-        playerNoob.name = "Kamu (Noob)";
+        const playerNoob = createR6(false, false);
+        playerNoob.name = "Kamu";
         playerNoob.position.set(0, 72, 0);
         scene.add(playerNoob);
 
+        function applyPlayerAppearance() {
+            const is007 = (survivorChar === "007n7");
+            playerNoob.parts.burgerHat.visible = is007;
+            const limbCol = is007 ? 0xe0e0e0 : 0xffd200;
+            const legCol = is007 ? 0x1a3366 : 0x287f46;
+            playerNoob.parts.lArm.material.color.setHex(limbCol);
+            playerNoob.parts.rArm.material.color.setHex(limbCol);
+            playerNoob.parts.lLeg.material.color.setHex(legCol);
+            playerNoob.parts.rLeg.material.color.setHex(legCol);
+        }
+
         const aiSurvivors = [];
         for(let i = 0; i < 3; i++) {
-            const ai = createR6(false);
+            const ai = createR6(false, false);
             ai.position.set((i - 1) * 6, 72, 5);
             ai.alive = true; ai.hp = 100; ai.isInvulnerable = false;
             ai.name = "AI Noob " + (i + 1);
@@ -560,7 +633,7 @@
             aiSurvivors.push(ai);
         }
 
-        const c00lkidd = createR6(true);
+        const c00lkidd = createR6(true, false);
         c00lkidd.name = "c00lkidd";
         const redGlow = new THREE.PointLight(0xff0000, 2.5, 18);
         c00lkidd.add(redGlow);
@@ -568,6 +641,7 @@
         scene.add(c00lkidd);
 
         const minions = [];
+        const clones = []; // Klon 007n7
 
         // ==========================================
         // 5. KAMERA 360 & UNLOCK MOUSE [M]
@@ -581,19 +655,12 @@
             document.body.requestPointerLock();
             document.getElementById("start-hint").style.display = "none";
             unlockAllAudio();
-            if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) {
-                useBasicAttack();
-            }
+            if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
         });
 
-        document.addEventListener("pointerlockchange", () => {
-            isPointerLocked = (document.pointerLockElement === document.body);
-        });
-
+        document.addEventListener("pointerlockchange", () => { isPointerLocked = (document.pointerLockElement === document.body); });
         window.addEventListener("mousedown", (e) => {
-            if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) {
-                useBasicAttack();
-            }
+            if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
             isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY;
         });
         window.addEventListener("mouseup", () => { isMouseDown = false; });
@@ -612,16 +679,13 @@
         });
 
         // ==========================================
-        // 6. ROUND, SPECTATE HP LIST & BURNING
-        // =========================================================================
+        // 6. ROUND, SPECTATE & STATUS BURNING
+        // ==========================================
         let gameState = "LOBBY";
         let timerSeconds = 15;
         let lmsTriggered = false;
         let isPlayerDead = false;
-
-        let spectateList = [];
-        let spectateIdx = 0;
-        let isSpectating = false;
+        let spectateList = [], spectateIdx = 0, isSpectating = false;
 
         let burnTimer = null;
         function applyBurningToPlayer(durationSec) {
@@ -633,9 +697,7 @@
             burnTimer = setInterval(() => {
                 ticks++;
                 if (ticks > durationSec || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) {
-                    clearInterval(burnTimer);
-                    removeStatusEffect("burn");
-                    return;
+                    clearInterval(burnTimer); removeStatusEffect("burn"); return;
                 }
                 playerNoob.hp = Math.max(0, playerNoob.hp - 1.5);
                 document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
@@ -652,6 +714,14 @@
                 document.getElementById("label-s3").innerText = "Pizza [R]";
                 document.getElementById("icon-sprint").innerText = "M1 / F";
                 document.getElementById("label-sprint").innerText = "TAG (26.5)";
+            } else if (survivorChar === "007n7") {
+                document.getElementById("hp-title").style.display = "block";
+                document.getElementById("hp-container").style.display = "block";
+                document.getElementById("label-s1").innerText = "Clone [Q]";
+                document.getElementById("label-s2").innerText = "c00lgui [E]";
+                document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
+                document.getElementById("icon-sprint").innerText = "SHIFT";
+                document.getElementById("label-sprint").innerText = "SPRINT";
             } else {
                 document.getElementById("hp-title").style.display = "block";
                 document.getElementById("hp-container").style.display = "block";
@@ -664,11 +734,11 @@
         }
 
         function updateUIState() {
-            document.getElementById("role-btn").style.display = (gameState === "LOBBY") ? "block" : "none";
-
+            document.getElementById("lobby-controls").style.display = (gameState === "LOBBY") ? "flex" : "none";
             const showHUD = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
             document.getElementById("player-bars").style.display = showHUD ? "block" : "none";
             document.getElementById("skills-container").style.display = showHUD ? "block" : "none";
+            dexMarker.visible = (gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead);
             updateSkillButtonsForRole();
             
             const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR");
@@ -690,7 +760,6 @@
             spectateList = [];
             aiSurvivors.forEach(ai => { if (ai.alive) spectateList.push(ai); });
             spectateList.push(c00lkidd);
-
             if (spectateList.length > 0) {
                 isSpectating = true;
                 spectateIdx = (spectateIdx + 1) % spectateList.length;
@@ -700,6 +769,7 @@
 
         function killPlayer() {
             if (playerRole === "KILLER") return;
+            cancelC00lgui();
             isPlayerDead = true;
             playerNoob.hp = 0;
             playerNoob.position.set(0, 72, 0);
@@ -709,7 +779,7 @@
         }
 
         function pickNewPatrol(ai) {
-            ai.patrolTarget.set((Math.random() - 0.5) * 160, 0, (Math.random() - 0.5) * 160);
+            ai.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
         }
         aiSurvivors.forEach(pickNewPatrol);
 
@@ -722,12 +792,11 @@
                 if (timerSeconds <= 0) {
                     gameState = "INGAME";
                     timerSeconds = 180;
-                    isPlayerDead = false;
-                    isSpectating = false;
-                    clearAllEffects();
+                    isPlayerDead = false; isSpectating = false;
+                    clearAllEffects(); cancelC00lgui();
 
                     playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
-                    playerNoob.isInvulnerable = false;
+                    playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false;
                     document.getElementById("hp-bar").style.width = "100%";
                     playerNoob.position.set(0, 0, 0);
 
@@ -748,7 +817,7 @@
 
                 let aliveCount = 0;
                 if (playerRole === "SURVIVOR" && !isPlayerDead) aliveCount++;
-                if (playerRole === "KILLER" && playerNoob.alive) aliveCount++; // Bot player noob jika jadi killer
+                if (playerRole === "KILLER" && playerNoob.alive) aliveCount++;
                 aiSurvivors.forEach(ai => { if (ai.alive) aliveCount++; });
 
                 updateSpectateHPList();
@@ -763,13 +832,12 @@
                 if (timerSeconds <= 0 || aliveCount === 0) {
                     gameState = "LOBBY";
                     timerSeconds = 15;
-                    lmsTriggered = false;
-                    isSpectating = false;
-                    clearAllEffects();
+                    lmsTriggered = false; isSpectating = false;
+                    clearAllEffects(); cancelC00lgui();
                     playerNoob.position.set(0, 72, 0);
                     c00lkidd.position.set(0, 72, -10);
-                    minions.forEach(m => scene.remove(m));
-                    minions.length = 0;
+                    minions.forEach(m => scene.remove(m)); minions.length = 0;
+                    clones.forEach(c => scene.remove(c)); clones.length = 0;
                     updateUIState();
                     stopAndResetAllAudio();
                 }
@@ -777,19 +845,18 @@
         }, 1000);
 
         // =========================================================================
-        // 7. ABILITIES (SURVIVOR NOOB DAN KILLER C00LKIDD!)
+        // 7. ABILITIES: NOOB, 007n7 (CLONE, C00LGUI, INJECT) & C00LKIDD
         // =========================================================================
         let keys = {};
-        let isShiftlock = false;
-        let stamina = 100;
-        let isSprinting = false;
-
-        let isDrinkingOrEating = false;
-        let slateTimerId = null;
-        let speedBoostMultiplier = 1.0;
-        let hasSlowness = false;
-
+        let isShiftlock = false, stamina = 100, isSprinting = false;
+        let isDrinkingOrEating = false, slateTimerId = null, speedBoostMultiplier = 1.0, hasSlowness = false;
         let cdQ = false, cdE = false, cdR = false, cdM1 = false;
+
+        // 007n7 VARIABLES
+        const injectModes = ["Wander", "Pathfind", "Cursor"];
+        let injectIdx = 0;
+        let isCastingC00lgui = false;
+        let c00lguiTimeout = null;
 
         function toggleShiftlock() {
             isShiftlock = !isShiftlock;
@@ -806,19 +873,97 @@
             if (e.code === "KeyR") useSkill3();
             if (e.code === "KeyF" && playerRole === "KILLER") useBasicAttack();
         });
-
         window.addEventListener("keyup", (e) => { 
             keys[e.code] = false;
             if (e.code === "ShiftLeft") isSprinting = false;
         });
 
-        // Dispatcer Skill berdasarkan Role
-        function useSkill1() { if (playerRole === "SURVIVOR") useBurger(); else killerWalkspeedOverride(); }
-        function useSkill2() { if (playerRole === "SURVIVOR") useSlate(); else killerCorruptNature(); }
-        function useSkill3() { if (playerRole === "SURVIVOR") useCola(); else killerPizzaDelivery(); }
+        function useSkill1() {
+            if (playerRole === "KILLER") killerWalkspeedOverride();
+            else if (survivorChar === "007n7") use007Clone();
+            else useBurger();
+        }
+        function useSkill2() {
+            if (playerRole === "KILLER") killerCorruptNature();
+            else if (survivorChar === "007n7") use007C00lgui();
+            else useSlate();
+        }
+        function useSkill3() {
+            if (playerRole === "KILLER") killerPizzaDelivery();
+            else if (survivorChar === "007n7") use007Inject();
+            else useCola();
+        }
         function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
 
-        // --- SKILL SURVIVOR ---
+        // --- ABILITY 007n7 ---
+        // [Q] CLONE (Cooldown 27s, Klon hidup 10s [5s jika mode Cursor], 007n7 Asli Invisibility + Undetectable 5s!)
+        function use007Clone() {
+            if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
+            cdQ = true; animateCD("cd-q", 27, () => { cdQ = false; });
+
+            // Buat Klon
+            const clone = createR6(false, true);
+            clone.position.copy(playerNoob.position);
+            clone.rotation.copy(playerNoob.rotation);
+            clone.hp = 100;
+            clone.alive = true;
+            clone.mode = injectModes[injectIdx];
+            clone.patrolTarget = new THREE.Vector3((Math.random()-0.5)*140, 0, (Math.random()-0.5)*140);
+            scene.add(clone);
+            clones.push(clone);
+
+            // Durasi Klon (Cursor mode = 50% lebih singkat = 5s)
+            const duration = (clone.mode === "Cursor") ? 5000 : 10000;
+            setTimeout(() => {
+                clone.alive = false;
+                scene.remove(clone);
+                const idx = clones.indexOf(clone);
+                if (idx > -1) clones.splice(idx, 1);
+            }, duration);
+
+            // 007n7 Asli mendapat Invisibility IV & Undetectable I selama 5 detik!
+            playerNoob.isUndetectable = true;
+            addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#00ffcc", 5);
+            Object.values(playerNoob.parts).forEach(p => { if (p.material) { p.material.transparent = true; p.material.opacity = 0.12; } });
+            setTimeout(() => {
+                playerNoob.isUndetectable = false;
+                Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; });
+            }, 5000);
+        }
+
+        // [E] c00lgui (Cooldown 50s, Windup diam 5.5s, Teleport ke Spawn Terjauh. Batal jika kena hit!)
+        function cancelC00lgui() {
+            if (!isCastingC00lgui) return;
+            clearTimeout(c00lguiTimeout);
+            isCastingC00lgui = false;
+            playerNoob.parts.c00lguiTab.visible = false;
+            removeStatusEffect("c00lgui");
+        }
+
+        function use007C00lgui() {
+            if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
+            cdE = true; animateCD("cd-e", 50, () => { cdE = false; });
+
+            isCastingC00lgui = true;
+            playerNoob.parts.c00lguiTab.visible = true;
+            addStatusEffect("c00lgui", "c00lgui TELEPORT", "#ff3333", 6);
+
+            c00lguiTimeout = setTimeout(() => {
+                isCastingC00lgui = false;
+                playerNoob.parts.c00lguiTab.visible = false;
+                const farSpawn = getFarthestSpawn(playerNoob.position);
+                playerNoob.position.set(farSpawn.x, 0, farSpawn.z);
+            }, 5500);
+        }
+
+        // [R] INJECT (Instant - Ganti mode gerakan klon)
+        function use007Inject() {
+            if (isPlayerDead || gameState !== "INGAME") return;
+            injectIdx = (injectIdx + 1) % injectModes.length;
+            document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
+        }
+
+        // --- ABILITY NOOB ---
         function playConsumeAnimation(itemColor, onComplete) {
             isDrinkingOrEating = true;
             playerNoob.parts.heldItem.material.color.setHex(itemColor);
@@ -898,15 +1043,14 @@
             });
         }
 
-        // --- SKILL PLAYER JIKA MEMILIH KILLER ---
+        // --- SKILL KILLER ---
         function killerTagM1() {
             if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return;
             cdM1 = true; animateCD("cd-m1", 2, () => { cdM1 = false; });
             c00lkidd.parts.rArm.rotation.x = -1.6;
             setTimeout(() => { c00lkidd.parts.rArm.rotation.x = 0; }, 300);
 
-            const allSurv = [playerNoob, ...aiSurvivors];
-            allSurv.forEach(s => {
+            [playerNoob, ...aiSurvivors, ...clones].forEach(s => {
                 if (s.alive && checkHitbox(s)) {
                     s.hp -= 26.5;
                     if (s.hp <= 0) { s.alive = false; s.visible = false; }
@@ -924,8 +1068,7 @@
             if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return;
             cdE = true; animateCD("cd-e", 12, () => { cdE = false; });
             const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-            const aimTarget = { position: c00lkidd.position.clone().addScaledVector(fwd, 20) };
-            triggerCorruptNature(aimTarget);
+            triggerCorruptNature({ position: c00lkidd.position.clone().addScaledVector(fwd, 20) });
         }
 
         function killerPizzaDelivery() {
@@ -956,32 +1099,44 @@
         }
 
         // =========================================================================
-        // 8. ANIMASI C00LKIDD & ABILITIES SHARED (AI MAUPUN PLAYER)
+        // 8. ANIMASI C00LKIDD: CORRUPT THROW & LONGER WALKSPEED OVERRIDE
         // =========================================================================
-        let c00lState = "IDLE";
-        let dashTimer = 0;
-        let c00lAbilitiesTimer = 0;
+        let c00lState = "IDLE", dashTimer = 0, c00lAbilitiesTimer = 0;
 
+        // WALKSPEED OVERRIDE: LEBIH LAMA (1.34 DETIK) & JAUH!
         function triggerWalkspeedOverride() {
             c00lState = "OVERRIDE_WINDUP";
-            c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = 0.8; c00lkidd.parts.rArm.rotation.x = 0.8;
-            setTimeout(() => { c00lState = "DASHING"; dashTimer = 40; c00lkidd.parts.torso.rotation.x = 0; }, 500);
+            c00lkidd.parts.torso.rotation.x = 0.5;
+            c00lkidd.parts.lArm.rotation.x = 0.9;
+            c00lkidd.parts.rArm.rotation.x = 0.9;
+
+            setTimeout(() => {
+                c00lState = "DASHING";
+                dashTimer = 80; // 1.34 detik pada 60 FPS -> Melesat sangat jauh!
+                c00lkidd.parts.torso.rotation.x = 0.2;
+            }, 450);
         }
 
+        // CORRUPT NATURE: ANIMASI AYUNAN MELEMPAR YANG JELAS
         function triggerCorruptNature(target) {
             c00lState = "CASTING";
-            c00lkidd.parts.rArm.rotation.x = -2.2;
+            c00lkidd.parts.torso.rotation.y = -0.4; // Tarik badan ke belakang
+            c00lkidd.parts.rArm.rotation.x = 1.2;   // Tarik tangan melempar jauh ke belakang
+
             setTimeout(() => {
-                c00lkidd.parts.rArm.rotation.x = -0.5;
+                // Ayunkan kuat ke depan untuk melempar!
+                c00lkidd.parts.torso.rotation.y = 0.3;
+                c00lkidd.parts.rArm.rotation.x = -2.2;
+
                 const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
                 proj.position.copy(c00lkidd.position); proj.position.y += 3; scene.add(proj);
 
                 const dir = target.position.clone().sub(c00lkidd.position).normalize();
-                let life = 120; let hitDone = false;
+                let life = 140; let hitDone = false;
 
                 const intv = setInterval(() => {
                     proj.position.addScaledVector(dir, 1.1); life--;
-                    const allTargets = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : [playerNoob, ...aiSurvivors];
+                    const allTargets = [playerNoob, ...aiSurvivors, ...clones];
 
                     for (let t of allTargets) {
                         if (!hitDone && t.alive && proj.position.distanceTo(t.position) < 3.2) {
@@ -989,6 +1144,7 @@
                             if (!t.isInvulnerable) {
                                 t.hp = Math.max(0, t.hp - 15);
                                 if (t === playerNoob && playerRole === "SURVIVOR") {
+                                    cancelC00lgui();
                                     hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
                                     setTimeout(() => { hasSlowness = false; }, 4000);
                                     document.getElementById("hp-bar").style.width = t.hp + "%";
@@ -1000,7 +1156,12 @@
                     }
                     if (life <= 0) { scene.remove(proj); clearInterval(intv); }
                 }, 16);
-                setTimeout(() => { c00lState = "IDLE"; }, 400);
+
+                setTimeout(() => {
+                    c00lkidd.parts.torso.rotation.y = 0;
+                    c00lkidd.parts.rArm.rotation.x = 0;
+                    c00lState = "IDLE";
+                }, 350);
             }, 350);
         }
 
@@ -1054,7 +1215,7 @@
         }
 
         // =========================================================================
-        // 9. GAME LOOP UTAMA (NGEBUT & RINGAN!)
+        // 9. GAME LOOP UTAMA
         // =========================================================================
         let c00lAttackTimer = 0;
 
@@ -1065,14 +1226,11 @@
             if (keys["ArrowLeft"]) camYaw += 0.05;
             if (keys["ArrowRight"]) camYaw -= 0.05;
 
-            // Tentukan karakter mana yang dikontrol Player (Noob atau c00lkidd)
             const controlledChar = (playerRole === "KILLER") ? c00lkidd : playerNoob;
-            const canMove = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
+            const canMove = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER") && !isCastingC00lgui);
 
             if (canMove && !(playerRole === "KILLER" && c00lState !== "IDLE")) {
-                // KECEPATAN NGEBUT NYAMAN!
                 let spd = (playerRole === "KILLER" ? 0.25 : 0.23) * speedBoostMultiplier;
-                
                 if (playerRole === "SURVIVOR") {
                     if (playerNoob.isInvulnerable) spd *= 0.45;
                     else if (isDrinkingOrEating) spd *= 0.35;
@@ -1081,9 +1239,7 @@
 
                 if (isSprinting && stamina > 0 && !isDrinkingOrEating && !playerNoob.isInvulnerable) {
                     spd *= 1.6; stamina = Math.max(0, stamina - 0.4);
-                } else {
-                    stamina = Math.min(100, stamina + 0.25);
-                }
+                } else { stamina = Math.min(100, stamina + 0.25); }
                 document.getElementById("stamina-bar").style.width = stamina + "%";
 
                 let mx = 0, mz = 0;
@@ -1102,6 +1258,12 @@
                 }
             }
 
+            // Update Posisi Beacon Passive Dex (007n7)
+            if (dexMarker.visible) {
+                const farSp = getFarthestSpawn(playerNoob.position);
+                dexMarker.position.set(farSp.x, 20, farSp.z);
+            }
+
             let camFocus = controlledChar;
             if (isSpectating && spectateList[spectateIdx]) camFocus = spectateList[spectateIdx];
 
@@ -1112,24 +1274,23 @@
             camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
 
             if (gameState === "INGAME") {
-                // HITUNG JARAK AUDIO
                 let audioDistance = 9999;
                 if (playerRole === "SURVIVOR") {
                     if (!isPlayerDead) audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
                     else if (isSpectating && camFocus) audioDistance = camFocus.position.distanceTo(c00lkidd.position);
                 } else {
-                    // Jika kamu jadi killer, jarak ke survivor terdekat
                     let minD = 9999;
                     [playerNoob, ...aiSurvivors].forEach(s => { if (s.alive) minD = Math.min(minD, s.position.distanceTo(c00lkidd.position)); });
                     audioDistance = minD;
                 }
                 update4LayerChase(audioDistance);
 
-                // KUMPULKAN TARGET SURVIVOR
+                // KUMPULKAN TARGET (KLON DIPRIORITASKAN SAAT PLAYER UNDETECTABLE!)
                 let targets = [];
-                if (playerRole === "SURVIVOR" && !isPlayerDead) targets.push(playerNoob);
-                if (playerRole === "KILLER" && playerNoob.alive) targets.push(playerNoob); // Jika jadi killer, playerNoob jadi AI bot
+                if (playerRole === "SURVIVOR" && !isPlayerDead && !playerNoob.isUndetectable) targets.push(playerNoob);
+                if (playerRole === "KILLER" && playerNoob.alive) targets.push(playerNoob);
                 aiSurvivors.forEach(ai => { if (ai.alive) targets.push(ai); });
+                clones.forEach(cl => { if (cl.alive) targets.push(cl); });
 
                 let closestTarget = null;
                 for (let t of targets) { if (t.isHighlighted) { closestTarget = t; break; } }
@@ -1141,9 +1302,9 @@
                     });
                 }
 
-                // JIKA C00LKIDD DIKENDALIKAN AI (SAAT KAMU JADI SURVIVOR)
+                // AI C00LKIDD
                 if (playerRole === "SURVIVOR" && closestTarget) {
-                    if (c00lState !== "SUMMONING") {
+                    if (c00lState !== "SUMMONING" && c00lState !== "CASTING") {
                         c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z);
                         c00lkidd.rotation.y += Math.PI;
                     }
@@ -1151,22 +1312,22 @@
                     if (c00lState === "DASHING") {
                         dashTimer--;
                         const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                        moveWithCollision(c00lkidd, fwd.x * 0.9, fwd.z * 0.9);
+                        moveWithCollision(c00lkidd, fwd.x * 1.15, fwd.z * 1.15); // Melesat jauh dan kencang!
                         if (checkHitbox(closestTarget) && !closestTarget.isInvulnerable) {
                             closestTarget.hp -= 32;
                             if (closestTarget === playerNoob) {
-                                applyBurningToPlayer(8); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+                                cancelC00lgui(); applyBurningToPlayer(8);
+                                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                 if (playerNoob.hp <= 0) killPlayer();
                             } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
-                            c00lState = "IDLE";
+                            c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0;
                         }
-                        if (dashTimer <= 0) c00lState = "IDLE";
+                        if (dashTimer <= 0) { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
                     } else if (c00lState === "IDLE") {
                         const kx = closestTarget.position.x - c00lkidd.position.x;
                         const kz = closestTarget.position.z - c00lkidd.position.z;
                         const kd = Math.sqrt(kx*kx + kz*kz);
 
-                        // C00LKIDD LEBIH CEPAT (0.25) DARI AI (0.21) -> PASTI TERKEJAR!
                         if (kd > 3.5) {
                             moveWithCollision(c00lkidd, (kx / kd) * 0.25, (kz / kd) * 0.25);
                             animateWalkingLimbs(c00lkidd, 0.22);
@@ -1178,6 +1339,7 @@
                             if (!closestTarget.isInvulnerable) {
                                 closestTarget.hp -= 26.5;
                                 if (closestTarget === playerNoob) {
+                                    cancelC00lgui();
                                     document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
                                     if (playerNoob.hp <= 0) killPlayer();
                                 } else if (closestTarget.hp <= 0) { closestTarget.alive = false; closestTarget.visible = false; }
@@ -1191,17 +1353,16 @@
                         if (c00lAbilitiesTimer === 1350) { triggerPizzaDelivery(); c00lAbilitiesTimer = 0; }
                     }
                 } else if (playerRole === "KILLER" && c00lState === "DASHING") {
-                    // DASH SAAT PLAYER JADI KILLER
                     dashTimer--;
                     const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                    moveWithCollision(c00lkidd, fwd.x * 0.9, fwd.z * 0.9);
+                    moveWithCollision(c00lkidd, fwd.x * 1.15, fwd.z * 1.15);
                     targets.forEach(t => {
                         if (checkHitbox(t)) {
                             t.hp -= 32; if (t.hp <= 0) { t.alive = false; t.visible = false; }
-                            c00lState = "IDLE";
+                            c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0;
                         }
                     });
-                    if (dashTimer <= 0) c00lState = "IDLE";
+                    if (dashTimer <= 0) { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
                 }
                 if (c00lAttackTimer > 0) c00lAttackTimer--;
 
@@ -1222,6 +1383,7 @@
                         if (!closestTarget.isInvulnerable) {
                             closestTarget.hp -= 15;
                             if (closestTarget === playerNoob && playerRole === "SURVIVOR") {
+                                cancelC00lgui();
                                 hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
                                 setTimeout(() => { hasSlowness = false; }, 3000);
                                 applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
@@ -1231,12 +1393,34 @@
                     }
                 }
 
-                // AI SURVIVOR MOVEMENT (TERMASUK PLAYERNOOB BOT SAAT JADI KILLER)
+                // GERAKAN CLONE 007n7 (3 MODE INJECT!)
+                clones.forEach(cl => {
+                    if (!cl.alive) return;
+                    let dest = cl.patrolTarget;
+                    if (cl.mode === "Pathfind") {
+                        dest = getFarthestSpawn(cl.position);
+                    } else if (cl.mode === "Cursor") {
+                        const lookFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
+                        dest = playerNoob.position.clone().addScaledVector(lookFwd, 40);
+                    }
+
+                    const cx = dest.x - cl.position.x, cz = dest.z - cl.position.z;
+                    const cd = Math.sqrt(cx*cx + cz*cz);
+                    if (cd > 2) {
+                        moveWithCollision(cl, (cx / cd) * 0.20, (cz / cd) * 0.20);
+                        cl.lookAt(dest.x, 0, dest.z); cl.rotation.y += Math.PI;
+                        animateWalkingLimbs(cl, 0.22);
+                    } else if (cl.mode === "Wander") {
+                        cl.patrolTarget.set((Math.random()-0.5)*150, 0, (Math.random()-0.5)*150);
+                    }
+                });
+
+                // AI SURVIVOR MOVEMENT
                 const botList = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : aiSurvivors;
                 botList.forEach(ai => {
                     if (ai.alive) {
                         const distToKiller = ai.position.distanceTo(c00lkidd.position);
-                        let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.13; // Lebih lambat dari c00lkidd (0.25)
+                        let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.13;
 
                         if (distToKiller < 35 || ai.isHighlighted) {
                             const adx = ai.position.x - c00lkidd.position.x, adz = ai.position.z - c00lkidd.position.z;
