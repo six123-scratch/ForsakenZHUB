@@ -1,1610 +1,757 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Forsaken 3D - Complete Loop & Hitbox</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; user-select: none; }
-
-        #vignette {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 5;
-            box-shadow: inset 0 0 100px rgba(255, 0, 0, 0);
-            transition: box-shadow 0.3s ease;
-        }
-
-        #top-hud {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            background: rgba(0, 0, 0, 0.75); padding: 8px 24px; border-radius: 8px;
-            border: 2px solid #555; z-index: 10; color: #fff;
-        }
-        #round-timer { font-size: 24px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
-        #gen-status { font-size: 12px; color: #00e676; font-weight: bold; display: none; }
-
-        #lobby-controls { display: flex; gap: 8px; }
-        .lobby-btn {
-            background: #0055ff; color: #fff; border: 2px solid #fff;
-            padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
-        }
-        .lobby-btn.killer { background: #cc0000; }
-        .lobby-btn.char007 { background: #009977; }
-
-        #status-effects {
-            position: absolute; top: 28%; left: 20px;
-            display: flex; flex-direction: column; gap: 8px;
-            z-index: 15; pointer-events: none;
-        }
-        .effect-badge {
-            background: rgba(0, 0, 0, 0.8); border-left: 5px solid #fff;
-            padding: 6px 14px; border-radius: 4px; color: #fff;
-            font-weight: bold; font-size: 13px; letter-spacing: 1px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.6); min-width: 130px;
-        }
-
-        #event-toast {
-            position: absolute; top: 95px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85); color: #00ffcc; border: 2px solid #00ffcc;
-            font-weight: 900; padding: 6px 18px; border-radius: 20px; font-size: 14px;
-            display: none; z-index: 20;
-        }
-
-        #interact-prompt {
-            position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85); color: #fff; border: 2px solid #ffcc00;
-            padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
-            display: none; z-index: 15;
-        }
-
-        #puzzle-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #111827; border: 3px solid #ffcc00; border-radius: 12px;
-            padding: 20px 30px; display: none; flex-direction: column; align-items: center;
-            gap: 14px; z-index: 50; color: #fff; box-shadow: 0 0 30px rgba(0,0,0,0.9);
-        }
-        #puzzle-buttons { display: flex; gap: 12px; }
-        .puz-btn {
-            width: 55px; height: 55px; border-radius: 8px; border: 2px solid #fff;
-            background: #1f2937; color: #fff; font-size: 20px; font-weight: bold; cursor: pointer;
-        }
-        .puz-btn.target { background: #10b981; box-shadow: 0 0 15px #10b981; border-color: #fff; }
-
-        #inventory-bar {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
-            display: none; gap: 12px; z-index: 15;
-        }
-        .inv-slot {
-            width: 82px; height: 60px; background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #777; border-radius: 8px; color: #fff;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; cursor: pointer;
-        }
-        .inv-slot.has-item { border-color: #ffcc00; background: rgba(40, 35, 10, 0.9); }
-
-        #player-bars {
-            position: absolute; bottom: 25px; left: 25px;
-            background: rgba(0, 0, 0, 0.75); padding: 10px 14px; border-radius: 8px;
-            border: 2px solid #444; width: 170px; z-index: 10; color: #fff;
-            display: none;
-        }
-        .bar-container { background: #222; height: 12px; border-radius: 4px; overflow: hidden; margin-top: 3px; }
-        #hp-bar { width: 100%; height: 100%; background: #00e64d; transition: width 0.2s; }
-        #stamina-bar { width: 100%; height: 100%; background: #ffaa00; transition: width 0.1s; }
-        .bar-title { font-size: 10px; font-weight: bold; margin-top: 3px; }
-
-        #spectate-panel {
-            position: absolute; top: 48%; left: 20px; transform: translateY(-50%);
-            display: none; flex-direction: column; gap: 8px; z-index: 25;
-        }
-        #spectate-btn {
-            background: #111; color: #00e6ff; border: 2px solid #00e6ff;
-            padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 14px;
-            cursor: pointer; box-shadow: 0 0 10px rgba(0, 230, 255, 0.4);
-        }
-        #spectate-btn:hover { background: #00e6ff; color: #000; }
-        #spectate-info { color: #fff; font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
-        #ai-hp-list {
-            background: rgba(0, 0, 0, 0.8); border: 1px solid #444; border-radius: 6px;
-            padding: 8px 12px; color: #fff; font-size: 12px; display: flex; flex-direction: column; gap: 4px;
-        }
-
-        #lms-banner {
-            position: absolute; top: 22%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 42px; font-weight: 900; color: #ff0000; letter-spacing: 5px;
-            text-shadow: 0 0 20px #ff0000, 0 0 35px #000; display: none; z-index: 20;
-            text-align: center; animation: pulse 0.8s infinite alternate;
-        }
-        @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.08); } }
-
-        #skills-container {
-            position: absolute; bottom: 20px; right: 25px; width: 220px; height: 210px;
-            z-index: 10; display: none;
-        }
-        .brush-circle {
-            position: absolute; border-radius: 50%; background: #0a101d;
-            border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #fff; text-align: center; cursor: pointer;
-        }
-        .skill-name {
-            position: absolute; bottom: -16px; font-size: 10px; font-weight: bold;
-            white-space: nowrap; color: #fff; text-shadow: 1px 1px 3px #000;
-        }
-        .cd-dark {
-            position: absolute; top: 0; left: 0; width: 100%; height: 0%;
-            background: rgba(0, 0, 0, 0.7); border-radius: 50%; pointer-events: none;
-        }
-
-        #btn-s1 { width: 56px; height: 56px; top: 5px; right: 8px; }
-        #btn-s2 { width: 60px; height: 60px; top: 5px; left: 55px; }
-        #btn-s3 { width: 56px; height: 56px; bottom: 35px; left: 5px; }
-        #btn-sprint { width: 80px; height: 80px; bottom: 28px; right: 25px; }
-        #btn-shiftlock { width: 36px; height: 36px; bottom: -6px; left: 82px; background: #111; }
-        #btn-shiftlock.active { border-color: #00ffcc; box-shadow: 0 0 10px #00ffcc; }
-
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 8px; height: 8px; border: 2px solid #00ffcc; border-radius: 50%;
-            pointer-events: none; display: none; z-index: 15;
-        }
-
-        #start-hint {
-            position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.9); font-size: 14px; z-index: 10;
-            background: rgba(180, 0, 0, 0.75); padding: 7px 16px; border-radius: 20px;
-            font-weight: bold; cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Forsaken 3D</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #000000; font-family: Arial, sans-serif; user-select: none; }
+  #vignette { position: absolute; inset: 0; pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
+  #top-hud { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; background: rgba(0,0,0,0.75); padding: 8px 22px; border-radius: 8px; border: 2px solid #555555; z-index: 10; color: #ffffff; }
+  #round-timer { font-size: 22px; font-weight: bold; color: #ffcc00; letter-spacing: 2px; }
+  #gen-status { font-size: 12px; color: #00e676; font-weight: bold; display: none; }
+  #lobby-controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .lobby-btn { background: #0055ff; color: #ffffff; border: 2px solid #ffffff; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; }
+  .lobby-btn.killer { background: #cc0000; }
+  .lobby-btn.char007 { background: #009977; }
+  .lobby-btn.start { background: #10b981; }
+  #status-effects { position: absolute; top: 28%; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 15; pointer-events: none; }
+  .effect-badge { background: rgba(0,0,0,0.8); border-left: 5px solid #ffffff; padding: 6px 14px; border-radius: 4px; color: #ffffff; font-weight: bold; font-size: 12px; min-width: 120px; }
+  #event-toast { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #00ffcc; border: 2px solid #00ffcc; font-weight: 900; padding: 6px 18px; border-radius: 20px; font-size: 13px; display: none; z-index: 20; }
+  #interact-prompt { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #ffffff; border: 2px solid #ffcc00; padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 13px; display: none; z-index: 15; }
+  #puzzle-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #111827; border: 3px solid #ffcc00; border-radius: 12px; padding: 20px 30px; display: none; flex-direction: column; align-items: center; gap: 14px; z-index: 50; color: #ffffff; }
+  #puzzle-buttons { display: flex; gap: 12px; }
+  .puz-btn { width: 55px; height: 55px; border-radius: 8px; border: 2px solid #ffffff; background: #1f2937; color: #ffffff; font-size: 20px; font-weight: bold; cursor: pointer; }
+  .puz-btn.target { background: #10b981; box-shadow: 0 0 15px #10b981; }
+  #inventory-bar { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: none; gap: 12px; z-index: 15; }
+  .inv-slot { width: 82px; height: 58px; background: rgba(0,0,0,0.8); border: 2px solid #777777; border-radius: 8px; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; }
+  .inv-slot.has-item { border-color: #ffcc00; background: rgba(40,35,10,0.9); }
+  #player-bars { position: absolute; bottom: 25px; left: 25px; background: rgba(0,0,0,0.75); padding: 10px 14px; border-radius: 8px; border: 2px solid #444444; width: 165px; z-index: 10; color: #ffffff; display: none; }
+  .bar-container { background: #222222; height: 11px; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+  #hp-bar { width: 100%; height: 100%; background: #00e64d; transition: width 0.2s; }
+  #stamina-bar { width: 100%; height: 100%; background: #ffaa00; transition: width 0.1s; }
+  .bar-title { font-size: 10px; font-weight: bold; margin-top: 3px; }
+  #spectate-panel { position: absolute; top: 48%; left: 20px; transform: translateY(-50%); display: none; flex-direction: column; gap: 8px; z-index: 25; }
+  #spectate-btn { background: #111111; color: #00e6ff; border: 2px solid #00e6ff; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; }
+  #spectate-info { color: #ffffff; font-size: 12px; font-weight: bold; }
+  #ai-hp-list { background: rgba(0,0,0,0.8); border: 1px solid #444444; border-radius: 6px; padding: 8px 12px; color: #ffffff; font-size: 11px; display: flex; flex-direction: column; gap: 4px; }
+  #lms-banner { position: absolute; top: 22%; left: 50%; transform: translate(-50%,-50%); font-size: 38px; font-weight: 900; color: #ff0000; letter-spacing: 4px; text-shadow: 0 0 20px #ff0000; display: none; z-index: 20; text-align: center; }
+  #skills-container { position: absolute; bottom: 20px; right: 25px; width: 220px; height: 210px; z-index: 10; display: none; }
+  .brush-circle { position: absolute; border-radius: 50%; background: #0a101d; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(255,255,255,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; }
+  .skill-name { position: absolute; bottom: -16px; font-size: 10px; font-weight: bold; white-space: nowrap; color: #ffffff; text-shadow: 1px 1px 3px #000000; }
+  .cd-dark { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: rgba(0,0,0,0.7); border-radius: 50%; pointer-events: none; }
+  #btn-s1 { width: 56px; height: 56px; top: 5px; right: 8px; }
+  #btn-s2 { width: 60px; height: 60px; top: 5px; left: 55px; }
+  #btn-s3 { width: 56px; height: 56px; bottom: 35px; left: 5px; }
+  #btn-sprint { width: 80px; height: 80px; bottom: 28px; right: 25px; }
+  #btn-shiftlock { width: 36px; height: 36px; bottom: -6px; left: 82px; background: #111111; }
+  #btn-shiftlock.active { border-color: #00ffcc; box-shadow: 0 0 10px #00ffcc; }
+  #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 8px; height: 8px; border: 2px solid #00ffcc; border-radius: 50%; pointer-events: none; display: none; z-index: 15; }
+  #start-hint { position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 13px; z-index: 10; background: rgba(180,0,0,0.8); padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+</style>
 </head>
 <body>
-    <div id="vignette"></div>
-    <div id="crosshair"></div>
-    <div id="event-toast"></div>
-    <div id="status-effects"></div>
-    <div id="interact-prompt">Tekan [F] untuk Memperbaiki Generator</div>
+<div id="vignette"></div><div id="crosshair"></div><div id="event-toast"></div><div id="status-effects"></div>
+<div id="interact-prompt">Tekan [F] untuk Memperbaiki Generator</div>
+<div id="puzzle-modal">
+  <div style="font-size:18px;font-weight:bold;color:#ffcc00;">PERBAIKI GENERATOR</div>
+  <div id="puzzle-stage-text">Tahap: 1 / 5</div>
+  <div style="font-size:12px;color:#cccccc;">Klik atau tekan angka yang menyala HIJAU!</div>
+  <div id="puzzle-buttons">
+    <button class="puz-btn" onclick="hitPuzzleBtn(1)">1</button>
+    <button class="puz-btn" onclick="hitPuzzleBtn(2)">2</button>
+    <button class="puz-btn" onclick="hitPuzzleBtn(3)">3</button>
+    <button class="puz-btn" onclick="hitPuzzleBtn(4)">4</button>
+  </div>
+  <button onclick="closePuzzle()" style="background:#aa2222;color:#ffffff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Batal [ESC]</button>
+</div>
 
-    <div id="puzzle-modal">
-        <div style="font-size:18px;font-weight:bold;color:#ffcc00;">PERBAIKI GENERATOR</div>
-        <div id="puzzle-stage-text">Tahap: 1 / 5</div>
-        <div style="font-size:12px;color:#ccc;">Klik atau tekan tombol angka yang menyala HIJAU!</div>
-        <div id="puzzle-buttons">
-            <button class="puz-btn" onclick="hitPuzzleBtn(1)">1</button>
-            <button class="puz-btn" onclick="hitPuzzleBtn(2)">2</button>
-            <button class="puz-btn" onclick="hitPuzzleBtn(3)">3</button>
-            <button class="puz-btn" onclick="hitPuzzleBtn(4)">4</button>
-        </div>
-        <button onclick="closePuzzle()" style="background:#aa2222;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Batal [ESC]</button>
-    </div>
+<audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
+<audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
+<audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
+<audio id="chase-layer4" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"><source src="layer4.mp3" type="audio/mpeg"></audio>
+<audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
+<audio id="audio-plead" loop preload="auto"><source src="plead.mp3" type="audio/mpeg"></audio>
+<audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-slate" preload="auto"><source src="slate.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-burger" preload="auto"><source src="burger.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-c00lgui" preload="auto"><source src="c00lgui.mp3" type="audio/mpeg"></audio>
 
-    <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
-    <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
-    <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
-    <audio id="chase-layer4" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"><source src="layer4.mp3" type="audio/mpeg"></audio>
-    <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
-    <audio id="audio-plead" loop preload="auto"><source src="plead.mp3" type="audio/mpeg"></audio>
-    <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
-    <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
-    <audio id="sfx-slate" preload="auto"><source src="slate.mp3" type="audio/mpeg"></audio>
-    <audio id="sfx-burger" preload="auto"><source src="burger.mp3" type="audio/mpeg"></audio>
-    <audio id="sfx-c00lgui" preload="auto"><source src="c00lgui.mp3" type="audio/mpeg"></audio>
+<div id="player-bars">
+  <div id="hp-title" class="bar-title">HEALTH</div>
+  <div id="hp-container" class="bar-container"><div id="hp-bar"></div></div>
+  <div class="bar-title">STAMINA</div>
+  <div class="bar-container"><div id="stamina-bar"></div></div>
+</div>
 
-    <div id="player-bars">
-        <div id="hp-title" class="bar-title">HEALTH</div>
-        <div id="hp-container" class="bar-container"><div id="hp-bar"></div></div>
-        <div class="bar-title">STAMINA</div>
-        <div class="bar-container"><div id="stamina-bar"></div></div>
-    </div>
+<div id="inventory-bar">
+  <div id="slot-cola" class="inv-slot" onclick="usePickedCola()">[1] COLA<br><span id="count-cola">0 / 1</span></div>
+  <div id="slot-medkit" class="inv-slot" onclick="usePickedMedkit()">[2] MEDKIT<br><span id="count-medkit">0 / 1</span></div>
+</div>
 
-    <div id="inventory-bar">
-        <div id="slot-cola" class="inv-slot" onclick="usePickedCola()">[1] COLA<br><span id="count-cola">0 / 1</span></div>
-        <div id="slot-medkit" class="inv-slot" onclick="usePickedMedkit()">[2] MEDKIT<br><span id="count-medkit">0 / 1</span></div>
-    </div>
+<div id="top-hud">
+  <div id="round-timer">LOBBY: 15s</div>
+  <div id="gen-status">Generator Selesai: 0 / 5</div>
+  <div id="lobby-controls">
+    <button id="role-btn" class="lobby-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR</button>
+    <button id="char-btn" class="lobby-btn" onclick="toggleSurvivorChar()">SURVIVOR: NOOB</button>
+    <button class="lobby-btn start" onclick="startMatchNow()">MULAI SEKARANG</button>
+  </div>
+</div>
 
-    <div id="top-hud">
-        <div id="round-timer">LOBBY: 15s</div>
-        <div id="gen-status">Generator Selesai: 0 / 5</div>
-        <div id="lobby-controls">
-            <button id="role-btn" class="lobby-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR</button>
-            <button id="char-btn" class="lobby-btn" onclick="toggleSurvivorChar()">SURVIVOR: NOOB</button>
-        </div>
-    </div>
+<div id="spectate-panel">
+  <button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button>
+  <div id="spectate-info">Spectating: AI Noob 1</div>
+  <div id="ai-hp-list"></div>
+</div>
 
-    <div id="spectate-panel">
-        <button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button>
-        <div id="spectate-info">Spectating: AI Noob 1</div>
-        <div id="ai-hp-list"></div>
-    </div>
+<div id="lms-banner">LAST MAN STANDING!</div>
+<div id="start-hint">🔊 KLIK LAYAR UNTUK MULAI & SUARA | Tekan [M] Unlock Mouse</div>
 
-    <div id="lms-banner">LAST MAN STANDING!</div>
-    <div id="start-hint">🔊 KLIK LAYAR UNTUK MULAI & SUARA | Tekan [M] Unlock Mouse</div>
+<div id="skills-container">
+  <div id="btn-s1" class="brush-circle" onclick="useSkill1()"><div id="cd-q" class="cd-dark"></div><div id="icon-s1" style="font-size:18px;font-weight:bold;">Q</div><div id="label-s1" class="skill-name">Ghostburger [Q]</div></div>
+  <div id="btn-s2" class="brush-circle" onclick="useSkill2()"><div id="cd-e" class="cd-dark"></div><div id="icon-s2" style="font-size:18px;font-weight:bold;">E</div><div id="label-s2" class="skill-name">Slateskin [E]</div></div>
+  <div id="btn-s3" class="brush-circle" onclick="useSkill3()"><div id="cd-r" class="cd-dark"></div><div id="icon-s3" style="font-size:18px;font-weight:bold;">R</div><div id="label-s3" class="skill-name">Bloxy Cola [R]</div></div>
+  <div id="btn-sprint" class="brush-circle" onclick="useBasicAttack()"><div id="cd-m1" class="cd-dark"></div><div id="icon-sprint" style="font-size:16px;font-weight:bold;">SHIFT</div><div id="label-sprint" class="skill-name" style="bottom:4px;font-size:9px;">SPRINT</div></div>
+  <div id="btn-shiftlock" class="brush-circle" onclick="toggleShiftlock()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></div>
+</div>
 
-    <div id="skills-container">
-        <div id="btn-s1" class="brush-circle" onclick="useSkill1()">
-            <div id="cd-q" class="cd-dark"></div>
-            <div id="icon-s1" style="font-size:18px;font-weight:bold;">Q</div>
-            <div id="label-s1" class="skill-name">Ghostburger [Q]</div>
-        </div>
-        <div id="btn-s2" class="brush-circle" onclick="useSkill2()">
-            <div id="cd-e" class="cd-dark"></div>
-            <div id="icon-s2" style="font-size:18px;font-weight:bold;">E</div>
-            <div id="label-s2" class="skill-name">Slateskin [E]</div>
-        </div>
-        <div id="btn-s3" class="brush-circle" onclick="useSkill3()">
-            <div id="cd-r" class="cd-dark"></div>
-            <div id="icon-s3" style="font-size:18px;font-weight:bold;">R</div>
-            <div id="label-s3" class="skill-name">Bloxy Cola [R]</div>
-        </div>
-        <div id="btn-sprint" class="brush-circle" onclick="useBasicAttack()">
-            <div id="cd-m1" class="cd-dark"></div>
-            <div id="icon-sprint" style="font-size:16px;font-weight:bold;">SHIFT</div>
-            <div id="label-sprint" class="skill-name" style="bottom: 4px; font-size: 9px;">SPRINT</div>
-        </div>
-        <div id="btn-shiftlock" class="brush-circle" onclick="toggleShiftlock()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-                <circle cx="12" cy="12" r="6"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
-            </svg>
-        </div>
-    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let playerRole = "SURVIVOR", survivorChar = "NOOB", gameState = "LOBBY", timerSeconds = 15;
+let lmsTriggered = false, isPleadLMS = false, isPlayerDead = false;
+let spectateList = [], spectateIdx = 0, isSpectating = false, camFocusOverride = null;
+let activeGen = null, currentPuzzleTarget = 1, invCola = 0, invMedkit = 0, medkitTimeout = null, isUsingMedkit = false;
+let keys = {}, isShiftlock = false, stamina = 100, isSprinting = false, isDrinkingOrEating = false;
+let slateTimerId = null, speedBoostMultiplier = 1, hasSlowness = false;
+let cdQ = false, cdE = false, cdR = false, cdM1 = false;
+let injectIdx = 0, isCastingC00lgui = false, c00lguiTimeout = null;
+let c00lState = "IDLE", dashTimer = 0, c00lAbilitiesTimer = 0, c00lAttackTimer = 0;
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+const injectModes = ["Wander", "Pathfind", "Cursor"];
+const activeEffects = {}, effectsContainer = document.getElementById("status-effects");
 
-    <script>
-        let playerRole = "SURVIVOR";
-        let survivorChar = "NOOB";
+function showToast(m, c = "#00ffcc") {
+  const t = document.getElementById("event-toast");
+  t.innerText = m; t.style.color = c; t.style.borderColor = c; t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, 3000);
+}
+function togglePlayerRole() {
+  if (gameState !== "LOBBY") return;
+  playerRole = (playerRole === "SURVIVOR") ? "KILLER" : "SURVIVOR";
+  const b = document.getElementById("role-btn");
+  b.innerText = "PERAN: " + playerRole; b.classList.toggle("killer", playerRole === "KILLER");
+  document.getElementById("char-btn").style.display = (playerRole === "SURVIVOR") ? "block" : "none";
+}
+function toggleSurvivorChar() {
+  if (gameState !== "LOBBY") return;
+  survivorChar = (survivorChar === "NOOB") ? "007n7" : "NOOB";
+  const b = document.getElementById("char-btn");
+  b.innerText = "SURVIVOR: " + survivorChar; b.classList.toggle("char007", survivorChar === "007n7");
+  applyPlayerAppearance();
+}
+function startMatchNow() { if (gameState === "LOBBY") timerSeconds = 1; }
 
-        function showToast(msg, color = "#00ffcc") {
-            const t = document.getElementById("event-toast");
-            t.innerText = msg; t.style.color = color; t.style.borderColor = color;
-            t.style.display = "block";
-            setTimeout(() => { t.style.display = "none"; }, 3000);
+function addStatusEffect(k, l, c, d) {
+  if (activeEffects[k]) { clearInterval(activeEffects[k].i); activeEffects[k].el.remove(); }
+  const el = document.createElement("div"); el.className = "effect-badge"; el.style.borderLeftColor = c; el.style.color = c;
+  effectsContainer.appendChild(el);
+  let t = d; el.innerText = `${l} (${t}s)`;
+  const i = setInterval(() => { t--; if (t <= 0) removeStatusEffect(k); else el.innerText = `${l} (${t}s)`; }, 1000);
+  activeEffects[k] = { el, i };
+}
+function removeStatusEffect(k) { if (activeEffects[k]) { clearInterval(activeEffects[k].i); activeEffects[k].el.remove(); delete activeEffects[k]; } }
+function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
+
+let isAudioInit = false, activeLayerIndex = 0;
+const l1 = document.getElementById("chase-layer1"), l2 = document.getElementById("chase-layer2");
+const l3 = document.getElementById("chase-layer3"), l4 = document.getElementById("chase-layer4");
+const bgmLMS = document.getElementById("audio-lms"), bgmPlead = document.getElementById("audio-plead"), bgmAmbience = document.getElementById("audio-ambience");
+const sfxCola = document.getElementById("sfx-cola"), sfxSlate = document.getElementById("sfx-slate"), sfxBurger = document.getElementById("sfx-burger"), sfxC00lgui = document.getElementById("sfx-c00lgui");
+
+function unlockAllAudio() {
+  if (isAudioInit) return;
+  isAudioInit = true;
+  [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxCola, sfxSlate, sfxBurger, sfxC00lgui].forEach(a => {
+    if (a) { a.load(); a.volume = 0; const p = a.play(); if (p) p.then(() => { a.pause(); a.currentTime = 0; }).catch(() => {}); }
+  });
+  if (gameState === "INGAME") startRoundAudio();
+}
+function playSFX(el) { if (el) { el.volume = 1; el.currentTime = 0; el.play().catch(() => {}); } }
+function stopAndResetAllAudio() {
+  [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxC00lgui].forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
+  activeLayerIndex = 0; document.getElementById("vignette").style.boxShadow = "none";
+}
+function startRoundAudio() {
+  if (!isAudioInit) return;
+  stopAndResetAllAudio();
+  if (bgmAmbience) { bgmAmbience.volume = 0.4; bgmAmbience.play().catch(() => {}); }
+}
+function switchSingleLayer(t) {
+  const c = [null, l1, l2, l3, l4][t];
+  if (activeLayerIndex !== t) {
+    [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
+    activeLayerIndex = t;
+    if (c) { c.currentTime = 0; c.volume = 1; c.play().catch(() => {}); }
+  } else if (c && c.paused) { c.volume = 1; c.play().catch(() => {}); }
+}
+function update4LayerChase(d) {
+  if (!isAudioInit || gameState !== "INGAME") return;
+  const v = document.getElementById("vignette");
+  if (lmsTriggered) {
+    [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
+    activeLayerIndex = 0;
+    if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
+    const tr = isPleadLMS ? bgmPlead : bgmLMS;
+    if (tr && tr.paused) { tr.currentTime = 0; tr.volume = 1; tr.play().catch(() => {}); }
+    v.style.boxShadow = isPleadLMS ? "inset 0 0 130px rgba(255,255,255,0.4)" : "inset 0 0 120px rgba(255,0,0,0.7)";
+    return;
+  }
+  if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
+  if (bgmPlead && !bgmPlead.paused) bgmPlead.pause();
+  if (playerRole === "KILLER") {
+    if (d <= 28) { switchSingleLayer(4); if (bgmAmbience) bgmAmbience.volume = 0.1; v.style.boxShadow = "inset 0 0 80px rgba(255,0,0,0.45)"; }
+    else { switchSingleLayer(0); if (bgmAmbience) bgmAmbience.volume = 0.4; v.style.boxShadow = "none"; }
+    return;
+  }
+  if (d > 80) { switchSingleLayer(0); if (bgmAmbience) bgmAmbience.volume = 0.45; v.style.boxShadow = "none"; }
+  else if (d > 55) { switchSingleLayer(1); if (bgmAmbience) bgmAmbience.volume = 0.3; v.style.boxShadow = "inset 0 0 50px rgba(255,0,0,0.15)"; }
+  else if (d > 36) { switchSingleLayer(2); if (bgmAmbience) bgmAmbience.volume = 0.2; v.style.boxShadow = "inset 0 0 80px rgba(255,0,0,0.35)"; }
+  else if (d > 22) { switchSingleLayer(3); if (bgmAmbience) bgmAmbience.volume = 0.1; v.style.boxShadow = "inset 0 0 110px rgba(255,0,0,0.55)"; }
+  else { switchSingleLayer(4); if (bgmAmbience) bgmAmbience.volume = 0.05; v.style.boxShadow = "inset 0 0 140px rgba(255,0,0,0.85)"; }
+}
+
+const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x14151f, 0.008);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; document.body.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0x777788, 1.1));
+const moon = new THREE.DirectionalLight(0xaaccff, 0.9); moon.position.set(60, 100, 60); moon.castShadow = true;
+moon.shadow.mapSize.set(1024, 1024); moon.shadow.camera.left = -125; moon.shadow.camera.right = 125; moon.shadow.camera.top = 125; moon.shadow.camera.bottom = -125; scene.add(moon);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x203220, roughness: 0.9 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const lobby = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 })); lobby.position.set(0, 70, 0); lobby.receiveShadow = true; scene.add(lobby);
+
+const survivorSpawns = [new THREE.Vector3(-85, 0, -85), new THREE.Vector3(85, 0, -85), new THREE.Vector3(-85, 0, 85), new THREE.Vector3(85, 0, 85)];
+const dexMarker = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 40, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, wireframe: true })); dexMarker.visible = false; scene.add(dexMarker);
+function getFarthestSpawn(p) { let f = survivorSpawns[0], m = -1; survivorSpawns.forEach(s => { const d = p.distanceTo(s); if (d > m) { m = d; f = s; } }); return f; }
+
+const solidBoxes = [];
+function registerBox(x, z, w, d) { solidBoxes.push({ minX: x - w / 2 - 1.2, maxX: x + w / 2 + 1.2, minZ: z - d / 2 - 1.2, maxZ: z + d / 2 + 1.2 }); }
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 });
+function mkWall(x, z, w, d) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat); m.position.set(x, 11, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); registerBox(x, z, w, d); }
+mkWall(0, -125, 250, 6); mkWall(0, 125, 250, 6); mkWall(-125, 0, 6, 250); mkWall(125, 0, 6, 250);
+
+const torchLights = [];
+function addTorch(x, y, z) {
+  const g = new THREE.Group(), st = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.4, 0.25), new THREE.MeshStandardMaterial({ color: 0x4d3319 })); st.rotation.x = 0.4; g.add(st);
+  const fl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 })); fl.position.set(0, 0.7, 0.3); g.add(fl);
+  const lt = new THREE.PointLight(0xff6600, 2.2, 28); lt.position.set(0, 0.8, 0.5); g.add(lt); torchLights.push(lt); g.position.set(x, y, z); scene.add(g);
+}
+for (let i = 0; i < 20; i++) {
+  const h = 8 + Math.random() * 8, b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({ color: 0x333340 })), bx = (Math.random() - 0.5) * 150, bz = (Math.random() - 0.5) * 150;
+  b.position.set(bx, h / 2, bz); b.castShadow = true; b.receiveShadow = true; scene.add(b); registerBox(bx, bz, 8, 8);
+  if (i % 3 === 0) addTorch(bx, 5, bz + 4.2);
+}
+for (let i = 0; i < 28; i++) {
+  const tx = (Math.random() - 0.5) * 170, tz = (Math.random() - 0.5) * 170;
+  const tr = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), new THREE.MeshStandardMaterial({ color: 0x5c3a21 }));
+  const fo = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), new THREE.MeshStandardMaterial({ color: 0x1e5922 }));
+  tr.position.set(tx, 3.5, tz); tr.castShadow = true; fo.position.set(tx, 8, tz); fo.castShadow = true; scene.add(tr, fo); registerBox(tx, tz, 1.2, 1.2);
+}
+
+const generators = [];
+[[-55, -55], [55, -55], [-55, 55], [55, 55], [0, 45]].forEach((p, i) => {
+  const g = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x555555 })), l = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+  b.position.y = 1.25; b.castShadow = true; l.position.y = 3.2; g.add(b, l); g.position.set(p[0], 0, p[1]); scene.add(g); registerBox(p[0], p[1], 3.5, 2.5);
+  generators.push({ group: g, lamp: l, stage: 0, done: false, id: i + 1 });
+});
+
+const mapItems = [], itemCoords = [{ type: "COLA", x: -30, z: 25 }, { type: "COLA", x: 30, z: -25 }, { type: "COLA", x: -70, z: 0 }, { type: "COLA", x: 70, z: 0 }, { type: "MEDKIT", x: 0, z: -35 }, { type: "MEDKIT", x: 25, z: 70 }];
+function spawnAllMapItems() {
+  mapItems.forEach(i => scene.remove(i.mesh)); mapItems.length = 0;
+  itemCoords.forEach(ic => {
+    let m = ic.type === "COLA" ? new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 12), new THREE.MeshStandardMaterial({ color: 0xcc2222, emissive: 0x330000 })) : new THREE.Group();
+    if (ic.type === "MEDKIT") m.add(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1), new THREE.MeshStandardMaterial({ color: 0xffffff })), new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.95, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 })));
+    m.position.set(ic.x, 1, ic.z); scene.add(m); mapItems.push({ type: ic.type, mesh: m, active: true });
+  });
+}
+spawnAllMapItems();
+
+function canMoveTo(x, z) { for (let b of solidBoxes) if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false; return true; }
+function moveWithCollision(e, vx, vz) {
+  const nx = e.position.x + vx, nz = e.position.z + vz;
+  if (canMoveTo(nx, nz)) { e.position.x = nx; e.position.z = nz; }
+  else if (canMoveTo(nx, e.position.z)) e.position.x = nx;
+  else if (canMoveTo(e.position.x, nz)) e.position.z = nz;
+}
+
+function createFace(bg, isRed) {
+  const c = document.createElement("canvas"); c.width = 128; c.height = 128; const x = c.getContext("2d");
+  x.fillStyle = bg; x.fillRect(0, 0, 128, 128); x.fillStyle = "#000000";
+  if (isRed) {
+    x.beginPath(); x.ellipse(42, 45, 8, 14, 0, 0, Math.PI * 2); x.ellipse(86, 45, 8, 14, 0, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(64, 72, 30, 0.1 * Math.PI, 0.9 * Math.PI, false); x.lineWidth = 7; x.stroke();
+  } else {
+    x.beginPath(); x.arc(42, 45, 7, 0, Math.PI * 2); x.arc(86, 45, 7, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(64, 72, 22, 0.1 * Math.PI, 0.9 * Math.PI, false); x.lineWidth = 6; x.stroke();
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+function createC00lkiddSpan() {
+  const m = document.createElement("canvas"); m.width = 400; m.height = 200; const x = m.getContext("2d");
+  x.fillStyle = "#d40000"; x.fillRect(0, 0, 400, 200);
+  x.fillStyle = "#111111"; x.font = "bold 44px sans-serif"; x.textAlign = "center";
+  x.fillText("team c00lkidd", 200, 85); x.fillText("join today!", 200, 145);
+  const sl = (sx, sw) => { const s = document.createElement("canvas"); s.width = sw; s.height = 200; s.getContext("2d").drawImage(m, sx, 0, sw, 200, 0, 0, sw, 200); return new THREE.CanvasTexture(s); };
+  return { rArmTex: sl(0, 100), torsoTex: sl(100, 200), lArmTex: sl(300, 100) };
+}
+
+function setPartCol(p, hex) { if (Array.isArray(p.material)) p.material.forEach((m, i) => { if (i < 5) m.color.setHex(hex); }); else p.material.color.setHex(hex); }
+function setPartOp(p, op) { if (Array.isArray(p.material)) p.material.forEach(m => { m.transparent = true; m.opacity = op; }); else { p.material.transparent = true; p.material.opacity = op; } }
+
+function createR6(isRed, is007 = false) {
+  const g = new THREE.Group();
+  const bc = isRed ? 0xd40000 : (is007 ? 0x2856a3 : 0x0d69ac);
+  const lc = isRed ? 0xd40000 : (is007 ? 0xf8d9b0 : 0xf5cd30);
+  const lg = isRed ? 0xd40000 : (is007 ? 0x1b2a4a : 0x4b974b);
+  const mb = new THREE.MeshStandardMaterial({ color: bc }), ml = new THREE.MeshStandardMaterial({ color: lc }), mg = new THREE.MeshStandardMaterial({ color: lg });
+  let tm = mb, lm = ml, rm = ml;
+  if (isRed) {
+    const st = createC00lkiddSpan(), mkMat = t => new THREE.MeshStandardMaterial({ map: t }), sr = () => new THREE.MeshStandardMaterial({ color: 0xd40000 });
+    tm = [sr(), sr(), sr(), sr(), sr(), mkMat(st.torsoTex)];
+    rm = [sr(), sr(), sr(), sr(), sr(), mkMat(st.rArmTex)];
+    lm = [sr(), sr(), sr(), sr(), sr(), mkMat(st.lArmTex)];
+  }
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), tm); torso.position.y = 3; torso.castShadow = true;
+  const faceBg = isRed ? "#d40000" : (is007 ? "#f8d9b0" : "#f5cd30");
+  const hm = [new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ map: createFace(faceBg, isRed) })];
+  const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), hm); head.position.y = 4.65; head.castShadow = true;
+  const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), lm); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true;
+  const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), rm); rArm.position.set(1.5, 3, 0); rArm.castShadow = true;
+  const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true;
+  const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true;
+
+  const hat = new THREE.Group();
+  const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0xd99b43 }));
+  const mt = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.22, 12), new THREE.MeshStandardMaterial({ color: 0x5c2c16 })); mt.position.y = 0.22;
+  const lt = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.1, 12), new THREE.MeshStandardMaterial({ color: 0x44aa22 })); lt.position.y = 0.36;
+  const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.7, 0.35, 12), new THREE.MeshStandardMaterial({ color: 0xd99b43 })); b2.position.y = 0.58;
+  const mh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xffd200 })); mh.position.y = 0.95;
+  hat.add(b1, mt, lt, b2, mh); hat.position.set(0, 0.7, 0); hat.visible = is007; head.add(hat);
+
+  const gui = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1, 0.1), new THREE.MeshBasicMaterial({ color: 0xff2222, wireframe: true })); gui.position.set(0, 3.2, -1); gui.visible = false;
+  const hl = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 })); hl.position.y = 2.6; hl.visible = false;
+  const held = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6), new THREE.MeshStandardMaterial({ color: 0xaa2222 })); held.position.set(0, -0.9, -0.3); held.visible = false; rArm.add(held);
+
+  if (isRed) {
+    const sw = new THREE.Group(), bl = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 })), cr = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.2), new THREE.MeshStandardMaterial({ color: 0x880000 }));
+    bl.position.y = 1.3; cr.position.y = 0.1; sw.add(bl, cr); sw.position.set(0, -1, -0.4); sw.rotation.x = Math.PI / 2; rArm.add(sw);
+  }
+  g.add(torso, head, lArm, rArm, lLeg, rLeg, gui, hl);
+  g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem: held, highlightMesh: hl, burgerHat: hat, c00lguiTab: gui };
+  g.is007 = is007; g.isHighlighted = false; g.isUndetectable = false; g.hp = 100; g.isInvulnerable = false; g.walkCycle = 0;
+  g.cdQ = false; g.cdE = false; g.cdR = false; g.isCastingGui = false; g.invCola = 0; g.invMedkit = 0; g.isHealingMedkit = false; g.genWorkTimer = 0; g.assignedGen = null;
+  return g;
+}
+
+const playerNoob = createR6(false, false); playerNoob.name = "Kamu"; playerNoob.position.set(0, 72, 0); scene.add(playerNoob);
+function applyPlayerAppearance() {
+  const i = (survivorChar === "007n7"); playerNoob.is007 = i; playerNoob.parts.burgerHat.visible = i;
+  const lc = i ? 0xf8d9b0 : 0xf5cd30, lg = i ? 0x1b2a4a : 0x4b974b, tc = i ? 0x2856a3 : 0x0d69ac;
+  setPartCol(playerNoob.parts.torso, tc); setPartCol(playerNoob.parts.head, lc); setPartCol(playerNoob.parts.lArm, lc); setPartCol(playerNoob.parts.rArm, lc); setPartCol(playerNoob.parts.lLeg, lg); setPartCol(playerNoob.parts.rLeg, lg);
+}
+
+const aiSurvivors = [];
+for (let i = 0; i < 3; i++) {
+  const b0 = (i === 2), ai = createR6(false, b0);
+  ai.position.set((i - 1) * 6, 72, 5); ai.alive = true; ai.hp = 100; ai.name = b0 ? "007n7 (AI)" : ("AI Noob " + (i + 1)); ai.patrolTarget = new THREE.Vector3();
+  scene.add(ai); aiSurvivors.push(ai);
+}
+const c00lkidd = createR6(true, false); c00lkidd.name = "c00lkidd"; c00lkidd.add(new THREE.PointLight(0xff0000, 2.5, 18)); c00lkidd.position.set(0, 72, -10); scene.add(c00lkidd);
+const minions = [], clones = [], corpses = [];
+
+function spawnVisualHitbox() {
+  const hb = new THREE.Mesh(new THREE.BoxGeometry(4.4, 6, 5.5), new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.35 })), fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+  hb.position.copy(c00lkidd.position).addScaledVector(fwd, 3); hb.position.y = 3; hb.rotation.y = c00lkidd.rotation.y; scene.add(hb); setTimeout(() => scene.remove(hb), 300);
+}
+function playC00lkiddPunchAnimation() {
+  c00lkidd.parts.torso.rotation.y = -0.3; c00lkidd.parts.rArm.rotation.x = -0.6;
+  setTimeout(() => {
+    if (c00lState === "KILLING") return;
+    c00lkidd.parts.torso.rotation.y = 0.4; c00lkidd.parts.rArm.rotation.x = 1.8; spawnVisualHitbox();
+    setTimeout(() => { if (c00lState !== "KILLING") { c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; } }, 250);
+  }, 100);
+}
+
+function playKillAnimation(v) {
+  if (c00lState === "KILLING") return;
+  c00lState = "KILLING";
+  if (clones.indexOf(v) === -1) { timerSeconds += 30; showToast("+30 DETIK (SURVIVOR GUGUR!)", "#ff4444"); }
+  const cp = createR6(false, v.is007); cp.position.copy(v.position); cp.rotation.copy(v.rotation); scene.add(cp); corpses.push(cp);
+  v.alive = false; v.visible = false; v.isInvulnerable = false; v.isCastingGui = false; v.isHealingMedkit = false; v.parts.c00lguiTab.visible = false;
+  if (v === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); camFocusOverride = cp; isPlayerDead = true; playerNoob.hp = 0; playerNoob.position.set(0, 72, 0); clearAllEffects(); }
+  c00lkidd.parts.rArm.rotation.x = 2;
+  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
+  cp.position.copy(c00lkidd.position).addScaledVector(fwd, 2.5); cp.position.y = 2.6; cp.lookAt(c00lkidd.position.x, 2.6, c00lkidd.position.z); cp.rotation.y += Math.PI;
+  let st = 0; const si = setInterval(() => { st += 0.4; cp.parts.lLeg.rotation.x = Math.sin(st) * 0.6; cp.parts.rLeg.rotation.x = -Math.sin(st) * 0.6; cp.parts.lArm.rotation.z = -0.3 + Math.sin(st) * 0.2; cp.parts.rArm.rotation.z = 0.3 - Math.sin(st) * 0.2; }, 40);
+  setTimeout(() => {
+    clearInterval(si);
+    if (v.is007) {
+      let t = 0; const gi = setInterval(() => {
+        t++; c00lkidd.parts.rArm.rotation.x = 2 - t * 0.08; cp.position.y = Math.max(0.6, 2.6 - t * 0.1); cp.rotation.x = -(t / 20) * (Math.PI / 2);
+        cp.parts.lLeg.rotation.x = 0; cp.parts.rLeg.rotation.x = 0; cp.parts.lArm.rotation.z = 0.1; cp.parts.rArm.rotation.z = -0.1;
+        if (t >= 20) { clearInterval(gi); c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; if (v === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); } setTimeout(() => scene.remove(cp), 5000); }
+      }, 45);
+    } else {
+      c00lkidd.parts.rArm.rotation.x = -0.8; let vx = fwd.x * 0.85, vz = fwd.z * 0.85, vy = 0.45;
+      const ti = setInterval(() => {
+        cp.position.x += vx; cp.position.z += vz; cp.position.y += vy; vy -= 0.04; cp.rotation.x += 0.2;
+        if (cp.position.y <= 0.6) {
+          cp.position.y = 0.6; clearInterval(ti); cp.rotation.x = Math.PI / 2; cp.rotation.z = (Math.random() - 0.5) * 1.5;
+          cp.parts.lArm.rotation.z = -1.2; cp.parts.rArm.rotation.z = 1.1; cp.parts.lLeg.rotation.x = 0.5; cp.parts.rLeg.rotation.x = -0.4;
+          c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE";
+          if (v === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
+          setTimeout(() => scene.remove(cp), 5000);
         }
+      }, 30);
+    }
+  }, 1200);
+}
 
-        function togglePlayerRole() {
-            if (gameState !== "LOBBY") return;
-            playerRole = (playerRole === "SURVIVOR") ? "KILLER" : "SURVIVOR";
-            const rBtn = document.getElementById("role-btn");
-            rBtn.innerText = "PERAN: " + playerRole;
-            rBtn.classList.toggle("killer", playerRole === "KILLER");
-            document.getElementById("char-btn").style.display = (playerRole === "SURVIVOR") ? "block" : "none";
+function updateInventoryUI() { document.getElementById("count-cola").innerText = `${invCola} / 1`; document.getElementById("slot-cola").classList.toggle("has-item", invCola > 0); document.getElementById("count-medkit").innerText = `${invMedkit} / 1`; document.getElementById("slot-medkit").classList.toggle("has-item", invMedkit > 0); }
+function usePickedCola() {
+  if (invCola <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+  invCola--; updateInventoryUI(); playSFX(sfxCola);
+  playConsumeAnimation(0xaa1111, () => {
+    if (playerNoob.isInvulnerable) { clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance(); speedBoostMultiplier = 1; return; }
+    hasSlowness = false; removeStatusEffect("slow"); speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 7); setTimeout(() => { speedBoostMultiplier = 1; }, 7000);
+  });
+}
+function cancelMedkit() { if (!isUsingMedkit) return; clearTimeout(medkitTimeout); isUsingMedkit = false; playerNoob.parts.heldItem.visible = false; playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0; removeStatusEffect("medkit"); }
+function usePickedMedkit() {
+  if (invMedkit <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+  invMedkit--; updateInventoryUI(); isUsingMedkit = true; playerNoob.parts.heldItem.material.color.setHex(0xffffff); playerNoob.parts.heldItem.visible = true;
+  playerNoob.parts.rArm.rotation.x = 1.6; playerNoob.parts.lArm.rotation.x = 1.6; addStatusEffect("medkit", "HEALING MEDKIT", "#00ff88", 8);
+  medkitTimeout = setTimeout(() => {
+    isUsingMedkit = false; playerNoob.parts.heldItem.visible = false; playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
+    playerNoob.hp = Math.min(100, playerNoob.hp + 80); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; showToast("MEDKIT SELESAI (+80 HP)", "#00e64d");
+  }, 8000);
+}
+
+function getNearestIncompleteGen(p) { let b = null, m = 6; generators.forEach(g => { if (!g.done) { const d = p.distanceTo(g.group.position); if (d < m) { m = d; b = g; } } }); return b; }
+function pickRandomIncompleteGen() { const inc = generators.filter(g => !g.done); return inc.length > 0 ? inc[Math.floor(Math.random() * inc.length)] : null; }
+function completeGenerator(g, n) { if (g.done) return; g.done = true; g.lamp.material.color.setHex(0x00ff00); timerSeconds = Math.max(1, timerSeconds - 10); showToast(`${n} SELESAIKAN GENERATOR! (-10 DETIK)`, "#00ff88"); document.getElementById("gen-status").innerText = `Generator Selesai: ${generators.filter(x => x.done).length} / 5`; }
+function openPuzzle(g) { activeGen = g; document.exitPointerLock(); document.getElementById("puzzle-modal").style.display = "flex"; nextPuzzleStage(); }
+function closePuzzle() { activeGen = null; document.getElementById("puzzle-modal").style.display = "none"; }
+function nextPuzzleStage() { if (!activeGen) return; if (activeGen.done) { closePuzzle(); return; } document.getElementById("puzzle-stage-text").innerText = `Tahap: ${activeGen.stage + 1} / 5`; currentPuzzleTarget = Math.floor(Math.random() * 4) + 1; document.querySelectorAll(".puz-btn").forEach((b, i) => b.classList.toggle("target", (i + 1) === currentPuzzleTarget)); }
+function hitPuzzleBtn(n) { if (!activeGen) return; if (n === currentPuzzleTarget) { activeGen.stage++; if (activeGen.stage >= 5) { completeGenerator(activeGen, "KAMU"); closePuzzle(); document.body.requestPointerLock(); } else nextPuzzleStage(); } }
+
+let camYaw = 0, camPitch = 0.2, isPointerLocked = false, isMouseDown = false, prevMouseX = 0, prevMouseY = 0;
+document.body.addEventListener("click", (e) => { if (e.target.tagName === "BUTTON" || activeGen) return; document.body.requestPointerLock(); document.getElementById("start-hint").style.display = "none"; unlockAllAudio(); if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack(); });
+document.addEventListener("pointerlockchange", () => { isPointerLocked = (document.pointerLockElement === document.body); });
+window.addEventListener("mousedown", (e) => { if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack(); isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY; });
+window.addEventListener("mouseup", () => { isMouseDown = false; });
+window.addEventListener("mousemove", (e) => { if (activeGen) return; let dx = 0, dy = 0; if (isPointerLocked) { dx = e.movementX; dy = e.movementY; } else if (isMouseDown) { dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY; prevMouseX = e.clientX; prevMouseY = e.clientY; } if (dx !== 0 || dy !== 0) { camYaw -= dx * 0.0035; camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035)); } });
+
+let burnTimer = null;
+function applyBurningToPlayer(d) {
+  if (playerNoob.isInvulnerable || isPlayerDead) return;
+  addStatusEffect("burn", "BURNING I", "#ff4400", d); if (burnTimer) clearInterval(burnTimer);
+  let t = 0; burnTimer = setInterval(() => { t++; if (t > d || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) { clearInterval(burnTimer); removeStatusEffect("burn"); return; } playerNoob.hp = Math.max(0, playerNoob.hp - 1.5); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; if (playerNoob.hp <= 0) playKillAnimation(playerNoob); }, 1000);
+}
+
+function updateSkillButtonsForRole() {
+  const s1 = document.getElementById("label-s1"), s2 = document.getElementById("label-s2"), s3 = document.getElementById("label-s3"), is = document.getElementById("icon-sprint"), ls = document.getElementById("label-sprint"), ht = document.getElementById("hp-title"), hc = document.getElementById("hp-container");
+  if (playerRole === "KILLER") { ht.style.display = "none"; hc.style.display = "none"; s1.innerText = "Override [Q]"; s2.innerText = "Corrupt [E]"; s3.innerText = "Pizza [R]"; is.innerText = "M1 / F"; ls.innerText = "TAG (26.5)"; }
+  else if (survivorChar === "007n7") { ht.style.display = "block"; hc.style.display = "block"; s1.innerText = "Clone [Q]"; s2.innerText = "c00lgui [E]"; s3.innerText = "Inject: " + injectModes[injectIdx]; is.innerText = "SHIFT"; ls.innerText = "SPRINT"; }
+  else { ht.style.display = "block"; hc.style.display = "block"; s1.innerText = "Ghostburger [Q]"; s2.innerText = "Slateskin [E]"; s3.innerText = "Bloxy Cola [R]"; is.innerText = "SHIFT"; ls.innerText = "SPRINT"; }
+}
+function updateUIState() {
+  document.getElementById("lobby-controls").style.display = (gameState === "LOBBY") ? "flex" : "none";
+  document.getElementById("gen-status").style.display = (gameState === "INGAME") ? "block" : "none";
+  const sh = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
+  document.getElementById("player-bars").style.display = sh ? "block" : "none"; document.getElementById("skills-container").style.display = sh ? "block" : "none";
+  document.getElementById("inventory-bar").style.display = (gameState === "INGAME" && !isPlayerDead && playerRole === "SURVIVOR") ? "flex" : "none";
+  dexMarker.visible = (gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead);
+  updateSkillButtonsForRole();
+  document.getElementById("spectate-panel").style.display = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride) ? "flex" : "none";
+}
+function updateSpectateHPList() { if (gameState !== "INGAME" || !isPlayerDead || playerRole !== "SURVIVOR") return; let h = "<b>DARAH SURVIVOR:</b>"; aiSurvivors.forEach(a => { h += `<div>${a.name}: ${a.alive ? Math.ceil(a.hp) + "% HP" : '<span style="color:#ff4444">MATI</span>'}</div>`; }); document.getElementById("ai-hp-list").innerHTML = h; }
+function cycleSpectate() { spectateList = []; aiSurvivors.forEach(a => { if (a.alive) spectateList.push(a); }); spectateList.push(c00lkidd); if (spectateList.length > 0) { isSpectating = true; spectateIdx = (spectateIdx + 1) % spectateList.length; document.getElementById("spectate-info").innerText = "Spectating: " + spectateList[spectateIdx].name; } }
+function pickNewPatrol(ai) { ai.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150); }
+aiSurvivors.forEach(pickNewPatrol);
+
+const aiSpawns = [[-45, -25], [45, -25], [0, 55]];
+setInterval(() => {
+  timerSeconds--; const te = document.getElementById("round-timer");
+  if (gameState === "LOBBY") {
+    te.innerText = "LOBBY: " + timerSeconds + "s";
+    if (timerSeconds <= 0) {
+      gameState = "INGAME"; timerSeconds = 180; isPlayerDead = false; isSpectating = false; isPleadLMS = false; camFocusOverride = null;
+      clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle(); c00lState = "IDLE";
+      invCola = 0; invMedkit = 0; updateInventoryUI(); spawnAllMapItems();
+      generators.forEach(g => { g.stage = 0; g.done = false; g.lamp.material.color.setHex(0xff0000); });
+      document.getElementById("gen-status").innerText = "Generator Selesai: 0 / 5";
+      playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true; playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false;
+      document.getElementById("hp-bar").style.width = "100%"; playerNoob.position.set(0, 0, 0);
+      aiSurvivors.forEach((a, i) => {
+        a.alive = true; a.hp = 100; a.isInvulnerable = false; a.visible = true; a.cdQ = false; a.cdE = false; a.cdR = false; a.isCastingGui = false;
+        a.invCola = 0; a.invMedkit = 0; a.isHealingMedkit = false; a.genWorkTimer = 0; a.assignedGen = pickRandomIncompleteGen();
+        a.parts.c00lguiTab.visible = false; a.position.set(aiSpawns[i][0], 0, aiSpawns[i][1]); pickNewPatrol(a);
+      });
+      c00lkidd.position.set(0, 0, -80); updateUIState(); startRoundAudio();
+    }
+  } else if (gameState === "INGAME") {
+    const m = Math.floor(timerSeconds / 60), s = timerSeconds % 60; te.innerText = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    let al = []; if (playerRole === "SURVIVOR" && !isPlayerDead) al.push(playerNoob); if (playerRole === "KILLER" && playerNoob.alive) al.push(playerNoob); aiSurvivors.forEach(a => { if (a.alive) al.push(a); });
+    updateSpectateHPList();
+    if (al.length === 1 && !lmsTriggered) {
+      lmsTriggered = true; const ls = al[0], b = document.getElementById("lms-banner");
+      if (ls.is007) { isPleadLMS = true; timerSeconds = 90; b.innerText = "PLEAD\n(FATHER & SON)"; b.style.color = "#ffffff"; }
+      else { isPleadLMS = false; timerSeconds = 75; b.innerText = "LAST MAN STANDING!"; b.style.color = "#ff0000"; }
+      b.style.display = "block"; setTimeout(() => b.style.display = "none", 5500);
+    }
+    if (timerSeconds <= 0 || (al.length === 0 && c00lState !== "KILLING")) {
+      gameState = "LOBBY"; timerSeconds = 15; lmsTriggered = false; isPleadLMS = false; isSpectating = false; camFocusOverride = null;
+      clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle();
+      playerNoob.position.set(0, 72, 0); c00lkidd.position.set(0, 72, -10);
+      minions.forEach(x => scene.remove(x)); minions.length = 0; clones.forEach(x => scene.remove(x)); clones.length = 0; corpses.forEach(x => scene.remove(x)); corpses.length = 0;
+      updateUIState(); stopAndResetAllAudio();
+    }
+  }
+}, 1000);
+
+function toggleShiftlock() { isShiftlock = !isShiftlock; document.getElementById("btn-shiftlock").classList.toggle("active", isShiftlock); document.getElementById("crosshair").style.display = isShiftlock ? "block" : "none"; }
+window.addEventListener("keydown", (e) => {
+  keys[e.code] = true;
+  if (e.code === "Escape" && activeGen) { closePuzzle(); return; }
+  if (activeGen) { if (e.code === "Digit1") hitPuzzleBtn(1); if (e.code === "Digit2") hitPuzzleBtn(2); if (e.code === "Digit3") hitPuzzleBtn(3); if (e.code === "Digit4") hitPuzzleBtn(4); return; }
+  if (e.code === "KeyM") document.exitPointerLock(); if (e.code === "ShiftLeft") isSprinting = true;
+  if (e.code === "KeyQ") useSkill1(); if (e.code === "KeyE") useSkill2(); if (e.code === "KeyR") useSkill3();
+  if (e.code === "Digit1") usePickedCola(); if (e.code === "Digit2") usePickedMedkit();
+  if (e.code === "KeyF") { if (playerRole === "KILLER") useBasicAttack(); else if (!isPlayerDead && gameState === "INGAME") { const g = getNearestIncompleteGen(playerNoob.position); if (g) openPuzzle(g); } }
+});
+window.addEventListener("keyup", (e) => { keys[e.code] = false; if (e.code === "ShiftLeft") isSprinting = false; });
+
+function useSkill1() { if (playerRole === "KILLER") killerWalkspeedOverride(); else if (survivorChar === "007n7") use007Clone(); else useBurger(); }
+function useSkill2() { if (playerRole === "KILLER") killerCorruptNature(); else if (survivorChar === "007n7") use007C00lgui(); else useSlate(); }
+function useSkill3() { if (playerRole === "KILLER") killerPizzaDelivery(); else if (survivorChar === "007n7") use007Inject(); else useCola(); }
+function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
+
+function use007Clone() {
+  if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
+  cdQ = true; animateCD("cd-q", 27, () => cdQ = false);
+  const c = createR6(false, true); c.position.copy(playerNoob.position); c.rotation.copy(playerNoob.rotation); c.hp = 100; c.alive = true; c.mode = injectModes[injectIdx];
+  c.patrolTarget = new THREE.Vector3((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140); scene.add(c); clones.push(c);
+  setTimeout(() => { c.alive = false; scene.remove(c); const i = clones.indexOf(c); if (i > -1) clones.splice(i, 1); }, c.mode === "Cursor" ? 5000 : 10000);
+  playerNoob.isUndetectable = true; addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#00ffcc", 5);
+  Object.values(playerNoob.parts).forEach(p => { if (p.material) setPartOp(p, 0.15); });
+  setTimeout(() => { playerNoob.isUndetectable = false; Object.values(playerNoob.parts).forEach(p => { if (p.material) setPartOp(p, 1); }); }, 5000);
+}
+function cancelC00lgui() { if (!isCastingC00lgui) return; clearTimeout(c00lguiTimeout); isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false; removeStatusEffect("c00lgui"); if (sfxC00lgui && !sfxC00lgui.paused) sfxC00lgui.pause(); }
+function use007C00lgui() { if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return; cdE = true; animateCD("cd-e", 50, () => cdE = false); playSFX(sfxC00lgui); isCastingC00lgui = true; playerNoob.parts.c00lguiTab.visible = true; addStatusEffect("c00lgui", "c00lgui TELEPORT", "#ff3333", 6); c00lguiTimeout = setTimeout(() => { isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false; const fs = getFarthestSpawn(playerNoob.position); playerNoob.position.set(fs.x, 0, fs.z); }, 5500); }
+function use007Inject() { if (isPlayerDead || gameState !== "INGAME") return; injectIdx = (injectIdx + 1) % injectModes.length; document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx]; }
+
+function playConsumeAnimation(col, cb) {
+  isDrinkingOrEating = true; playerNoob.parts.heldItem.material.color.setHex(col); playerNoob.parts.heldItem.visible = true;
+  playerNoob.parts.rArm.rotation.x = 2.2; playerNoob.parts.rArm.rotation.z = -0.4; playerNoob.parts.lArm.rotation.x = 2.2; playerNoob.parts.lArm.rotation.z = 0.4;
+  setTimeout(() => { playerNoob.parts.heldItem.visible = false; playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.rArm.rotation.z = 0; playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.lArm.rotation.z = 0; isDrinkingOrEating = false; if (cb) cb(); }, 1400);
+}
+function useBurger() { if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 40, () => cdQ = false); playSFX(sfxBurger); playConsumeAnimation(0xd4a373, () => { playerNoob.hp = Math.min(100, playerNoob.hp + Math.max(6, (100 - playerNoob.hp) * 0.25)); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; addStatusEffect("invis", "INVISIBLE", "#00ccff", 7); Object.values(playerNoob.parts).forEach(p => { if (p.material) setPartOp(p, 0.15); }); setTimeout(() => Object.values(playerNoob.parts).forEach(p => { if (p.material) setPartOp(p, 1); }), 7000); }); }
+function revertSlateAppearance() { applyPlayerAppearance(); document.getElementById("label-s2").innerText = "Slateskin [E]"; }
+function useSlate() {
+  if (playerNoob.isInvulnerable) { clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance(); if (playerNoob.position.distanceTo(c00lkidd.position) < 18) c00lkidd.position.addScaledVector(c00lkidd.position.clone().sub(playerNoob.position).normalize(), 9); speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 2); setTimeout(() => { speedBoostMultiplier = 1; }, 2500); return; }
+  if (cdE || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  cdE = true; animateCD("cd-e", 44, () => cdE = false); playSFX(sfxSlate);
+  playConsumeAnimation(0x4a6572, () => { playerNoob.isInvulnerable = true; document.getElementById("label-s2").innerText = "CANCEL [E]"; addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10); [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg].forEach(p => setPartCol(p, 0x4a5568)); slateTimerId = setTimeout(() => { playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1; }, 10000); });
+}
+function useCola() { if (cdR || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return; cdR = true; animateCD("cd-r", 50, () => cdR = false); playSFX(sfxCola); playConsumeAnimation(0xaa1111, () => { if (playerNoob.isInvulnerable) { clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance(); speedBoostMultiplier = 1; return; } hasSlowness = false; removeStatusEffect("slow"); speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 7); setTimeout(() => { speedBoostMultiplier = 1; }, 7000); }); }
+
+function killerTagM1() { if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return; cdM1 = true; animateCD("cd-m1", 2, () => cdM1 = false); playC00lkiddPunchAnimation(); setTimeout(() => { [playerNoob, ...aiSurvivors, ...clones].forEach(s => { if (s.alive && checkHitbox(s) && !s.isInvulnerable) { s.hp -= 26.5; if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; } if (s.hp <= 0) playKillAnimation(s); } }); }, 120); }
+function killerWalkspeedOverride() { if (cdQ || c00lState !== "IDLE" || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 20, () => cdQ = false); triggerWalkspeedOverride(); }
+function killerCorruptNature() { if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return; cdE = true; animateCD("cd-e", 12, () => cdE = false); const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y); triggerCorruptNature({ position: c00lkidd.position.clone().addScaledVector(f, 20) }); }
+function killerPizzaDelivery() { if (cdR || c00lState !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return; cdR = true; animateCD("cd-r", 50, () => cdR = false); triggerPizzaDelivery(); }
+
+function animateCD(id, dur, cb) { const el = document.getElementById(id); el.style.height = "100%"; let t = 0; const tm = setInterval(() => { t += 0.2; el.style.height = Math.max(0, (1 - t / dur) * 100) + "%"; if (t >= dur) { clearInterval(tm); if (cb) cb(); } }, 200); }
+function applyHighlight(t) { t.isHighlighted = true; t.parts.highlightMesh.visible = true; if (t === playerNoob && playerRole === "SURVIVOR") showToast("⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠", "#ffcc00"); setTimeout(() => { t.isHighlighted = false; t.parts.highlightMesh.visible = false; }, 7500); }
+
+function triggerWalkspeedOverride() { c00lState = "OVERRIDE_WINDUP"; c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = -0.9; c00lkidd.parts.rArm.rotation.x = -0.9; setTimeout(() => { if (c00lState === "OVERRIDE_WINDUP") { c00lState = "DASHING"; dashTimer = 80; c00lkidd.parts.torso.rotation.x = 0.2; } }, 450); }
+function triggerCorruptNature(tg) {
+  c00lState = "CASTING"; c00lkidd.parts.torso.rotation.y = -0.4; c00lkidd.parts.rArm.rotation.x = -1.2;
+  setTimeout(() => {
+    if (c00lState === "KILLING") return;
+    c00lkidd.parts.torso.rotation.y = 0.3; c00lkidd.parts.rArm.rotation.x = 2.2;
+    const pr = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
+    pr.position.copy(c00lkidd.position); pr.position.y += 3; scene.add(pr);
+    const dir = tg.position.clone().sub(c00lkidd.position).normalize(); let lf = 140, hd = false;
+    const iv = setInterval(() => {
+      pr.position.addScaledVector(dir, 1.1); lf--;
+      for (let t of [playerNoob, ...aiSurvivors, ...clones]) {
+        if (!hd && t.alive && pr.position.distanceTo(t.position) < 3.2) {
+          hd = true;
+          if (!t.isInvulnerable) {
+            t.hp = Math.max(0, t.hp - 15);
+            if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; }
+            if (t === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4); setTimeout(() => { hasSlowness = false; }, 4000); document.getElementById("hp-bar").style.width = t.hp + "%"; if (t.hp <= 0) playKillAnimation(t); }
+            else if (t.hp <= 0) playKillAnimation(t);
+          }
+          scene.remove(pr); clearInterval(iv); break;
         }
+      }
+      if (lf <= 0) { scene.remove(pr); clearInterval(iv); }
+    }, 16);
+    setTimeout(() => { if (c00lState !== "KILLING") { c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 350);
+  }, 350);
+}
+function triggerPizzaDelivery() {
+  if (minions.length >= 2) return;
+  c00lState = "SUMMONING"; c00lkidd.parts.lArm.rotation.x = 2.5; c00lkidd.parts.rArm.rotation.x = 2.5;
+  const nd = 2 - minions.length; let fin = 0;
+  for (let i = 0; i < nd; i++) {
+    const m = createR6(true); m.scale.set(0.65, 0.65, 0.65); m.isRising = true; m.position.set(c00lkidd.position.x + (i === 0 ? -4 : 4), -3, c00lkidd.position.z); scene.add(m); minions.push(m);
+    let rt = 0; const ri = setInterval(() => { m.position.y += 0.15; rt++; if (rt >= 20) { m.position.y = 0; m.isRising = false; clearInterval(ri); fin++; if (fin === nd) setTimeout(() => { if (c00lState !== "KILLING") { c00lkidd.parts.lArm.rotation.x = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 500); } }, 40);
+    m.despawnTimeout = setTimeout(() => { const ix = minions.indexOf(m); if (ix > -1) minions.splice(ix, 1); scene.remove(m); }, 30000);
+  }
+}
+function checkHitbox(t) { const r = t.position.clone().sub(c00lkidd.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), -c00lkidd.rotation.y); return Math.abs(r.x) <= 2.3 && r.y >= -1 && r.y <= 5.5 && r.z <= 0.5 && r.z >= -5.5; }
+function animateWalkingLimbs(g, s) { g.walkCycle += s; g.parts.lArm.rotation.x = Math.sin(g.walkCycle) * 0.7; g.parts.rArm.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.lLeg.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.rLeg.rotation.x = Math.sin(g.walkCycle) * 0.7; }
 
-        function toggleSurvivorChar() {
-            if (gameState !== "LOBBY") return;
-            survivorChar = (survivorChar === "NOOB") ? "007n7" : "NOOB";
-            const cBtn = document.getElementById("char-btn");
-            cBtn.innerText = "SURVIVOR: " + survivorChar;
-            cBtn.classList.toggle("char007", survivorChar === "007n7");
-            applyPlayerAppearance();
+function animate() {
+  requestAnimationFrame(animate);
+  torchLights.forEach(tl => { tl.intensity = 1.8 + Math.random() * 0.6; });
+  if (keys["ArrowLeft"]) camYaw += 0.05; if (keys["ArrowRight"]) camYaw -= 0.05;
+  mapItems.forEach(it => { if (it.active) it.mesh.rotation.y += 0.04; });
+
+  const cc = (playerRole === "KILLER") ? c00lkidd : playerNoob;
+  const cm = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER") && !isCastingC00lgui && !activeGen);
+  if (cm && !(playerRole === "KILLER" && c00lState !== "IDLE")) {
+    let sp = (playerRole === "KILLER" ? 0.25 : 0.23) * speedBoostMultiplier;
+    if (playerRole === "SURVIVOR") { if (playerNoob.isInvulnerable) sp *= 0.45; else if (isDrinkingOrEating || isUsingMedkit) sp *= 0.35; else if (hasSlowness) sp *= 0.65; }
+    if (isSprinting && stamina > 0 && !isDrinkingOrEating && !isUsingMedkit && !playerNoob.isInvulnerable) { sp *= 1.6; stamina = Math.max(0, stamina - 0.4); } else stamina = Math.min(100, stamina + 0.25);
+    document.getElementById("stamina-bar").style.width = stamina + "%";
+    let mx = 0, mz = 0; if (keys["KeyW"]) mz--; if (keys["KeyS"]) mz++; if (keys["KeyA"]) mx--; if (keys["KeyD"]) mx++;
+    cc.rotation.y = camYaw;
+    if (mx !== 0 || mz !== 0) { const a = Math.atan2(mx, mz); moveWithCollision(cc, Math.sin(camYaw + a) * sp, Math.cos(camYaw + a) * sp); animateWalkingLimbs(cc, 0.22); }
+    else if (!isDrinkingOrEating && !isUsingMedkit) { cc.parts.lArm.rotation.x = 0; cc.parts.rArm.rotation.x = 0; cc.parts.lLeg.rotation.x = 0; cc.parts.rLeg.rotation.x = 0; }
+  }
+
+  if (gameState === "INGAME" && playerRole === "SURVIVOR" && !isPlayerDead) {
+    mapItems.forEach(it => { if (it.active && playerNoob.position.distanceTo(it.mesh.position) < 3) { if (it.type === "COLA" && invCola < 1) { it.active = false; it.mesh.visible = false; invCola = 1; showToast("Pungut: Bloxy Cola [1]"); updateInventoryUI(); } else if (it.type === "MEDKIT" && invMedkit < 1) { it.active = false; it.mesh.visible = false; invMedkit = 1; showToast("Pungut: Medkit [2]"); updateInventoryUI(); } } });
+    const ng = getNearestIncompleteGen(playerNoob.position), pe = document.getElementById("interact-prompt");
+    if (ng && !activeGen) { pe.innerText = `Tekan [F] Perbaiki Generator (Tahap ${ng.stage}/5)`; pe.style.display = "block"; } else pe.style.display = "none";
+  } else document.getElementById("interact-prompt").style.display = "none";
+
+  if (dexMarker.visible) { const fs = getFarthestSpawn(playerNoob.position); dexMarker.position.set(fs.x, 20, fs.z); }
+  let cf = camFocusOverride ? camFocusOverride : (isSpectating && spectateList[spectateIdx] ? spectateList[spectateIdx] : cc);
+  camera.position.set(cf.position.x + Math.sin(camYaw) * Math.cos(camPitch) * 9, cf.position.y + 3.5 + Math.sin(camPitch) * 9, cf.position.z + Math.cos(camYaw) * Math.cos(camPitch) * 9);
+  camera.lookAt(cf.position.x, cf.position.y + 3, cf.position.z);
+
+  if (gameState === "INGAME") {
+    let ad = 9999; if (playerRole === "SURVIVOR") ad = !isPlayerDead ? playerNoob.position.distanceTo(c00lkidd.position) : (isSpectating && cf ? cf.position.distanceTo(c00lkidd.position) : 9999);
+    else [playerNoob, ...aiSurvivors].forEach(s => { if (s.alive) ad = Math.min(ad, s.position.distanceTo(c00lkidd.position)); });
+    update4LayerChase(ad);
+
+    let tgts = []; if (playerRole === "SURVIVOR" && !isPlayerDead && !playerNoob.isUndetectable) tgts.push(playerNoob); if (playerRole === "KILLER" && playerNoob.alive && !playerNoob.isUndetectable) tgts.push(playerNoob); aiSurvivors.forEach(a => { if (a.alive && !a.isUndetectable) tgts.push(a); }); clones.forEach(c => { if (c.alive) tgts.push(c); });
+    let ct = tgts.find(t => t.isHighlighted) || null; if (!ct) { let md = 9999; tgts.forEach(t => { const d = t.position.distanceTo(c00lkidd.position); if (d < md) { md = d; ct = t; } }); }
+
+    if (playerRole === "SURVIVOR" && ct && c00lState !== "KILLING") {
+      if (c00lState !== "SUMMONING" && c00lState !== "CASTING") { c00lkidd.lookAt(ct.position.x, 0, ct.position.z); c00lkidd.rotation.y += Math.PI; }
+      if (c00lState === "DASHING") {
+        dashTimer--; const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y); moveWithCollision(c00lkidd, f.x * 1.15, f.z * 1.15);
+        if (checkHitbox(ct) && !ct.isInvulnerable) {
+          ct.hp -= 32; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+          if (ct === playerNoob) { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToPlayer(8); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; if (playerNoob.hp <= 0) playKillAnimation(playerNoob); }
+          else if (ct.hp <= 0) playKillAnimation(ct);
+          if (c00lState !== "KILLING") c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0;
         }
-
-        const activeEffects = {};
-        const effectsContainer = document.getElementById("status-effects");
-
-        function addStatusEffect(key, label, color, durationSec) {
-            if (activeEffects[key]) { clearInterval(activeEffects[key].interval); activeEffects[key].el.remove(); }
-            const el = document.createElement("div");
-            el.className = "effect-badge"; el.style.borderLeftColor = color; el.style.color = color;
-            effectsContainer.appendChild(el);
-            let timeLeft = durationSec; el.innerText = `${label} (${timeLeft}s)`;
-            const interval = setInterval(() => {
-                timeLeft--; if (timeLeft <= 0) removeStatusEffect(key); else el.innerText = `${label} (${timeLeft}s)`;
-            }, 1000);
-            activeEffects[key] = { el, interval };
-        }
-
-        function removeStatusEffect(key) {
-            if (activeEffects[key]) { clearInterval(activeEffects[key].interval); activeEffects[key].el.remove(); delete activeEffects[key]; }
-        }
-        function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
-
-        let isAudioInit = false;
-        const l1 = document.getElementById("chase-layer1"), l2 = document.getElementById("chase-layer2");
-        const l3 = document.getElementById("chase-layer3"), l4 = document.getElementById("chase-layer4");
-        const bgmLMS = document.getElementById("audio-lms"), bgmPlead = document.getElementById("audio-plead");
-        const bgmAmbience = document.getElementById("audio-ambience");
-        const sfxCola = document.getElementById("sfx-cola"), sfxSlate = document.getElementById("sfx-slate");
-        const sfxBurger = document.getElementById("sfx-burger"), sfxC00lgui = document.getElementById("sfx-c00lgui");
-        let activeLayerIndex = 0;
-
-        function unlockAllAudio() {
-            if (isAudioInit) return;
-            isAudioInit = true;
-            [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxCola, sfxSlate, sfxBurger, sfxC00lgui].forEach(a => {
-                if (a) { a.load(); a.volume = 0; const p = a.play(); if (p !== undefined) p.then(() => { a.pause(); a.currentTime = 0; }).catch(()=>{}); }
-            });
-            if (gameState === "INGAME") startRoundAudio();
-        }
-
-        function playSFX(el) { if (el) { el.volume = 1.0; el.currentTime = 0; el.play().catch(()=>{}); } }
-
-        function stopAndResetAllAudio() {
-            [l1, l2, l3, l4, bgmLMS, bgmPlead, bgmAmbience, sfxC00lgui].forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
-            activeLayerIndex = 0;
-            document.getElementById("vignette").style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)";
-        }
-
-        function startRoundAudio() {
-            if (!isAudioInit) return;
-            stopAndResetAllAudio();
-            if (bgmAmbience) { bgmAmbience.volume = 0.4; bgmAmbience.play().catch(()=>{}); }
-        }
-
-        function switchSingleLayer(targetLayer) {
-            const layers = [null, l1, l2, l3, l4];
-            const chosen = layers[targetLayer];
-            if (activeLayerIndex !== targetLayer) {
-                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
-                activeLayerIndex = targetLayer;
-                if (chosen) { chosen.currentTime = 0; chosen.volume = 1.0; chosen.play().catch(()=>{}); }
-            } else if (chosen && chosen.paused) { chosen.volume = 1.0; chosen.play().catch(()=>{}); }
-        }
-
-        function update4LayerChase(dist) {
-            if (!isAudioInit || gameState !== "INGAME") return;
-            const vignette = document.getElementById("vignette");
-
-            if (lmsTriggered) {
-                [l1, l2, l3, l4].forEach(l => { if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
-                activeLayerIndex = 0;
-                if (bgmAmbience && !bgmAmbience.paused) bgmAmbience.volume = 0.05;
-                const targetLmsTrack = isPleadLMS ? bgmPlead : bgmLMS;
-                if (targetLmsTrack && targetLmsTrack.paused) { targetLmsTrack.currentTime = 0; targetLmsTrack.volume = 1.0; targetLmsTrack.play().catch(()=>{}); }
-                vignette.style.boxShadow = isPleadLMS ? "inset 0 0 130px rgba(255, 255, 255, 0.4)" : "inset 0 0 120px rgba(255, 0, 0, 0.7)";
-                return;
-            } else {
-                if (bgmLMS && !bgmLMS.paused) bgmLMS.pause();
-                if (bgmPlead && !bgmPlead.paused) bgmPlead.pause();
+        if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
+      } else if (c00lState === "IDLE") {
+        const kx = ct.position.x - c00lkidd.position.x, kz = ct.position.z - c00lkidd.position.z, kd = Math.sqrt(kx * kx + kz * kz);
+        if (kd > 3.5) { moveWithCollision(c00lkidd, (kx / kd) * 0.25, (kz / kd) * 0.25); animateWalkingLimbs(c00lkidd, 0.22); }
+        if (c00lAttackTimer <= 0 && checkHitbox(ct)) {
+          c00lAttackTimer = 110; playC00lkiddPunchAnimation();
+          setTimeout(() => {
+            if (ct.alive && checkHitbox(ct) && !ct.isInvulnerable) {
+              ct.hp -= 26.5; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+              if (ct === playerNoob) { closePuzzle(); cancelMedkit(); cancelC00lgui(); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; if (playerNoob.hp <= 0) playKillAnimation(playerNoob); }
+              else if (ct.hp <= 0) playKillAnimation(ct);
             }
-
-            if (playerRole === "KILLER") {
-                if (dist <= 28) { switchSingleLayer(4); if (bgmAmbience) bgmAmbience.volume = 0.1; vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.45)"; }
-                else { switchSingleLayer(0); if (bgmAmbience) bgmAmbience.volume = 0.4; vignette.style.boxShadow = "inset 0 0 0px rgba(255, 0, 0, 0)"; }
-                return;
-            }
-
-            if (dist > 80) { switchSingleLayer(0); if (bgmAmbience) bgmAmbience.volume = 0.45; vignette.style.boxShadow = "inset 0 0 0px rgba(255,0,0,0)"; }
-            else if (dist > 55) { switchSingleLayer(1); if (bgmAmbience) bgmAmbience.volume = 0.3; vignette.style.boxShadow = "inset 0 0 50px rgba(255, 0, 0, 0.15)"; }
-            else if (dist > 36) { switchSingleLayer(2); if (bgmAmbience) bgmAmbience.volume = 0.2; vignette.style.boxShadow = "inset 0 0 80px rgba(255, 0, 0, 0.35)"; }
-            else if (dist > 22) { switchSingleLayer(3); if (bgmAmbience) bgmAmbience.volume = 0.1; vignette.style.boxShadow = "inset 0 0 110px rgba(255, 0, 0, 0.55)"; }
-            else { switchSingleLayer(4); if (bgmAmbience) bgmAmbience.volume = 0.05; vignette.style.boxShadow = "inset 0 0 140px rgba(255, 0, 0, 0.85)"; }
+          }, 120);
         }
+        c00lAbilitiesTimer++; if (c00lAbilitiesTimer === 450) triggerWalkspeedOverride(); if (c00lAbilitiesTimer === 900) triggerCorruptNature(ct); if (c00lAbilitiesTimer === 1350) { triggerPizzaDelivery(); c00lAbilitiesTimer = 0; }
+      }
+    } else if (playerRole === "KILLER" && c00lState === "DASHING") {
+      dashTimer--; const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y); moveWithCollision(c00lkidd, f.x * 1.15, f.z * 1.15);
+      tgts.forEach(t => { if (t.alive && checkHitbox(t) && !t.isInvulnerable) { t.hp -= 32; if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; } if (t.hp <= 0) playKillAnimation(t); else c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; } });
+      if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
+    }
+    if (c00lAttackTimer > 0) c00lAttackTimer--;
 
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x14151f, 0.008);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
-        document.body.appendChild(renderer.domElement);
-
-        scene.add(new THREE.AmbientLight(0x666677, 1.0));
-        const moonLight = new THREE.DirectionalLight(0xaaccff, 0.9);
-        moonLight.position.set(60, 100, 60); moonLight.castShadow = true;
-        moonLight.shadow.mapSize.width = 1024; moonLight.shadow.mapSize.height = 1024;
-        moonLight.shadow.camera.near = 10; moonLight.shadow.camera.far = 300;
-        moonLight.shadow.camera.left = -125; moonLight.shadow.camera.right = 125;
-        moonLight.shadow.camera.top = 125; moonLight.shadow.camera.bottom = -125;
-        scene.add(moonLight);
-
-        const arenaFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshStandardMaterial({ color: 0x203220, roughness: 0.9 }));
-        arenaFloor.rotation.x = -Math.PI / 2; arenaFloor.receiveShadow = true; scene.add(arenaFloor);
-
-        const lobbyPlatform = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 50), new THREE.MeshStandardMaterial({ color: 0x554433 }));
-        lobbyPlatform.position.set(0, 70, 0); lobbyPlatform.receiveShadow = true; scene.add(lobbyPlatform);
-
-        const survivorSpawns = [
-            new THREE.Vector3(-85, 0, -85), new THREE.Vector3(85, 0, -85),
-            new THREE.Vector3(-85, 0, 85), new THREE.Vector3(85, 0, 85)
-        ];
-
-        const dexMarker = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 40, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, wireframe: true }));
-        dexMarker.visible = false; scene.add(dexMarker);
-
-        function getFarthestSpawn(pos) {
-            let far = survivorSpawns[0], maxD = -1;
-            survivorSpawns.forEach(sp => { const d = pos.distanceTo(sp); if (d > maxD) { maxD = d; far = sp; } });
-            return far;
+    for (let i = minions.length - 1; i >= 0; i--) {
+      const m = minions[i]; if (m.isRising || !ct) continue;
+      m.lookAt(ct.position.x, 0, ct.position.z); m.rotation.y += Math.PI;
+      const mx = ct.position.x - m.position.x, mz = ct.position.z - m.position.z, md = Math.sqrt(mx * mx + mz * mz);
+      if (md > 2.5) { moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14); animateWalkingLimbs(m, 0.24); }
+      else {
+        clearTimeout(m.despawnTimeout); scene.remove(m); minions.splice(i, 1); applyHighlight(ct);
+        if (!ct.isInvulnerable) {
+          ct.hp -= 15; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+          if (ct === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3); setTimeout(() => { hasSlowness = false; }, 3000); applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; if (playerNoob.hp <= 0) playKillAnimation(playerNoob); }
+          else if (ct.hp <= 0) playKillAnimation(ct);
         }
+      }
+    }
 
-        const solidBoxes = [];
-        function registerBox(x, z, w, d) {
-            solidBoxes.push({ minX: x - w/2 - 1.2, maxX: x + w/2 + 1.2, minZ: z - d/2 - 1.2, maxZ: z + d/2 + 1.2 });
+    clones.forEach(c => {
+      if (!c.alive) return;
+      let dst = c.patrolTarget;
+      if (c.mode === "Pathfind") dst = getFarthestSpawn(c.position);
+      else if (c.mode === "Cursor") dst = playerNoob.position.clone().addScaledVector(new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw), 40);
+      const cx = dst.x - c.position.x, cz = dst.z - c.position.z, cd = Math.sqrt(cx * cx + cz * cz);
+      if (cd > 2) { moveWithCollision(c, (cx / cd) * 0.2, (cz / cd) * 0.2); c.lookAt(dst.x, 0, dst.z); c.rotation.y += Math.PI; animateWalkingLimbs(c, 0.22); }
+      else if (c.mode === "Wander") c.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
+    });
+
+    (playerRole === "KILLER" ? [playerNoob, ...aiSurvivors] : aiSurvivors).forEach(ai => {
+      if (!ai.alive || ai.isCastingGui || ai.isHealingMedkit) return;
+      mapItems.forEach(it => { if (it.active && ai.position.distanceTo(it.mesh.position) < 3) { if (it.type === "COLA" && ai.invCola < 1) { it.active = false; it.mesh.visible = false; ai.invCola = 1; } else if (it.type === "MEDKIT" && ai.invMedkit < 1) { it.active = false; it.mesh.visible = false; ai.invMedkit = 1; } } });
+      const dk = ai.position.distanceTo(c00lkidd.position);
+      if (ai.invMedkit > 0 && ai.hp < 65 && dk > 25) { ai.invMedkit--; ai.isHealingMedkit = true; setTimeout(() => { if (ai.alive) ai.hp = Math.min(100, ai.hp + 80); ai.isHealingMedkit = false; }, 8000); return; }
+      if (ai.is007) {
+        if (dk < 22 && !ai.cdQ) {
+          ai.cdQ = true; const cl = createR6(false, true); cl.position.copy(ai.position); cl.hp = 100; cl.alive = true; cl.mode = "Wander"; cl.patrolTarget = new THREE.Vector3((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140); scene.add(cl); clones.push(cl);
+          setTimeout(() => { cl.alive = false; scene.remove(cl); const ix = clones.indexOf(cl); if (ix > -1) clones.splice(ix, 1); }, 10000);
+          ai.isUndetectable = true; Object.values(ai.parts).forEach(p => { if (p.material) setPartOp(p, 0.15); }); setTimeout(() => { ai.isUndetectable = false; Object.values(ai.parts).forEach(p => { if (p.material) setPartOp(p, 1); }); }, 5000); setTimeout(() => { ai.cdQ = false; }, 27000);
         }
-
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.9 });
-        function createBorderWall(x, z, w, d) {
-            const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), wallMat);
-            wall.position.set(x, 11, z); wall.castShadow = true; wall.receiveShadow = true;
-            scene.add(wall); registerBox(x, z, w, d);
+        if (ai.hp < 80 && dk > 25 && !ai.cdE) { ai.cdE = true; ai.isCastingGui = true; ai.parts.c00lguiTab.visible = true; setTimeout(() => { if (ai.alive && ai.isCastingGui) { ai.isCastingGui = false; ai.parts.c00lguiTab.visible = false; const fs = getFarthestSpawn(ai.position); ai.position.set(fs.x, 0, fs.z); } setTimeout(() => { ai.cdE = false; }, 50000); }, 5500); }
+      } else {
+        if (dk < 10 && !ai.cdE && !ai.isInvulnerable) { ai.cdE = true; ai.isInvulnerable = true; setPartCol(ai.parts.torso, 0x4a5568); setTimeout(() => { ai.isInvulnerable = false; setPartCol(ai.parts.torso, 0x0d69ac); setTimeout(() => { ai.cdE = false; }, 44000); }, 5000); }
+        if (ai.hp < 60 && !ai.cdQ) { ai.cdQ = true; ai.hp = Math.min(100, ai.hp + 20); Object.values(ai.parts).forEach(p => { if (p.material) setPartOp(p, 0.2); }); setTimeout(() => { Object.values(ai.parts).forEach(p => { if (p.material) setPartOp(p, 1); }); setTimeout(() => { ai.cdQ = false; }, 40000); }, 7000); }
+      }
+      let as = (dk < 35 || ai.isHighlighted) ? 0.21 : 0.14; if (dk < 30 && ai.invCola > 0) { ai.invCola--; as = 0.29; } else if (!ai.is007 && dk < 30 && !ai.cdR) { ai.cdR = true; as = 0.28; setTimeout(() => { ai.cdR = false; }, 50000); } if (ai.isInvulnerable) as = 0.1;
+      if (dk < 35 || ai.isHighlighted) {
+        const ax = ai.position.x - c00lkidd.position.x, az = ai.position.z - c00lkidd.position.z, d = Math.sqrt(ax * ax + az * az);
+        moveWithCollision(ai, (ax / d) * as, (az / d) * as); ai.lookAt(ai.position.x + ax, 0, ai.position.z + az); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.24);
+      } else {
+        if (!ai.assignedGen || ai.assignedGen.done) ai.assignedGen = pickRandomIncompleteGen();
+        const tg = ai.assignedGen;
+        if (tg) {
+          const mg = ai.position.distanceTo(tg.group.position);
+          if (mg > 4.5) { moveWithCollision(ai, ((tg.group.position.x - ai.position.x) / mg) * as, ((tg.group.position.z - ai.position.z) / mg) * as); ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
+          else { ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; ai.parts.rArm.rotation.x = 1.6 + Math.sin(Date.now() * 0.015) * 0.2; ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2; ai.genWorkTimer++; if (ai.genWorkTimer >= 220) { ai.genWorkTimer = 0; if (!tg.done) { tg.stage++; if (tg.stage >= 5) completeGenerator(tg, ai.name); } } }
+        } else {
+          if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
+          const px = ai.patrolTarget.x - ai.position.x, pz = ai.patrolTarget.z - ai.position.z, pd = Math.sqrt(px * px + pz * pz);
+          if (pd > 2) { moveWithCollision(ai, (px / pd) * as, (pz / pd) * as); ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
+          else pickNewPatrol(ai);
         }
-        createBorderWall(0, -125, 250, 6); createBorderWall(0, 125, 250, 6);
-        createBorderWall(-125, 0, 6, 250); createBorderWall(125, 0, 6, 250);
-
-        const torchLights = [];
-        function attachTorchToWall(wx, wy, wz) {
-            const torchGroup = new THREE.Group();
-            const stick = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.4, 0.25), new THREE.MeshStandardMaterial({ color: 0x4d3319 }));
-            stick.rotation.x = 0.4; torchGroup.add(stick);
-            const flame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 }));
-            flame.position.set(0, 0.7, 0.3); torchGroup.add(flame);
-            const light = new THREE.PointLight(0xff6600, 2.2, 28);
-            light.position.set(0, 0.8, 0.5); torchGroup.add(light); torchLights.push(light);
-            torchGroup.position.set(wx, wy, wz); scene.add(torchGroup);
-        }
-
-        for(let i = 0; i < 20; i++) {
-            const h = 8 + Math.random() * 8;
-            const b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), new THREE.MeshStandardMaterial({ color: 0x333340 }));
-            const bx = (Math.random() - 0.5) * 150, bz = (Math.random() - 0.5) * 150;
-            b.position.set(bx, h/2, bz); b.castShadow = true; b.receiveShadow = true;
-            scene.add(b); registerBox(bx, bz, 8, 8);
-            if (i % 3 === 0) attachTorchToWall(bx, 5, bz + 4.2);
-        }
-
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-        const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e5922 });
-        for(let i = 0; i < 28; i++) {
-            const tx = (Math.random() - 0.5) * 170, tz = (Math.random() - 0.5) * 170;
-            const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 7, 1.2), trunkMat);
-            trunk.position.set(tx, 3.5, tz); trunk.castShadow = true; scene.add(trunk);
-            const foliage = new THREE.Mesh(new THREE.BoxGeometry(4.5, 4.5, 4.5), foliageMat);
-            foliage.position.set(tx, 8, tz); foliage.castShadow = true; scene.add(foliage);
-            registerBox(tx, tz, 1.2, 1.2);
-        }
-
-        const generators = [];
-        const genPositions = [[-55, -55], [55, -55], [-55, 55], [55, 55], [0, 45]];
-        genPositions.forEach((pos, idx) => {
-            const gGroup = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x444444 }));
-            body.position.y = 1.25; body.castShadow = true; gGroup.add(body);
-            const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-            lamp.position.y = 3.2; gGroup.add(lamp);
-            gGroup.position.set(pos[0], 0, pos[1]); scene.add(gGroup);
-            registerBox(pos[0], pos[1], 3.5, 2.5);
-            generators.push({ group: gGroup, lamp: lamp, stage: 0, done: false, id: idx + 1 });
-        });
-
-        const mapItems = [];
-        const itemCoords = [
-            { type: "COLA", x: -30, z: 25 }, { type: "COLA", x: 30, z: -25 },
-            { type: "COLA", x: -70, z: 0 },  { type: "COLA", x: 70, z: 0 },
-            { type: "MEDKIT", x: 0, z: -35 }, { type: "MEDKIT", x: 25, z: 70 }
-        ];
-
-        function spawnAllMapItems() {
-            mapItems.forEach(it => scene.remove(it.mesh));
-            mapItems.length = 0;
-            itemCoords.forEach(ic => {
-                let mesh;
-                if (ic.type === "COLA") {
-                    mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 12), new THREE.MeshStandardMaterial({ color: 0xcc2222, emissive: 0x330000 }));
-                } else {
-                    mesh = new THREE.Group();
-                    const box = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1.0), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-                    const cross = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.95, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-                    mesh.add(box, cross);
-                }
-                mesh.position.set(ic.x, 1.0, ic.z); scene.add(mesh);
-                mapItems.push({ type: ic.type, mesh: mesh, active: true });
-            });
-        }
-        spawnAllMapItems();
-
-        function canMoveTo(x, z) {
-            for (let b of solidBoxes) { if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false; }
-            return true;
-        }
-
-        function moveWithCollision(entity, vx, vz) {
-            const nextX = entity.position.x + vx, nextZ = entity.position.z + vz;
-            if (canMoveTo(nextX, nextZ)) { entity.position.x = nextX; entity.position.z = nextZ; }
-            else if (canMoveTo(nextX, entity.position.z)) entity.position.x = nextX;
-            else if (canMoveTo(entity.position.x, nextZ)) entity.position.z = nextZ;
-        }
-
-        function createFace(bgHex) {
-            const c = document.createElement("canvas"); c.width = 128; c.height = 128;
-            const ctx = c.getContext("2d");
-            ctx.fillStyle = bgHex; ctx.fillRect(0,0,128,128);
-            ctx.fillStyle = "#000";
-            ctx.beginPath(); ctx.arc(40, 45, 8, 0, Math.PI*2); ctx.arc(88, 45, 8, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(64, 75, 24, 0, Math.PI, false); ctx.lineWidth = 6; ctx.stroke();
-            return new THREE.CanvasTexture(c);
-        }
-
-        function createC00lkiddSpanningTextures() {
-            const master = document.createElement("canvas");
-            master.width = 400; master.height = 200;
-            const ctx = master.getContext("2d");
-            ctx.fillStyle = "#cc0000"; ctx.fillRect(0, 0, 400, 200);
-            ctx.fillStyle = "#111111"; ctx.font = "bold 46px sans-serif"; ctx.textAlign = "center";
-            ctx.fillText("team c00lkidd", 200, 85);
-            ctx.fillText("join today!", 200, 145);
-
-            function sliceTex(sx, sw) {
-                const sub = document.createElement("canvas"); sub.width = sw; sub.height = 200;
-                sub.getContext("2d").drawImage(master, sx, 0, sw, 200, 0, 0, sw, 200);
-                return new THREE.CanvasTexture(sub);
-            }
-
-            return { rArmTex: sliceTex(0, 100), torsoTex: sliceTex(100, 200), lArmTex: sliceTex(300, 100) };
-        }
-
-        function createSword() {
-            const sword = new THREE.Group();
-            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.5, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 }));
-            blade.position.y = 1.3; blade.castShadow = true; sword.add(blade);
-            const cross = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.2), new THREE.MeshStandardMaterial({ color: 0x880000 }));
-            cross.position.y = 0.1; sword.add(cross);
-            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-            handle.position.y = -0.25; sword.add(handle);
-            return sword;
-        }
-
-        function createBurgerHat() {
-            const hat = new THREE.Group();
-            const bunMat = new THREE.MeshStandardMaterial({ color: 0xd99b43 });
-            const meatMat = new THREE.MeshStandardMaterial({ color: 0x5c2c16 });
-            const letMat = new THREE.MeshStandardMaterial({ color: 0x44aa22 });
-            const botBun = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.25, 12), bunMat);
-            const meat = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.22, 12), meatMat); meat.position.y = 0.22;
-            const lettuce = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.1, 12), letMat); lettuce.position.y = 0.36;
-            const topBun = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.7, 0.35, 12), bunMat); topBun.position.y = 0.58;
-            const miniHead = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xffd200 })); miniHead.position.y = 0.95;
-            hat.add(botBun, meat, lettuce, topBun, miniHead);
-            return hat;
-        }
-
-        function createR6(isRed, is007 = false) {
-            const g = new THREE.Group();
-            const bodyCol = isRed ? 0xcc0000 : (is007 ? 0x2a66cc : 0x0055ff);
-            const limbCol = isRed ? 0xcc0000 : (is007 ? 0xe0e0e0 : 0xffd200);
-            const legCol  = isRed ? 0x990000 : (is007 ? 0x1a3366 : 0x287f46);
-
-            const mBody = new THREE.MeshStandardMaterial({ color: bodyCol });
-            const mLimb = new THREE.MeshStandardMaterial({ color: limbCol });
-            const mLeg  = new THREE.MeshStandardMaterial({ color: legCol });
-
-            let torsoMat = mBody, lArmMat = mLimb, rArmMat = mLimb;
-            if (isRed) {
-                const spanTex = createC00lkiddSpanningTextures();
-                torsoMat = [mBody, mBody, mBody, mBody, mBody, new THREE.MeshStandardMaterial({ map: spanTex.torsoTex })];
-                rArmMat  = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: spanTex.rArmTex })];
-                lArmMat  = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: spanTex.lArmTex })];
-            }
-
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), torsoMat); torso.position.y = 3; torso.castShadow = true; g.add(torso);
-            const faceColorHex = isRed ? "#ff0000" : (is007 ? "#eeeeee" : "#ffd200");
-            const headMaterials = [mLimb, mLimb, mLimb, mLimb, mLimb, new THREE.MeshStandardMaterial({ map: createFace(faceColorHex) })];
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 1.25), headMaterials); head.position.y = 4.65; head.castShadow = true; g.add(head);
-            
-            const lArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), lArmMat); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true; g.add(lArm);
-            const rArm = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), rArmMat); rArm.position.set(1.5, 3, 0); rArm.castShadow = true; g.add(rArm);
-            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true; g.add(lLeg);
-            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), mLeg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true; g.add(rLeg);
-
-            const burgerHat = createBurgerHat();
-            burgerHat.position.set(0, 0.7, 0); burgerHat.visible = is007; head.add(burgerHat);
-
-            const c00lguiTab = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.1), new THREE.MeshBasicMaterial({ color: 0xff2222, wireframe: true }));
-            c00lguiTab.position.set(0, 3.2, -1.0); c00lguiTab.visible = false; g.add(c00lguiTab);
-
-            const highlightMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 5.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffea00, wireframe: true, transparent: true, opacity: 0.8 }));
-            highlightMesh.position.y = 2.6; highlightMesh.visible = false; g.add(highlightMesh);
-
-            const heldItem = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6), new THREE.MeshStandardMaterial({ color: 0xaa2222 }));
-            heldItem.position.set(0, -0.9, -0.3); heldItem.visible = false; rArm.add(heldItem);
-
-            if (isRed) {
-                const sw = createSword();
-                sw.position.set(0, -1, -0.4); sw.rotation.x = Math.PI / 2; rArm.add(sw);
-            }
-
-            g.parts = { torso, head, lArm, rArm, lLeg, rLeg, heldItem, highlightMesh, burgerHat, c00lguiTab };
-            g.is007 = is007; g.isHighlighted = false; g.isUndetectable = false; g.hp = 100; g.isInvulnerable = false; g.walkCycle = 0;
-            g.cdQ = false; g.cdE = false; g.cdR = false; g.isCastingGui = false;
-            g.invCola = 0; g.invMedkit = 0; g.isHealingMedkit = false; g.genWorkTimer = 0;
-            return g;
-        }
-
-        const playerNoob = createR6(false, false);
-        playerNoob.name = "Kamu"; playerNoob.position.set(0, 72, 0); scene.add(playerNoob);
-
-        function applyPlayerAppearance() {
-            const is007 = (survivorChar === "007n7");
-            playerNoob.is007 = is007; playerNoob.parts.burgerHat.visible = is007;
-            const limbCol = is007 ? 0xe0e0e0 : 0xffd200, legCol = is007 ? 0x1a3366 : 0x287f46;
-            playerNoob.parts.lArm.material.color.setHex(limbCol); playerNoob.parts.rArm.material.color.setHex(limbCol);
-            playerNoob.parts.lLeg.material.color.setHex(legCol); playerNoob.parts.rLeg.material.color.setHex(legCol);
-        }
-
-        const aiSurvivors = [];
-        for(let i = 0; i < 3; i++) {
-            const isBot007 = (i === 2);
-            const ai = createR6(false, isBot007);
-            ai.position.set((i - 1) * 6, 72, 5);
-            ai.alive = true; ai.hp = 100; ai.isInvulnerable = false;
-            ai.name = isBot007 ? "007n7 (AI)" : ("AI Noob " + (i + 1));
-            ai.patrolTarget = new THREE.Vector3();
-            scene.add(ai); aiSurvivors.push(ai);
-        }
-
-        const c00lkidd = createR6(true, false);
-        c00lkidd.name = "c00lkidd";
-        c00lkidd.add(new THREE.PointLight(0xff0000, 2.5, 18));
-        c00lkidd.position.set(0, 72, -10);
-        scene.add(c00lkidd);
-
-        const minions = [], clones = [], corpses = [];
-
-        function spawnVisualHitbox() {
-            const hbGeo = new THREE.BoxGeometry(4.4, 6.0, 5.5);
-            const hbMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.35, wireframe: false });
-            const hb = new THREE.Mesh(hbGeo, hbMat);
-            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-            hb.position.copy(c00lkidd.position).addScaledVector(fwd, 3.0);
-            hb.position.y = 3.0; hb.rotation.y = c00lkidd.rotation.y;
-            scene.add(hb);
-            setTimeout(() => { scene.remove(hb); }, 300);
-        }
-
-        function playC00lkiddPunchAnimation() {
-            c00lkidd.parts.torso.rotation.y = -0.3; c00lkidd.parts.rArm.rotation.x = -0.6;
-            setTimeout(() => {
-                if (c00lState === "KILLING") return;
-                c00lkidd.parts.torso.rotation.y = 0.4; c00lkidd.parts.rArm.rotation.x = 1.8;
-                spawnVisualHitbox();
-                setTimeout(() => {
-                    if (c00lState !== "KILLING") { c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; }
-                }, 250);
-            }, 100);
-        }
-
-        let camFocusOverride = null;
-
-        function playKillAnimation(victim) {
-            if (c00lState === "KILLING") return;
-            c00lState = "KILLING";
-
-            if (clones.indexOf(victim) === -1) {
-                timerSeconds += 30;
-                showToast("+30 DETIK (SURVIVOR GUGUR!)", "#ff4444");
-            }
-
-            const is007Victim = victim.is007;
-            const corpse = createR6(false, is007Victim);
-            corpse.position.copy(victim.position); corpse.rotation.copy(victim.rotation);
-            scene.add(corpse); corpses.push(corpse);
-
-            victim.alive = false; victim.visible = false;
-            victim.isInvulnerable = false; victim.isCastingGui = false; victim.isHealingMedkit = false;
-            victim.parts.c00lguiTab.visible = false;
-
-            if (victim === playerNoob && playerRole === "SURVIVOR") {
-                closePuzzle(); cancelMedkit(); cancelC00lgui();
-                camFocusOverride = corpse; isPlayerDead = true; playerNoob.hp = 0;
-                playerNoob.position.set(0, 72, 0); clearAllEffects();
-            }
-
-            c00lkidd.parts.rArm.rotation.x = 2.0;
-            const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-            corpse.position.copy(c00lkidd.position).addScaledVector(fwd, 2.5);
-            corpse.position.y = 2.6;
-            corpse.lookAt(c00lkidd.position.x, 2.6, c00lkidd.position.z); corpse.rotation.y += Math.PI;
-
-            let struggleTick = 0;
-            const struggleIntv = setInterval(() => {
-                struggleTick += 0.4;
-                corpse.parts.lLeg.rotation.x = Math.sin(struggleTick) * 0.6; corpse.parts.rLeg.rotation.x = -Math.sin(struggleTick) * 0.6;
-                corpse.parts.lArm.rotation.z = -0.3 + Math.sin(struggleTick) * 0.2; corpse.parts.rArm.rotation.z = 0.3 - Math.sin(struggleTick) * 0.2;
-            }, 40);
-
-            setTimeout(() => {
-                clearInterval(struggleIntv);
-                if (is007Victim) {
-                    let stepT = 0;
-                    const gentleIntv = setInterval(() => {
-                        stepT++;
-                        c00lkidd.parts.rArm.rotation.x = 2.0 - (stepT * 0.08);
-                        corpse.position.y = Math.max(0.6, 2.6 - (stepT * 0.1));
-                        corpse.rotation.x = - (stepT / 20) * (Math.PI / 2);
-                        corpse.parts.lLeg.rotation.x = 0; corpse.parts.rLeg.rotation.x = 0;
-                        corpse.parts.lArm.rotation.z = 0.1; corpse.parts.rArm.rotation.z = -0.1;
-
-                        if (stepT >= 20) {
-                            clearInterval(gentleIntv); c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE";
-                            if (victim === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
-                            setTimeout(() => { scene.remove(corpse); }, 5000);
-                        }
-                    }, 45);
-                } else {
-                    c00lkidd.parts.rArm.rotation.x = -0.8;
-                    let vx = fwd.x * 0.85, vz = fwd.z * 0.85, vy = 0.45;
-                    const throwIntv = setInterval(() => {
-                        corpse.position.x += vx; corpse.position.z += vz; corpse.position.y += vy;
-                        vy -= 0.04; corpse.rotation.x += 0.2;
-
-                        if (corpse.position.y <= 0.6) {
-                            corpse.position.y = 0.6; clearInterval(throwIntv);
-                            corpse.rotation.x = Math.PI / 2; corpse.rotation.z = (Math.random() - 0.5) * 1.5;
-                            corpse.parts.lArm.rotation.z = -1.2; corpse.parts.rArm.rotation.z = 1.1;
-                            corpse.parts.lLeg.rotation.x = 0.5; corpse.parts.rLeg.rotation.x = -0.4;
-                            c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE";
-
-                            if (victim === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
-                            setTimeout(() => { scene.remove(corpse); }, 5000);
-                        }
-                    }, 30);
-                }
-            }, 1200);
-            let activeGen = null, currentPuzzleTarget = 1;
-        let invCola = 0, invMedkit = 0;
-        let medkitTimeout = null, isUsingMedkit = false;
-
-        function updateInventoryUI() {
-            document.getElementById("count-cola").innerText = `${invCola} / 1`;
-            document.getElementById("slot-cola").classList.toggle("has-item", invCola > 0);
-            document.getElementById("count-medkit").innerText = `${invMedkit} / 1`;
-            document.getElementById("slot-medkit").classList.toggle("has-item", invMedkit > 0);
-        }
-
-        function usePickedCola() {
-            if (invCola <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
-            invCola--; updateInventoryUI();
-            playSFX(sfxCola);
-            playConsumeAnimation(0xaa1111, () => {
-                if (playerNoob.isInvulnerable) {
-                    clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
-                    speedBoostMultiplier = 1.0; return;
-                }
-                hasSlowness = false; removeStatusEffect("slow");
-                speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 7);
-                setTimeout(() => { speedBoostMultiplier = 1.0; }, 7000);
-            });
-        }
-
-        function cancelMedkit() {
-            if (!isUsingMedkit) return;
-            clearTimeout(medkitTimeout); isUsingMedkit = false;
-            playerNoob.parts.heldItem.visible = false;
-            playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
-            removeStatusEffect("medkit");
-        }
-
-        function usePickedMedkit() {
-            if (invMedkit <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
-            invMedkit--; updateInventoryUI();
-            isUsingMedkit = true;
-            playerNoob.parts.heldItem.material.color.setHex(0xffffff);
-            playerNoob.parts.heldItem.visible = true;
-            playerNoob.parts.rArm.rotation.x = 1.6; playerNoob.parts.lArm.rotation.x = 1.6;
-            addStatusEffect("medkit", "HEALING MEDKIT", "#00ff88", 8);
-
-            medkitTimeout = setTimeout(() => {
-                isUsingMedkit = false;
-                playerNoob.parts.heldItem.visible = false;
-                playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
-                playerNoob.hp = Math.min(100, playerNoob.hp + 80);
-                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                showToast("MEDKIT SELESAI (+80 HP)", "#00e64d");
-            }, 8000);
-        }
-
-        function getNearestIncompleteGen(pos) {
-            let best = null, minD = 6.0;
-            generators.forEach(g => {
-                if (!g.done) { const d = pos.distanceTo(g.group.position); if (d < minD) { minD = d; best = g; } }
-            });
-            return best;
-        }
-
-        function completeGenerator(gen, finisherName) {
-            if (gen.done) return;
-            gen.done = true; gen.lamp.material.color.setHex(0x00ff00);
-            timerSeconds = Math.max(1, timerSeconds - 10);
-            showToast(`${finisherName} MENYELESAIKAN GENERATOR! (-10 DETIK)`, "#00ff88");
-            let doneCount = generators.filter(g => g.done).length;
-            document.getElementById("gen-status").innerText = `Generator Selesai: ${doneCount} / 5`;
-        }
-
-        function openPuzzle(gen) {
-            activeGen = gen; document.exitPointerLock();
-            document.getElementById("puzzle-modal").style.display = "flex";
-            nextPuzzleStage();
-        }
-        function closePuzzle() { activeGen = null; document.getElementById("puzzle-modal").style.display = "none"; }
-
-        function nextPuzzleStage() {
-            if (!activeGen) return;
-            if (activeGen.done) { closePuzzle(); return; }
-            document.getElementById("puzzle-stage-text").innerText = `Tahap: ${activeGen.stage + 1} / 5`;
-            currentPuzzleTarget = Math.floor(Math.random() * 4) + 1;
-            document.querySelectorAll(".puz-btn").forEach((b, i) => b.classList.toggle("target", (i + 1) === currentPuzzleTarget));
-        }
-
-        function hitPuzzleBtn(num) {
-            if (!activeGen) return;
-            if (num === currentPuzzleTarget) {
-                activeGen.stage++;
-                if (activeGen.stage >= 5) {
-                    completeGenerator(activeGen, "KAMU");
-                    closePuzzle(); document.body.requestPointerLock();
-                } else nextPuzzleStage();
-            }
-        }
-
-        let camYaw = 0, camPitch = 0.2;
-        let isPointerLocked = false, isMouseDown = false;
-        let prevMouseX = 0, prevMouseY = 0;
-
-        document.body.addEventListener("click", (e) => {
-            if (e.target.tagName === "BUTTON" || activeGen) return;
-            document.body.requestPointerLock();
-            document.getElementById("start-hint").style.display = "none";
-            unlockAllAudio();
-            if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
-        });
-
-        document.addEventListener("pointerlockchange", () => { isPointerLocked = (document.pointerLockElement === document.body); });
-        window.addEventListener("mousedown", (e) => {
-            if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
-            isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY;
-        });
-        window.addEventListener("mouseup", () => { isMouseDown = false; });
-
-        window.addEventListener("mousemove", (e) => {
-            if (activeGen) return;
-            let dx = 0, dy = 0;
-            if (isPointerLocked) { dx = e.movementX; dy = e.movementY; }
-            else if (isMouseDown) { dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY; prevMouseX = e.clientX; prevMouseY = e.clientY; }
-            if (dx !== 0 || dy !== 0) {
-                camYaw -= dx * 0.0035; camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
-            }
-        });
-
-        let gameState = "LOBBY", timerSeconds = 15, lmsTriggered = false, isPleadLMS = false, isPlayerDead = false;
-        let spectateList = [], spectateIdx = 0, isSpectating = false;
-
-        let burnTimer = null;
-        function applyBurningToPlayer(durationSec) {
-            if (playerNoob.isInvulnerable || isPlayerDead) return;
-            addStatusEffect("burn", "BURNING I", "#ff4400", durationSec);
-            if (burnTimer) clearInterval(burnTimer);
-            let ticks = 0;
-            burnTimer = setInterval(() => {
-                ticks++;
-                if (ticks > durationSec || isPlayerDead || gameState !== "INGAME" || playerNoob.isInvulnerable) { clearInterval(burnTimer); removeStatusEffect("burn"); return; }
-                playerNoob.hp = Math.max(0, playerNoob.hp - 1.5);
-                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
-            }, 1000);
-        }
-
-        function updateSkillButtonsForRole() {
-            if (playerRole === "KILLER") {
-                document.getElementById("hp-title").style.display = "none"; document.getElementById("hp-container").style.display = "none";
-                document.getElementById("label-s1").innerText = "Override [Q]"; document.getElementById("label-s2").innerText = "Corrupt [E]";
-                document.getElementById("label-s3").innerText = "Pizza [R]"; document.getElementById("icon-sprint").innerText = "M1 / F";
-                document.getElementById("label-sprint").innerText = "TAG (26.5)";
-            } else if (survivorChar === "007n7") {
-                document.getElementById("hp-title").style.display = "block"; document.getElementById("hp-container").style.display = "block";
-                document.getElementById("label-s1").innerText = "Clone [Q]"; document.getElementById("label-s2").innerText = "c00lgui [E]";
-                document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx]; document.getElementById("icon-sprint").innerText = "SHIFT";
-                document.getElementById("label-sprint").innerText = "SPRINT";
-            } else {
-                document.getElementById("hp-title").style.display = "block"; document.getElementById("hp-container").style.display = "block";
-                document.getElementById("label-s1").innerText = "Ghostburger [Q]"; document.getElementById("label-s2").innerText = "Slateskin [E]";
-                document.getElementById("label-s3").innerText = "Bloxy Cola [R]"; document.getElementById("icon-sprint").innerText = "SHIFT";
-                document.getElementById("label-sprint").innerText = "SPRINT";
-            }
-        }
-
-        function updateUIState() {
-            document.getElementById("lobby-controls").style.display = (gameState === "LOBBY") ? "flex" : "none";
-            document.getElementById("gen-status").style.display = (gameState === "INGAME") ? "block" : "none";
-            const showHUD = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
-            document.getElementById("player-bars").style.display = showHUD ? "block" : "none";
-            document.getElementById("skills-container").style.display = showHUD ? "block" : "none";
-            document.getElementById("inventory-bar").style.display = (gameState === "INGAME" && !isPlayerDead && playerRole === "SURVIVOR") ? "flex" : "none";
-            dexMarker.visible = (gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead);
-            updateSkillButtonsForRole();
-            const showSpectate = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride);
-            document.getElementById("spectate-panel").style.display = showSpectate ? "flex" : "none";
-        }
-
-        function updateSpectateHPList() {
-            if (gameState !== "INGAME" || !isPlayerDead || playerRole !== "SURVIVOR") return;
-            const listEl = document.getElementById("ai-hp-list");
-            let html = "<b>DARAH SURVIVOR:</b>";
-            aiSurvivors.forEach(ai => {
-                let status = ai.alive ? `${Math.ceil(ai.hp)}% HP` : `<span style="color:#ff4444;">MATI</span>`;
-                html += `<div>${ai.name}: ${status}</div>`;
-            });
-            listEl.innerHTML = html;
-        }
-
-        function cycleSpectate() {
-            spectateList = [];
-            aiSurvivors.forEach(ai => { if (ai.alive) spectateList.push(ai); });
-            spectateList.push(c00lkidd);
-            if (spectateList.length > 0) {
-                isSpectating = true; spectateIdx = (spectateIdx + 1) % spectateList.length;
-                document.getElementById("spectate-info").innerText = "Spectating: " + spectateList[spectateIdx].name;
-            }
-        }
-
-        function pickNewPatrol(ai) { ai.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150); }
-        aiSurvivors.forEach(pickNewPatrol);
-
-        setInterval(() => {
-            timerSeconds--;
-            const timerEl = document.getElementById("round-timer");
-
-            if (gameState === "LOBBY") {
-                timerEl.innerText = "LOBBY: " + timerSeconds + "s";
-                if (timerSeconds <= 0) {
-                    gameState = "INGAME"; timerSeconds = 180;
-                    isPlayerDead = false; isSpectating = false; isPleadLMS = false; camFocusOverride = null;
-                    clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle(); c00lState = "IDLE";
-
-                    invCola = 0; invMedkit = 0; updateInventoryUI();
-                    spawnAllMapItems();
-                    generators.forEach(g => { g.stage = 0; g.done = false; g.lamp.material.color.setHex(0xff0000); });
-                    document.getElementById("gen-status").innerText = "Generator Selesai: 0 / 5";
-
-                    playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
-                    playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false;
-                    document.getElementById("hp-bar").style.width = "100%"; playerNoob.position.set(0, 0, 0);
-
-                    aiSurvivors.forEach((ai, idx) => {
-                        ai.alive = true; ai.hp = 100; ai.isInvulnerable = false; ai.visible = true;
-                        ai.cdQ = false; ai.cdE = false; ai.cdR = false; ai.isCastingGui = false;
-                        ai.invCola = 0; ai.invMedkit = 0; ai.isHealingMedkit = false; ai.genWorkTimer = 0;
-                        ai.parts.c00lguiTab.visible = false;
-                        ai.position.set((idx - 1) * 15, 0, 20);
-                        pickNewPatrol(ai);
-                    });
-
-                    c00lkidd.position.set(0, 0, -80);
-                    updateUIState(); startRoundAudio();
-                }
-            } else if (gameState === "INGAME") {
-                const mins = Math.floor(timerSeconds / 60), secs = timerSeconds % 60;
-                timerEl.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
-
-                let aliveList = [];
-                if (playerRole === "SURVIVOR" && !isPlayerDead) aliveList.push(playerNoob);
-                if (playerRole === "KILLER" && playerNoob.alive) aliveList.push(playerNoob);
-                aiSurvivors.forEach(ai => { if (ai.alive) aliveList.push(ai); });
-                updateSpectateHPList();
-
-                if (aliveList.length === 1 && !lmsTriggered) {
-                    lmsTriggered = true; const lastSurvivor = aliveList[0];
-                    if (lastSurvivor.is007) {
-                        isPleadLMS = true; timerSeconds = 90;
-                        const b = document.getElementById("lms-banner");
-                        b.innerText = "PLEAD\n(FATHER & SON)"; b.style.color = "#ffffff"; b.style.display = "block";
-                        setTimeout(() => { b.style.display = "none"; }, 5500);
-                    } else {
-                        isPleadLMS = false; timerSeconds = 75;
-                        const b = document.getElementById("lms-banner");
-                        b.innerText = "LAST MAN STANDING!"; b.style.color = "#ff0000"; b.style.display = "block";
-                        setTimeout(() => { b.style.display = "none"; }, 5000);
-                    }
-                }
-
-                if (timerSeconds <= 0 || (aliveList.length === 0 && c00lState !== "KILLING")) {
-                    gameState = "LOBBY"; timerSeconds = 15;
-                    lmsTriggered = false; isPleadLMS = false; isSpectating = false; camFocusOverride = null;
-                    clearAllEffects(); cancelC00lgui(); cancelMedkit(); closePuzzle();
-                    playerNoob.position.set(0, 72, 0); c00lkidd.position.set(0, 72, -10);
-                    minions.forEach(m => scene.remove(m)); minions.length = 0;
-                    clones.forEach(c => scene.remove(c)); clones.length = 0;
-                    corpses.forEach(cp => scene.remove(cp)); corpses.length = 0;
-                    updateUIState(); stopAndResetAllAudio();
-                }
-            }
-        }, 1000);
-
-        let keys = {}, isShiftlock = false, stamina = 100, isSprinting = false;
-        let isDrinkingOrEating = false, slateTimerId = null, speedBoostMultiplier = 1.0, hasSlowness = false;
-        let cdQ = false, cdE = false, cdR = false, cdM1 = false;
-        const injectModes = ["Wander", "Pathfind", "Cursor"];
-        let injectIdx = 0, isCastingC00lgui = false, c00lguiTimeout = null;
-
-        function toggleShiftlock() {
-            isShiftlock = !isShiftlock;
-            document.getElementById("btn-shiftlock").classList.toggle("active", isShiftlock);
-            document.getElementById("crosshair").style.display = isShiftlock ? "block" : "none";
-        }
-
-        window.addEventListener("keydown", (e) => { 
-            keys[e.code] = true;
-            if (e.code === "Escape" && activeGen) { closePuzzle(); return; }
-            if (activeGen) {
-                if (e.code === "Digit1") hitPuzzleBtn(1); if (e.code === "Digit2") hitPuzzleBtn(2);
-                if (e.code === "Digit3") hitPuzzleBtn(3); if (e.code === "Digit4") hitPuzzleBtn(4);
-                return;
-            }
-            if (e.code === "KeyM") document.exitPointerLock();
-            if (e.code === "ShiftLeft") isSprinting = true;
-            if (e.code === "KeyQ") useSkill1(); if (e.code === "KeyE") useSkill2(); if (e.code === "KeyR") useSkill3();
-            if (e.code === "Digit1") usePickedCola(); if (e.code === "Digit2") usePickedMedkit();
-            if (e.code === "KeyF") {
-                if (playerRole === "KILLER") useBasicAttack();
-                else if (!isPlayerDead && gameState === "INGAME") {
-                    const g = getNearestIncompleteGen(playerNoob.position);
-                    if (g) openPuzzle(g);
-                }
-            }
-        });
-        window.addEventListener("keyup", (e) => { keys[e.code] = false; if (e.code === "ShiftLeft") isSprinting = false; });
-
-        function useSkill1() { if (playerRole === "KILLER") killerWalkspeedOverride(); else if (survivorChar === "007n7") use007Clone(); else useBurger(); }
-        function useSkill2() { if (playerRole === "KILLER") killerCorruptNature(); else if (survivorChar === "007n7") use007C00lgui(); else useSlate(); }
-        function useSkill3() { if (playerRole === "KILLER") killerPizzaDelivery(); else if (survivorChar === "007n7") use007Inject(); else useCola(); }
-        function useBasicAttack() { if (playerRole === "KILLER") killerTagM1(); }
-
-        function use007Clone() {
-            if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
-            cdQ = true; animateCD("cd-q", 27, () => { cdQ = false; });
-            const clone = createR6(false, true);
-            clone.position.copy(playerNoob.position); clone.rotation.copy(playerNoob.rotation);
-            clone.hp = 100; clone.alive = true; clone.mode = injectModes[injectIdx];
-            clone.patrolTarget = new THREE.Vector3((Math.random()-0.5)*140, 0, (Math.random()-0.5)*140);
-            scene.add(clone); clones.push(clone);
-
-            const duration = (clone.mode === "Cursor") ? 5000 : 10000;
-            setTimeout(() => { clone.alive = false; scene.remove(clone); const idx = clones.indexOf(clone); if (idx > -1) clones.splice(idx, 1); }, duration);
-
-            playerNoob.isUndetectable = true; addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#00ffcc", 5);
-            Object.values(playerNoob.parts).forEach(p => { if (p.material) { p.material.transparent = true; p.material.opacity = 0.12; } });
-            setTimeout(() => { playerNoob.isUndetectable = false; Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; }); }, 5000);
-        }
-
-        function cancelC00lgui() {
-            if (!isCastingC00lgui) return;
-            clearTimeout(c00lguiTimeout); isCastingC00lgui = false;
-            playerNoob.parts.c00lguiTab.visible = false; removeStatusEffect("c00lgui");
-            if (sfxC00lgui && !sfxC00lgui.paused) sfxC00lgui.pause();
-        }
-
-        function use007C00lgui() {
-            if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
-            cdE = true; animateCD("cd-e", 50, () => { cdE = false; });
-            playSFX(sfxC00lgui);
-            isCastingC00lgui = true; playerNoob.parts.c00lguiTab.visible = true;
-            addStatusEffect("c00lgui", "c00lgui TELEPORT", "#ff3333", 6);
-            c00lguiTimeout = setTimeout(() => {
-                isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false;
-                const farSpawn = getFarthestSpawn(playerNoob.position);
-                playerNoob.position.set(farSpawn.x, 0, farSpawn.z);
-            }, 5500);
-        }
-
-        function use007Inject() {
-            if (isPlayerDead || gameState !== "INGAME") return;
-            injectIdx = (injectIdx + 1) % injectModes.length;
-            document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
-        }
-
-        function playConsumeAnimation(itemColor, onComplete) {
-            isDrinkingOrEating = true;
-            playerNoob.parts.heldItem.material.color.setHex(itemColor);
-            playerNoob.parts.heldItem.visible = true;
-            playerNoob.parts.rArm.rotation.x = 2.2; playerNoob.parts.rArm.rotation.z = -0.4;
-            playerNoob.parts.lArm.rotation.x = 2.2; playerNoob.parts.lArm.rotation.z = 0.4;
-            setTimeout(() => {
-                playerNoob.parts.heldItem.visible = false;
-                playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.rArm.rotation.z = 0;
-                playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.lArm.rotation.z = 0;
-                isDrinkingOrEating = false; if (onComplete) onComplete();
-            }, 1400);
-        }
-
-        function useBurger() {
-            if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
-            cdQ = true; animateCD("cd-q", 40, () => { cdQ = false; });
-            playSFX(sfxBurger);
-            playConsumeAnimation(0xd4a373, () => {
-                const healAmount = Math.max(6, (100 - playerNoob.hp) * 0.25);
-                playerNoob.hp = Math.min(100, playerNoob.hp + healAmount);
-                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                addStatusEffect("invis", "INVISIBLE", "#00ccff", 7);
-                Object.values(playerNoob.parts).forEach(p => { if (p.material) { p.material.transparent = true; p.material.opacity = 0.15; } });
-                setTimeout(() => { Object.values(playerNoob.parts).forEach(p => { if (p.material) p.material.opacity = 1; }); }, 7000);
-            });
-        }
-
-        function revertSlateAppearance() {
-            playerNoob.parts.torso.material.color.setHex(0x0055ff);
-            playerNoob.parts.head.material.color.setHex(0xffd200);
-            playerNoob.parts.lArm.material.color.setHex(0xffd200); playerNoob.parts.rArm.material.color.setHex(0xffd200);
-            playerNoob.parts.lLeg.material.color.setHex(0x287f46); playerNoob.parts.rLeg.material.color.setHex(0x287f46);
-            document.getElementById("label-s2").innerText = "Slateskin [E]";
-        }
-
-        function useSlate() {
-            if (playerNoob.isInvulnerable) {
-                clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
-                if (playerNoob.position.distanceTo(c00lkidd.position) < 18) {
-                    const pushDir = c00lkidd.position.clone().sub(playerNoob.position).normalize();
-                    c00lkidd.position.addScaledVector(pushDir, 9);
-                }
-                speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 2);
-                setTimeout(() => { speedBoostMultiplier = 1.0; }, 2500);
-                return;
-            }
-            if (cdE || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
-            cdE = true; animateCD("cd-e", 44, () => { cdE = false; });
-            playSFX(sfxSlate);
-            playConsumeAnimation(0x4a6572, () => {
-                playerNoob.isInvulnerable = true; document.getElementById("label-s2").innerText = "CANCEL [E]";
-                addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10);
-                const slateColor = 0x4a5568;
-                [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg].forEach(p => p.material.color.setHex(slateColor));
-                slateTimerId = setTimeout(() => { playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1.0; }, 10000);
-            });
-        }
-
-        function useCola() {
-            if (cdR || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
-            cdR = true; animateCD("cd-r", 50, () => { cdR = false; });
-            playSFX(sfxCola);
-            playConsumeAnimation(0xaa1111, () => {
-                if (playerNoob.isInvulnerable) {
-                    clearTimeout(slateTimerId); playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
-                    speedBoostMultiplier = 1.0; return;
-                }
-                hasSlowness = false; removeStatusEffect("slow");
-                speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#00ffcc", 7);
-                setTimeout(() => { speedBoostMultiplier = 1.0; }, 7000);
-            });
-        }
-
-        function killerTagM1() {
-            if (cdM1 || c00lState !== "IDLE" || gameState !== "INGAME") return;
-            cdM1 = true; animateCD("cd-m1", 2, () => { cdM1 = false; });
-            playC00lkiddPunchAnimation();
-
-            setTimeout(() => {
-                [playerNoob, ...aiSurvivors, ...clones].forEach(s => {
-                    if (s.alive && checkHitbox(s) && !s.isInvulnerable) {
-                        s.hp -= 26.5;
-                        if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; }
-                        if (s.hp <= 0) playKillAnimation(s);
-                    }
-                });
-            }, 120);
-        }
-
-        function killerWalkspeedOverride() { if (cdQ || c00lState !== "IDLE" || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 20, () => { cdQ = false; }); triggerWalkspeedOverride(); }
-        function killerCorruptNature() { if (cdE || c00lState !== "IDLE" || gameState !== "INGAME") return; cdE = true; animateCD("cd-e", 12, () => { cdE = false; }); const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y); triggerCorruptNature({ position: c00lkidd.position.clone().addScaledVector(fwd, 20) }); }
-        function killerPizzaDelivery() { if (cdR || c00lState !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return; cdR = true; animateCD("cd-r", 50, () => { cdR = false; }); triggerPizzaDelivery(); }
-
-        function animateCD(elemId, duration, onComplete) {
-            const el = document.getElementById(elemId); el.style.height = "100%"; let t = 0;
-            const timer = setInterval(() => { t += 0.2; el.style.height = Math.max(0, (1 - (t / duration)) * 100) + "%"; if (t >= duration) { clearInterval(timer); if (onComplete) onComplete(); } }, 200);
-        }
-
-        function applyHighlight(target) {
-            target.isHighlighted = true; target.parts.highlightMesh.visible = true;
-            if (target === playerNoob && playerRole === "SURVIVOR") showToast("⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠", "#ffcc00");
-            setTimeout(() => { target.isHighlighted = false; target.parts.highlightMesh.visible = false; }, 7500);
-        }
-
-        let c00lState = "IDLE", dashTimer = 0, c00lAbilitiesTimer = 0;
-
-        function triggerWalkspeedOverride() {
-            c00lState = "OVERRIDE_WINDUP";
-            c00lkidd.parts.torso.rotation.x = 0.5; c00lkidd.parts.lArm.rotation.x = -0.9; c00lkidd.parts.rArm.rotation.x = -0.9;
-            setTimeout(() => { if(c00lState==="OVERRIDE_WINDUP"){ c00lState = "DASHING"; dashTimer = 80; c00lkidd.parts.torso.rotation.x = 0.2; } }, 450);
-        }
-
-        function triggerCorruptNature(target) {
-            c00lState = "CASTING";
-            c00lkidd.parts.torso.rotation.y = -0.4; c00lkidd.parts.rArm.rotation.x = -1.2;
-
-            setTimeout(() => {
-                if (c00lState === "KILLING") return;
-                c00lkidd.parts.torso.rotation.y = 0.3; c00lkidd.parts.rArm.rotation.x = 2.2;
-                const proj = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.8 }));
-                proj.position.copy(c00lkidd.position); proj.position.y += 3; scene.add(proj);
-
-                const dir = target.position.clone().sub(c00lkidd.position).normalize();
-                let life = 140, hitDone = false;
-
-                const intv = setInterval(() => {
-                    proj.position.addScaledVector(dir, 1.1); life--;
-                    const allTargets = [playerNoob, ...aiSurvivors, ...clones];
-
-                    for (let t of allTargets) {
-                        if (!hitDone && t.alive && proj.position.distanceTo(t.position) < 3.2) {
-                            hitDone = true;
-                            if (!t.isInvulnerable) {
-                                t.hp = Math.max(0, t.hp - 15);
-                                if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; }
-                                if (t === playerNoob && playerRole === "SURVIVOR") {
-                                    closePuzzle(); cancelMedkit(); cancelC00lgui();
-                                    hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#aa66ff", 4);
-                                    setTimeout(() => { hasSlowness = false; }, 4000);
-                                    document.getElementById("hp-bar").style.width = t.hp + "%";
-                                    if (t.hp <= 0) playKillAnimation(t);
-                                } else if (t.hp <= 0) { playKillAnimation(t); }
-                            }
-                            scene.remove(proj); clearInterval(intv); break;
-                        }
-                    }
-                    if (life <= 0) { scene.remove(proj); clearInterval(intv); }
-                }, 16);
-
-                setTimeout(() => { if(c00lState !== "KILLING"){ c00lkidd.parts.torso.rotation.y = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 350);
-            }, 350);
-        }
-
-        function triggerPizzaDelivery() {
-            if (minions.length >= 2) return;
-            c00lState = "SUMMONING";
-            c00lkidd.parts.lArm.rotation.x = 2.5; c00lkidd.parts.rArm.rotation.x = 2.5;
-
-            const needed = 2 - minions.length;
-            let minionsFinished = 0;
-
-            for(let i = 0; i < needed; i++) {
-                const offset = (i === 0) ? -4 : 4;
-                const m = createR6(true);
-                m.scale.set(0.65, 0.65, 0.65); m.isRising = true;
-                m.position.set(c00lkidd.position.x + offset, -3, c00lkidd.position.z);
-                scene.add(m); minions.push(m);
-
-                let riseT = 0;
-                const riseInterval = setInterval(() => {
-                    m.position.y += 0.15; riseT++;
-                    if (riseT >= 20) {
-                        m.position.y = 0; m.isRising = false; clearInterval(riseInterval);
-                        minionsFinished++;
-                        if (minionsFinished === needed) {
-                            setTimeout(() => { if(c00lState !== "KILLING"){ c00lkidd.parts.lArm.rotation.x = 0; c00lkidd.parts.rArm.rotation.x = 0; c00lState = "IDLE"; } }, 500);
-                        }
-                    }
-                }, 40);
-
-                m.despawnTimeout = setTimeout(() => { const idx = minions.indexOf(m); if (idx > -1) minions.splice(idx, 1); scene.remove(m); }, 30000);
-            }
-        }
-
-        function checkHitbox(target) {
-            const relPos = target.position.clone().sub(c00lkidd.position);
-            relPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), -c00lkidd.rotation.y);
-            return (Math.abs(relPos.x) <= 2.3 && relPos.y >= -1 && relPos.y <= 5.5 && relPos.z <= 0.5 && relPos.z >= -5.5);
-        }
-
-        function animateWalkingLimbs(charGroup, cycleSpeed) {
-            charGroup.walkCycle += cycleSpeed;
-            charGroup.parts.lArm.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
-            charGroup.parts.rArm.rotation.x = -Math.sin(charGroup.walkCycle) * 0.7;
-            charGroup.parts.lLeg.rotation.x = -Math.sin(charGroup.walkCycle) * 0.7;
-            charGroup.parts.rLeg.rotation.x = Math.sin(charGroup.walkCycle) * 0.7;
-        }
-
-        let c00lAttackTimer = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            torchLights.forEach(tl => { tl.intensity = 1.8 + Math.random() * 0.6; });
-            if (keys["ArrowLeft"]) camYaw += 0.05;
-            if (keys["ArrowRight"]) camYaw -= 0.05;
-
-            mapItems.forEach(it => { if (it.active) it.mesh.rotation.y += 0.04; });
-
-            const controlledChar = (playerRole === "KILLER") ? c00lkidd : playerNoob;
-            const canMove = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER") && !isCastingC00lgui && !activeGen);
-
-            if (canMove && !(playerRole === "KILLER" && c00lState !== "IDLE")) {
-                let spd = (playerRole === "KILLER" ? 0.25 : 0.23) * speedBoostMultiplier;
-                if (playerRole === "SURVIVOR") {
-                    if (playerNoob.isInvulnerable) spd *= 0.45;
-                    else if (isDrinkingOrEating || isUsingMedkit) spd *= 0.35;
-                    else if (hasSlowness) spd *= 0.65;
-                }
-
-                if (isSprinting && stamina > 0 && !isDrinkingOrEating && !isUsingMedkit && !playerNoob.isInvulnerable) {
-                    spd *= 1.6; stamina = Math.max(0, stamina - 0.4);
-                } else { stamina = Math.min(100, stamina + 0.25); }
-                document.getElementById("stamina-bar").style.width = stamina + "%";
-
-                let mx = 0, mz = 0;
-                if (keys["KeyW"]) mz -= 1; if (keys["KeyS"]) mz += 1;
-                if (keys["KeyA"]) mx -= 1; if (keys["KeyD"]) mx += 1;
-
-                controlledChar.rotation.y = camYaw;
-
-                if (mx !== 0 || mz !== 0) {
-                    const angle = Math.atan2(mx, mz);
-                    moveWithCollision(controlledChar, Math.sin(camYaw + angle) * spd, Math.cos(camYaw + angle) * spd);
-                    animateWalkingLimbs(controlledChar, 0.22);
-                } else if (!isDrinkingOrEating && !isUsingMedkit) {
-                    controlledChar.parts.lArm.rotation.x = 0; controlledChar.parts.rArm.rotation.x = 0;
-                    controlledChar.parts.lLeg.rotation.x = 0; controlledChar.parts.rLeg.rotation.x = 0;
-                }
-            }
-
-            if (gameState === "INGAME" && playerRole === "SURVIVOR" && !isPlayerDead) {
-                mapItems.forEach(it => {
-                    if (it.active && playerNoob.position.distanceTo(it.mesh.position) < 3.0) {
-                        if (it.type === "COLA" && invCola < 1) {
-                            it.active = false; it.mesh.visible = false; invCola = 1;
-                            showToast("Pungut: Bloxy Cola [Tekan 1]"); updateInventoryUI();
-                        } else if (it.type === "MEDKIT" && invMedkit < 1) {
-                            it.active = false; it.mesh.visible = false; invMedkit = 1;
-                            showToast("Pungut: Medkit [Tekan 2]"); updateInventoryUI();
-                        }
-                    }
-                });
-
-                const nearGen = getNearestIncompleteGen(playerNoob.position);
-                const pEl = document.getElementById("interact-prompt");
-                if (nearGen && !activeGen) {
-                    pEl.innerText = `Tekan [F] Perbaiki Generator (Tahap ${nearGen.stage}/5)`; pEl.style.display = "block";
-                } else pEl.style.display = "none";
-            } else { document.getElementById("interact-prompt").style.display = "none"; }
-
-            if (dexMarker.visible) {
-                const farSp = getFarthestSpawn(playerNoob.position);
-                dexMarker.position.set(farSp.x, 20, farSp.z);
-            }
-
-            let camFocus = controlledChar;
-            if (camFocusOverride) camFocus = camFocusOverride;
-            else if (isSpectating && spectateList[spectateIdx]) camFocus = spectateList[spectateIdx];
-
-            const cDist = 9;
-            camera.position.x = camFocus.position.x + Math.sin(camYaw) * Math.cos(camPitch) * cDist;
-            camera.position.z = camFocus.position.z + Math.cos(camYaw) * Math.cos(camPitch) * cDist;
-            camera.position.y = camFocus.position.y + 3.5 + Math.sin(camPitch) * cDist;
-            camera.lookAt(camFocus.position.x, camFocus.position.y + 3, camFocus.position.z);
-
-            if (gameState === "INGAME") {
-                let audioDistance = 9999;
-                if (playerRole === "SURVIVOR") {
-                    if (!isPlayerDead) audioDistance = playerNoob.position.distanceTo(c00lkidd.position);
-                    else if (isSpectating && camFocus) audioDistance = camFocus.position.distanceTo(c00lkidd.position);
-                } else {
-                    let minD = 9999;
-                    [playerNoob, ...aiSurvivors].forEach(s => { if (s.alive) minD = Math.min(minD, s.position.distanceTo(c00lkidd.position)); });
-                    audioDistance = minD;
-                }
-                update4LayerChase(audioDistance);
-
-                let targets = [];
-                if (playerRole === "SURVIVOR" && !isPlayerDead && !playerNoob.isUndetectable) targets.push(playerNoob);
-                if (playerRole === "KILLER" && playerNoob.alive && !playerNoob.isUndetectable) targets.push(playerNoob);
-                aiSurvivors.forEach(ai => { if (ai.alive && !ai.isUndetectable) targets.push(ai); });
-                clones.forEach(cl => { if (cl.alive) targets.push(cl); });
-
-                let closestTarget = null;
-                for (let t of targets) { if (t.isHighlighted) { closestTarget = t; break; } }
-                if (!closestTarget) {
-                    let minDist = 9999;
-                    targets.forEach(t => { const d = t.position.distanceTo(c00lkidd.position); if (d < minDist) { minDist = d; closestTarget = t; } });
-                }
-
-                if (playerRole === "SURVIVOR" && closestTarget && c00lState !== "KILLING") {
-                    if (c00lState !== "SUMMONING" && c00lState !== "CASTING") {
-                        c00lkidd.lookAt(closestTarget.position.x, 0, closestTarget.position.z); c00lkidd.rotation.y += Math.PI;
-                    }
-
-                    if (c00lState === "DASHING") {
-                        dashTimer--;
-                        const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                        moveWithCollision(c00lkidd, fwd.x * 1.15, fwd.z * 1.15);
-                        if (checkHitbox(closestTarget) && !closestTarget.isInvulnerable) {
-                            closestTarget.hp -= 32;
-                            if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
-                            if (closestTarget === playerNoob) {
-                                closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToPlayer(8);
-                                document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
-                            } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
-                            if (c00lState !== "KILLING") c00lState = "IDLE";
-                            c00lkidd.parts.torso.rotation.x = 0;
-                        }
-                        if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
-                    } else if (c00lState === "IDLE") {
-                        const kx = closestTarget.position.x - c00lkidd.position.x, kz = closestTarget.position.z - c00lkidd.position.z;
-                        const kd = Math.sqrt(kx*kx + kz*kz);
-
-                        if (kd > 3.5) { moveWithCollision(c00lkidd, (kx / kd) * 0.25, (kz / kd) * 0.25); animateWalkingLimbs(c00lkidd, 0.22); }
-
-                        if (c00lAttackTimer <= 0 && checkHitbox(closestTarget)) {
-                            c00lAttackTimer = 110;
-                            playC00lkiddPunchAnimation();
-
-                            setTimeout(() => {
-                                if (closestTarget.alive && checkHitbox(closestTarget) && !closestTarget.isInvulnerable) {
-                                    closestTarget.hp -= 26.5;
-                                    if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
-                                    if (closestTarget === playerNoob) {
-                                        closePuzzle(); cancelMedkit(); cancelC00lgui();
-                                        document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                        if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
-                                    } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
-                                }
-                            }, 120);
-                        }
-
-                        c00lAbilitiesTimer++;
-                        if (c00lAbilitiesTimer === 450) triggerWalkspeedOverride();
-                        if (c00lAbilitiesTimer === 900) triggerCorruptNature(closestTarget);
-                        if (c00lAbilitiesTimer === 1350) { triggerPizzaDelivery(); c00lAbilitiesTimer = 0; }
-                    }
-                } else if (playerRole === "KILLER" && c00lState === "DASHING") {
-                    dashTimer--;
-                    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), c00lkidd.rotation.y);
-                    moveWithCollision(c00lkidd, fwd.x * 1.15, fwd.z * 1.15);
-                    targets.forEach(t => {
-                        if (t.alive && checkHitbox(t) && !t.isInvulnerable) {
-                            t.hp -= 32;
-                            if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; }
-                            if (t.hp <= 0) playKillAnimation(t);
-                            else c00lState = "IDLE";
-                            c00lkidd.parts.torso.rotation.x = 0;
-                        }
-                    });
-                    if (dashTimer <= 0 && c00lState === "DASHING") { c00lState = "IDLE"; c00lkidd.parts.torso.rotation.x = 0; }
-                }
-                if (c00lAttackTimer > 0) c00lAttackTimer--;
-
-                for (let i = minions.length - 1; i >= 0; i--) {
-                    const m = minions[i];
-                    if (m.isRising || !closestTarget) continue;
-                    m.lookAt(closestTarget.position.x, 0, closestTarget.position.z); m.rotation.y += Math.PI;
-                    const mx = closestTarget.position.x - m.position.x, mz = closestTarget.position.z - m.position.z;
-                    const md = Math.sqrt(mx*mx + mz*mz);
-
-                    if (md > 2.5) { moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14); animateWalkingLimbs(m, 0.24); }
-                    else {
-                        clearTimeout(m.despawnTimeout); scene.remove(m); minions.splice(i, 1);
-                        applyHighlight(closestTarget);
-                        if (!closestTarget.isInvulnerable) {
-                            closestTarget.hp -= 15;
-                            if (closestTarget.isCastingGui) { closestTarget.isCastingGui = false; closestTarget.parts.c00lguiTab.visible = false; }
-                            if (closestTarget === playerNoob && playerRole === "SURVIVOR") {
-                                closePuzzle(); cancelMedkit(); cancelC00lgui();
-                                hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#aa66ff", 3);
-                                setTimeout(() => { hasSlowness = false; }, 3000);
-                                applyBurningToPlayer(3); document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
-                                if (playerNoob.hp <= 0) playKillAnimation(playerNoob);
-                            } else if (closestTarget.hp <= 0) { playKillAnimation(closestTarget); }
-                        }
-                    }
-                }
-
-                clones.forEach(cl => {
-                    if (!cl.alive) return;
-                    let dest = cl.patrolTarget;
-                    if (cl.mode === "Pathfind") dest = getFarthestSpawn(cl.position);
-                    else if (cl.mode === "Cursor") {
-                        const lookFwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
-                        dest = playerNoob.position.clone().addScaledVector(lookFwd, 40);
-                    }
-                    const cx = dest.x - cl.position.x, cz = dest.z - cl.position.z, cd = Math.sqrt(cx*cx + cz*cz);
-                    if (cd > 2) { moveWithCollision(cl, (cx / cd) * 0.20, (cz / cd) * 0.20); cl.lookAt(dest.x, 0, dest.z); cl.rotation.y += Math.PI; animateWalkingLimbs(cl, 0.22); }
-                    else if (cl.mode === "Wander") cl.patrolTarget.set((Math.random()-0.5)*150, 0, (Math.random()-0.5)*150);
-                });
-
-                const botList = (playerRole === "KILLER") ? [playerNoob, ...aiSurvivors] : aiSurvivors;
-                botList.forEach(ai => {
-                    if (!ai.alive || ai.isCastingGui || ai.isHealingMedkit) return;
-
-                    mapItems.forEach(it => {
-                        if (it.active && ai.position.distanceTo(it.mesh.position) < 3.0) {
-                            if (it.type === "COLA" && ai.invCola < 1) { it.active = false; it.mesh.visible = false; ai.invCola = 1; }
-                            else if (it.type === "MEDKIT" && ai.invMedkit < 1) { it.active = false; it.mesh.visible = false; ai.invMedkit = 1; }
-                        }
-                    });
-
-                    const distToKiller = ai.position.distanceTo(c00lkidd.position);
-
-                    if (ai.invMedkit > 0 && ai.hp < 65 && distToKiller > 25) {
-                        ai.invMedkit--; ai.isHealingMedkit = true;
-                        setTimeout(() => { if (ai.alive) ai.hp = Math.min(100, ai.hp + 80); ai.isHealingMedkit = false; }, 8000);
-                        return;
-                    }
-
-                    if (ai.is007) {
-                        if (distToKiller < 22 && !ai.cdQ) {
-                            ai.cdQ = true;
-                            const cl = createR6(false, true);
-                            cl.position.copy(ai.position); cl.hp = 100; cl.alive = true; cl.mode = "Wander";
-                            cl.patrolTarget = new THREE.Vector3((Math.random()-0.5)*140, 0, (Math.random()-0.5)*140);
-                            scene.add(cl); clones.push(cl);
-                            setTimeout(() => { cl.alive = false; scene.remove(cl); const ix = clones.indexOf(cl); if(ix>-1) clones.splice(ix, 1); }, 10000);
-                            ai.isUndetectable = true;
-                            Object.values(ai.parts).forEach(p => { if(p.material){ p.material.transparent=true; p.material.opacity=0.15; } });
-                            setTimeout(() => { ai.isUndetectable = false; Object.values(ai.parts).forEach(p => { if(p.material) p.material.opacity=1; }); }, 5000);
-                            setTimeout(() => { ai.cdQ = false; }, 27000);
-                        }
-                        if (ai.hp < 80 && distToKiller > 25 && !ai.cdE) {
-                            ai.cdE = true; ai.isCastingGui = true; ai.parts.c00lguiTab.visible = true;
-                            setTimeout(() => {
-                                if (ai.alive && ai.isCastingGui) {
-                                    ai.isCastingGui = false; ai.parts.c00lguiTab.visible = false;
-                                    const fs = getFarthestSpawn(ai.position); ai.position.set(fs.x, 0, fs.z);
-                                }
-                                setTimeout(() => { ai.cdE = false; }, 50000);
-                            }, 5500);
-                        }
-                    } else {
-                        if (distToKiller < 10 && !ai.cdE && !ai.isInvulnerable) {
-                            ai.cdE = true; ai.isInvulnerable = true; ai.parts.torso.material.color.setHex(0x4a5568);
-                            setTimeout(() => { ai.isInvulnerable = false; ai.parts.torso.material.color.setHex(0x0055ff); setTimeout(() => { ai.cdE = false; }, 44000); }, 5000);
-                        }
-                        if (ai.hp < 60 && !ai.cdQ) {
-                            ai.cdQ = true; ai.hp = Math.min(100, ai.hp + 20);
-                            Object.values(ai.parts).forEach(p => { if(p.material){ p.material.transparent=true; p.material.opacity=0.2; } });
-                            setTimeout(() => { Object.values(ai.parts).forEach(p => { if(p.material) p.material.opacity=1; }); setTimeout(() => { ai.cdQ = false; }, 40000); }, 7000);
-                        }
-                    }
-
-                    let aiSpeed = (distToKiller < 35 || ai.isHighlighted) ? 0.21 : 0.14;
-                    if (distToKiller < 30 && ai.invCola > 0) { ai.invCola--; aiSpeed = 0.29; }
-                    else if (!ai.is007 && distToKiller < 30 && !ai.cdR) { ai.cdR = true; aiSpeed = 0.28; setTimeout(() => { ai.cdR = false; }, 50000); }
-                    if (ai.isInvulnerable) aiSpeed = 0.10;
-
-                    if (distToKiller < 35 || ai.isHighlighted) {
-                        const adx = ai.position.x - c00lkidd.position.x, adz = ai.position.z - c00lkidd.position.z;
-                        const dist = Math.sqrt(adx*adx + adz*adz);
-                        moveWithCollision(ai, (adx / dist) * aiSpeed, (adz / dist) * aiSpeed);
-                        ai.lookAt(ai.position.x + adx, 0, ai.position.z + adz); ai.rotation.y += Math.PI;
-                        animateWalkingLimbs(ai, 0.24);
-                    } else {
-                        let targetGen = null, minGD = 9999;
-                        generators.forEach(g => {
-                            if (!g.done) { const d = ai.position.distanceTo(g.group.position); if (d < minGD) { minGD = d; targetGen = g; } }
-                        });
-
-                        if (targetGen) {
-                            if (minGD > 4.5) {
-                                const gx = targetGen.group.position.x - ai.position.x, gz = targetGen.group.position.z - ai.position.z;
-                                moveWithCollision(ai, (gx / minGD) * aiSpeed, (gz / minGD) * aiSpeed);
-                                ai.lookAt(targetGen.group.position.x, 0, targetGen.group.position.z); ai.rotation.y += Math.PI;
-                                animateWalkingLimbs(ai, 0.16);
-                            } else {
-                                ai.lookAt(targetGen.group.position.x, 0, targetGen.group.position.z); ai.rotation.y += Math.PI;
-                                ai.parts.rArm.rotation.x = 1.6 + Math.sin(Date.now() * 0.015) * 0.2;
-                                ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2;
-                                ai.genWorkTimer++;
-                                if (ai.genWorkTimer >= 220) {
-                                    ai.genWorkTimer = 0;
-                                    if (!targetGen.done) {
-                                        targetGen.stage++;
-                                        if (targetGen.stage >= 5) completeGenerator(targetGen, ai.name);
-                                    }
-                                }
-                            }
-                        } else {
-                            if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
-                            const pdx = ai.patrolTarget.x - ai.position.x, pdz = ai.patrolTarget.z - ai.position.z;
-                            const pdist = Math.sqrt(pdx*pdx + pdz*pdz);
-                            if (pdist > 2) {
-                                moveWithCollision(ai, (pdx / pdist) * aiSpeed, (pdz / pdist) * aiSpeed);
-                                ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI;
-                                animateWalkingLimbs(ai, 0.16);
-                            } else { pickNewPatrol(ai); }
-                        }
-                    }
-                });
-            }
-
-            renderer.render(scene, camera);
-        }
-        animate();
-        updateUIState();
-    </script>
+      }
+    });
+  }
+  renderer.render(scene, camera);
+}
+animate(); updateUIState();
+</script>
 </body>
 </html>
-        }
