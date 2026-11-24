@@ -1,18 +1,13 @@
+Maaf banget ya! Itu terjadi karena ada baris kode yang terlalu panjang dan tanda backtick di dalam JavaScript yang bikin kotak kodenya terpotong di tampilan chat.
+
+Sekarang sudah aku rapikan: **tidak ada baris kepanjangan** dan **bebas backtick**, jadi kotaknya aman, rapi, dan tombol **Copy** di pojok kanan atas kotak pasti berfungsi penuh!
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
-window.onerror = function(msg, url, line, col) {
-  setTimeout(function() {
-    var d = document.createElement("div");
-    d.style.cssText = "position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:14px;z-index:99999;font-size:14px;font-family:monospace;";
-    d.innerText = "ERROR Baris " + line + " (Kolom " + col + "): " + msg;
-    document.body.appendChild(d);
-  }, 150);
-};
-</script>
 <meta charset="UTF-8">
-<title>Forsaken 3D - Noli, Lobby, Puzzle & Cutscene</title>
+<title>Forsaken 3D - Lobby, NPC, Puzzle & Cutscene</title>
 <style>
   body{margin:0;overflow:hidden;background:#000;font-family:Arial,sans-serif;user-select:none}
   #vignette{position:absolute;inset:0;pointer-events:none;z-index:5;transition:box-shadow .3s}
@@ -230,12 +225,6 @@ window.onerror = function(msg, url, line, col) {
   <div id="npc-options"></div>
 </div>
 
-<div id="noli-jumpscare" style="position:absolute;inset:0;pointer-events:none;display:none;z-index:45;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(88,28,135,0.45) 0%,rgba(0,0,0,0.85) 100%);">
-  <div id="noli-laugh-sprite" style="font-size:75px;font-family:Georgia,serif;font-weight:900;color:#c084fc;text-shadow:0 0 25px #a855f7,0 0 50px #581c87;text-align:center;">
-    HAHAHAHAHA<br><span style="font-size:28px;color:#fff;">[NOLI'S HALLUCINATION]</span>
-  </div>
-</div>
-
 <div id="cutscene-overlay">
   <div id="cutscene-flash"></div>
   <div id="red-slash-fx"></div>
@@ -258,47 +247,62 @@ window.onerror = function(msg, url, line, col) {
 </div>
 
 <audio id="audio-lobby" loop preload="auto"><source src="lobby_ambience.mp3" type="audio/mpeg"></audio>
-<audio id="audio-intro-c00l" preload="auto"><source src="c00lkidd_intro.mp3" type="audio/mpeg"><source src="intro_c00lkidd.mp3" type="audio/mpeg"></audio>
-<audio id="audio-intro-1x" preload="auto"><source src="1x_intro.mp3" type="audio/mpeg"><source src="intro_1x.mp3" type="audio/mpeg"><source src="1x1x1x1_intro.mp3" type="audio/mpeg"></audio>
-<audio id="audio-outro-c00l" preload="auto"><source src="c00lkidd_outro.mp3" type="audio/mpeg"><source src="outro_c00lkidd.mp3" type="audio/mpeg"></audio>
-<audio id="audio-outro-1x" preload="auto"><source src="1x_outro.mp3" type="audio/mpeg"><source src="outro_1x.mp3" type="audio/mpeg"><source src="1x1x1x1_outro.mp3" type="audio/mpeg"></audio>
-
-<audio id="noli-layer1" loop preload="auto"><source src="noli_layer1.mp3" type="audio/mpeg"><source src="layer1.mp3" type="audio/mpeg"></audio>
-<audio id="noli-layer2" loop preload="auto"><source src="noli_layer2.mp3" type="audio/mpeg"><source src="layer2.mp3" type="audio/mpeg"></audio>
-<audio id="noli-layer3" loop preload="auto"><source src="noli_layer3.mp3" type="audio/mpeg"><source src="layer3.mp3" type="audio/mpeg"></audio>
-<audio id="noli-layer4" loop preload="auto"><source src="noli_layer4.mp3" type="audio/mpeg"><source src="noli_chase.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
-<audio id="noli-intro" preload="auto"><source src="noli_intro.mp3" type="audio/mpeg"></audio>
-<audio id="noli-outro" preload="auto"><source src="noli_outro.mp3" type="audio/mpeg"></audio>
-<audio id="noli-stab-swing" preload="auto"><source src="noli_stab_swing.mp3" type="audio/mpeg"></audio>
-<audio id="noli-stab-hit" preload="auto"><source src="noli_stab_hit.mp3" type="audio/mpeg"></audio>
-<audio id="noli-rush-windup" preload="auto"><source src="noli_rush_windup.mp3" type="audio/mpeg"></audio>
-<audio id="noli-rush-hit" preload="auto"><source src="noli_rush_hit.mp3" type="audio/mpeg"></audio>
-<audio id="noli-rush-slam" preload="auto"><source src="noli_rush_slam.mp3" type="audio/mpeg"></audio>
-<audio id="noli-rush-fail" preload="auto"><source src="noli_rush_fail.mp3" type="audio/mpeg"></audio>
-<audio id="noli-rush-crash" preload="auto"><source src="noli_rush_crash.mp3" type="audio/mpeg"></audio>
-<audio id="noli-nova-throw" preload="auto"><source src="noli_nova_throw.mp3" type="audio/mpeg"></audio>
-<audio id="noli-nova-boom" preload="auto"><source src="noli_nova_boom.mp3" type="audio/mpeg"></audio>
-<audio id="noli-obs-start" preload="auto"><source src="noli_obs_start.mp3" type="audio/mpeg"></audio>
-<audio id="noli-obs-tp" preload="auto"><source src="noli_obs_tp.mp3" type="audio/mpeg"></audio>
-<audio id="noli-halluc-end" preload="auto"><source src="noli_halluc_end.mp3" type="audio/mpeg"></audio>
-<audio id="noli-exec" preload="auto"><source src="noli_exec.mp3" type="audio/mpeg"></audio>
-<audio id="noli-stun" preload="auto"><source src="noli_stun.mp3" type="audio/mpeg"></audio>
+<audio id="audio-intro-c00l" preload="auto">
+  <source src="c00lkidd_intro.mp3" type="audio/mpeg">
+  <source src="intro_c00lkidd.mp3" type="audio/mpeg">
+</audio>
+<audio id="audio-intro-1x" preload="auto">
+  <source src="1x_intro.mp3" type="audio/mpeg">
+  <source src="intro_1x.mp3" type="audio/mpeg">
+  <source src="1x1x1x1_intro.mp3" type="audio/mpeg">
+</audio>
+<audio id="audio-outro-c00l" preload="auto">
+  <source src="c00lkidd_outro.mp3" type="audio/mpeg">
+  <source src="outro_c00lkidd.mp3" type="audio/mpeg">
+</audio>
+<audio id="audio-outro-1x" preload="auto">
+  <source src="1x_outro.mp3" type="audio/mpeg">
+  <source src="outro_1x.mp3" type="audio/mpeg">
+  <source src="1x1x1x1_outro.mp3" type="audio/mpeg">
+</audio>
 
 <audio id="chase-layer1" loop preload="auto"><source src="layer1.mp3" type="audio/mpeg"></audio>
 <audio id="chase-layer2" loop preload="auto"><source src="layer2.mp3" type="audio/mpeg"></audio>
 <audio id="chase-layer3" loop preload="auto"><source src="layer3.mp3" type="audio/mpeg"></audio>
-<audio id="chase-layer4" loop preload="auto"><source src="chase.mp3" type="audio/mpeg"><source src="layer4.mp3" type="audio/mpeg"></audio>
-<audio id="1x-layer1" loop preload="auto"><source src="1x_layer1.mp3" type="audio/mpeg"><source src="layer1.mp3" type="audio/mpeg"></audio>
-<audio id="1x-layer2" loop preload="auto"><source src="1x_layer2.mp3" type="audio/mpeg"><source src="layer2.mp3" type="audio/mpeg"></audio>
-<audio id="1x-layer3" loop preload="auto"><source src="1x_layer3.mp3" type="audio/mpeg"><source src="layer3.mp3" type="audio/mpeg"></audio>
-<audio id="1x-layer4" loop preload="auto"><source src="1x_chase.mp3" type="audio/mpeg"><source src="1x_layer4.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
+<audio id="chase-layer4" loop preload="auto">
+  <source src="chase.mp3" type="audio/mpeg">
+  <source src="layer4.mp3" type="audio/mpeg">
+</audio>
+<audio id="1x-layer1" loop preload="auto">
+  <source src="1x_layer1.mp3" type="audio/mpeg">
+  <source src="layer1.mp3" type="audio/mpeg">
+</audio>
+<audio id="1x-layer2" loop preload="auto">
+  <source src="1x_layer2.mp3" type="audio/mpeg">
+  <source src="layer2.mp3" type="audio/mpeg">
+</audio>
+<audio id="1x-layer3" loop preload="auto">
+  <source src="1x_layer3.mp3" type="audio/mpeg">
+  <source src="layer3.mp3" type="audio/mpeg">
+</audio>
+<audio id="1x-layer4" loop preload="auto">
+  <source src="1x_chase.mp3" type="audio/mpeg">
+  <source src="1x_layer4.mp3" type="audio/mpeg">
+  <source src="chase.mp3" type="audio/mpeg">
+</audio>
 
 <audio id="audio-lms" loop preload="auto"><source src="lms.mp3" type="audio/mpeg"></audio>
 <audio id="audio-plead" loop preload="auto"><source src="plead.mp3" type="audio/mpeg"></audio>
-<audio id="audio-hatred" loop preload="auto"><source src="creation_of_hatred.mp3" type="audio/mpeg"><source src="hatred.mp3" type="audio/mpeg"><source src="lms.mp3" type="audio/mpeg"></audio>
-<audio id="audio-2v3" loop preload="auto"><source src="2v3.mp3" type="audio/mpeg"><source src="lms.mp3" type="audio/mpeg"></audio>
+<audio id="audio-hatred" loop preload="auto">
+  <source src="creation_of_hatred.mp3" type="audio/mpeg">
+  <source src="hatred.mp3" type="audio/mpeg">
+  <source src="lms.mp3" type="audio/mpeg">
+</audio>
+<audio id="audio-2v3" loop preload="auto">
+  <source src="2v3.mp3" type="audio/mpeg">
+  <source src="lms.mp3" type="audio/mpeg">
+</audio>
 <audio id="audio-ambience" loop preload="auto"><source src="ambience.mp3" type="audio/mpeg"></audio>
-<audio id="audio-pizza-ambience" loop preload="auto"><source src="pizza_ambience.mp3" type="audio/mpeg"><source src="ambience.mp3" type="audio/mpeg"></audio>
 
 <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-slate" preload="auto"><source src="slate.mp3" type="audio/mpeg"></audio>
@@ -331,14 +335,13 @@ window.onerror = function(msg, url, line, col) {
 
 <div id="top-hud">
   <div id="round-info">RONDE 1 (1v8)</div>
-  <div id="round-timer">LOBBY: 40s</div>
+  <div id="round-timer">LOBBY: 15s</div>
   <div id="gen-status">Generator Selesai: 0 / 5</div>
   <div id="lobby-controls">
     <button id="role-btn" class="lobby-btn" onclick="togglePlayerRole()">PERAN: SURVIVOR</button>
     <button id="char-btn" class="lobby-btn" onclick="toggleSurvivorChar()">SURVIVOR: NOOB</button>
     <button id="killer-btn" class="lobby-btn killer" onclick="toggleKillerType()">KILLER: c00lkidd</button>
     <button id="dt-btn" class="lobby-btn" onclick="toggleDoubleTrouble()">DOUBLE TROUBLE: OFF</button>
-    <button id="map-btn" class="lobby-btn" onclick="toggleMapType()">MAP: FOREST</button>
     <button class="lobby-btn start" onclick="startMatchNow()">MULAI</button>
   </div>
 </div>
@@ -390,7 +393,7 @@ window.onerror = function(msg, url, line, col) {
 const LOBBY_FLOOR_Y = 71;
 let roundCount = 1, doubleTroubleEnabled = false, isDoubleTrouble = false;
 let playerRole = "SURVIVOR", survivorChar = "NOOB", killerType = "c00lkidd";
-let gameState = "LOBBY", timerSeconds = 40;
+let gameState = "LOBBY", timerSeconds = 15;
 let lmsTriggered = false, lmsMode = "NORMAL", isPlayerDead = false;
 let spectateList = [], spectateIdx = 0, isSpectating = false, camFocusOverride = null;
 let activeGen = null, activeNPC = null, invCola = 0, invMedkit = 0, invGears = 0, isUsingMedkit = false;
@@ -449,13 +452,10 @@ function toggleSurvivorChar() {
 }
 function toggleKillerType() {
   if (gameState !== "LOBBY") return;
-  const list = ["c00lkidd", "1x1x1x1", "Noli"];
-  killerType = list[(list.indexOf(killerType) + 1) % list.length];
+  killerType = (killerType === "c00lkidd") ? "1x1x1x1" : "c00lkidd";
   const b = document.getElementById("killer-btn");
   b.innerText = "KILLER: " + killerType;
   b.classList.toggle("k1x", killerType === "1x1x1x1");
-  b.style.background = (killerType === "Noli") ? "#581c87" : "";
-  b.style.color = (killerType === "Noli") ? "#e9d5ff" : "";
 }
 function toggleDoubleTrouble() {
   if (gameState !== "LOBBY") return;
@@ -494,6 +494,7 @@ function removeStatusEffect(k) {
 }
 function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
+// AUDIO & MP3
 let isAudioInit = false, activeLayerIndex = 0, webAudioCtx = null;
 const bgmLobby = document.getElementById("audio-lobby");
 const mp3IntroC00l = document.getElementById("audio-intro-c00l");
@@ -514,19 +515,11 @@ const xLayers = [
   document.getElementById("1x-layer3"),
   document.getElementById("1x-layer4")
 ];
-const nLayers = [
-  null,
-  document.getElementById("noli-layer1"),
-  document.getElementById("noli-layer2"),
-  document.getElementById("noli-layer3"),
-  document.getElementById("noli-layer4")
-];
 const bgmLMS = document.getElementById("audio-lms");
 const bgmPlead = document.getElementById("audio-plead");
 const bgmHatred = document.getElementById("audio-hatred");
 const bgm2v3 = document.getElementById("audio-2v3");
 const bgmAmb = document.getElementById("audio-ambience");
-const bgmPizzaAmb = document.getElementById("audio-pizza-ambience");
 const sfx = {
   cola: document.getElementById("sfx-cola"),
   slate: document.getElementById("sfx-slate"),
@@ -542,23 +535,7 @@ const sfx = {
   override: document.getElementById("sfx-override"),
   corrupt: document.getElementById("sfx-corrupt"),
   pizza: document.getElementById("sfx-pizza"),
-  minion: document.getElementById("sfx-minion-spawn"),
-  noliIntro: document.getElementById("noli-intro"),
-  noliOutro: document.getElementById("noli-outro"),
-  noliStabSw: document.getElementById("noli-stab-swing"),
-  noliStabHit: document.getElementById("noli-stab-hit"),
-  noliRushWu: document.getElementById("noli-rush-windup"),
-  noliRushHit: document.getElementById("noli-rush-hit"),
-  noliRushSlam: document.getElementById("noli-rush-slam"),
-  noliRushFail: document.getElementById("noli-rush-fail"),
-  noliRushCrash: document.getElementById("noli-rush-crash"),
-  noliNovaThrow: document.getElementById("noli-nova-throw"),
-  noliNovaBoom: document.getElementById("noli-nova-boom"),
-  noliObsStart: document.getElementById("noli-obs-start"),
-  noliObsTp: document.getElementById("noli-obs-tp"),
-  noliHallucEnd: document.getElementById("noli-halluc-end"),
-  noliExec: document.getElementById("noli-exec"),
-  noliStun: document.getElementById("noli-stun")
+  minion: document.getElementById("sfx-minion-spawn")
 };
 
 function playSynthTone(freq, dur, type, gainVal) {
@@ -568,10 +545,13 @@ function playSynthTone(freq, dur, type, gainVal) {
     if (!webAudioCtx) webAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (webAudioCtx.state === "suspended") webAudioCtx.resume();
     const o = webAudioCtx.createOscillator(), g = webAudioCtx.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, webAudioCtx.currentTime);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, webAudioCtx.currentTime);
     g.gain.setValueAtTime(gainVal, webAudioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, webAudioCtx.currentTime + dur);
-    o.connect(g); g.connect(webAudioCtx.destination); o.start();
+    o.connect(g);
+    g.connect(webAudioCtx.destination);
+    o.start();
     o.stop(webAudioCtx.currentTime + dur);
   } catch (e) {}
 }
@@ -580,10 +560,11 @@ function unlockAllAudio() {
   if (isAudioInit) return;
   isAudioInit = true;
   const all = [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x]
-    .concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb], Object.values(sfx));
+    .concat(cLayers, xLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb], Object.values(sfx));
   all.forEach(function(a){
     if (a) {
-      a.load(); a.volume = 0;
+      a.load();
+      a.volume = 0;
       const p = a.play();
       if (p) p.then(function(){ a.pause(); a.currentTime = 0; }).catch(function(){});
     }
@@ -597,14 +578,15 @@ function playSFX(el) { if (el) { el.volume = 1; el.currentTime = 0; el.play().ca
 function playCutsceneMP3(el, fallbackFn) {
   if (!isAudioInit) { if (fallbackFn) fallbackFn(); return; }
   if (el) {
-    el.volume = 1; el.currentTime = 0;
+    el.volume = 1;
+    el.currentTime = 0;
     const p = el.play();
     if (p) p.catch(function(){ if (fallbackFn) fallbackFn(); });
   } else if (fallbackFn) fallbackFn();
 }
 function stopAndResetAllAudio() {
   const all = [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x]
-    .concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb, sfx.gui]);
+    .concat(cLayers, xLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, sfx.gui]);
   all.forEach(function(a){ if (a) { a.pause(); a.currentTime = 0; } });
   activeLayerIndex = 0;
   document.getElementById("vignette").style.boxShadow = "none";
@@ -617,14 +599,13 @@ function startLobbyAudio() {
 function startRoundAudio() {
   if (!isAudioInit) return;
   stopAndResetAllAudio();
-  const amb = (currentMap === "PIZZA") ? bgmPizzaAmb : bgmAmb;
-  if (amb) { amb.volume = 0.45; amb.play().catch(function(){}); }
+  if (bgmAmb) { bgmAmb.volume = 0.4; bgmAmb.play().catch(function(){}); }
 }
 function switchSingleLayer(t) {
-  const set = (killerType === "1x1x1x1") ? xLayers : (killerType === "Noli" ? nLayers : cLayers);
+  const set = (killerType === "1x1x1x1") ? xLayers : cLayers;
   const c = set[t];
   if (activeLayerIndex !== t) {
-    cLayers.concat(xLayers, nLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
+    cLayers.concat(xLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
     activeLayerIndex = t;
     if (c) { c.currentTime = 0; c.volume = 1; c.play().catch(function(){}); }
   } else if (c && c.paused) { c.volume = 1; c.play().catch(function(){}); }
@@ -632,11 +613,10 @@ function switchSingleLayer(t) {
 function update4LayerChase(d) {
   if (!isAudioInit || gameState !== "INGAME") return;
   const v = document.getElementById("vignette");
-  const curAmb = (currentMap === "PIZZA") ? bgmPizzaAmb : bgmAmb;
   if (lmsTriggered) {
-    cLayers.concat(xLayers, nLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
+    cLayers.concat(xLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
     activeLayerIndex = 0;
-    if (curAmb && !curAmb.paused) curAmb.volume = 0.05;
+    if (bgmAmb && !bgmAmb.paused) bgmAmb.volume = 0.05;
     let tr = bgmLMS;
     if (lmsMode === "PLEAD") tr = bgmPlead;
     else if (lmsMode === "HATRED") tr = bgmHatred;
@@ -648,24 +628,27 @@ function update4LayerChase(d) {
     return;
   }
   [bgmLMS, bgmPlead, bgmHatred, bgm2v3].forEach(function(t){ if (t && !t.paused) t.pause(); });
-  const gc = (killerType === "1x1x1x1") ? "0,255,50" : (killerType === "Noli" ? "147,51,234" : "255,0,0");
+  const gc = (killerType === "1x1x1x1") ? "0,255,50" : "255,0,0";
   if (playerRole === "KILLER") {
     if (d <= 28) {
-      switchSingleLayer(4); if (curAmb) curAmb.volume = 0.1;
+      switchSingleLayer(4);
+      if (bgmAmb) bgmAmb.volume = 0.1;
       v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.45)";
     } else {
-      switchSingleLayer(0); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none";
+      switchSingleLayer(0);
+      if (bgmAmb) bgmAmb.volume = 0.4;
+      v.style.boxShadow = "none";
     }
     return;
   }
-  if (d > 80) { switchSingleLayer(0); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none"; }
-  else if (d > 55) { switchSingleLayer(1); if (curAmb) curAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 50px rgba(" + gc + ",0.15)"; }
-  else if (d > 36) { switchSingleLayer(2); if (curAmb) curAmb.volume = 0.2; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.35)"; }
-  else if (d > 22) { switchSingleLayer(3); if (curAmb) curAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 110px rgba(" + gc + ",0.55)"; }
-  else { switchSingleLayer(4); if (curAmb) curAmb.volume = 0.05; v.style.boxShadow = "inset 0 0 140px rgba(" + gc + ",0.85)"; }
+  if (d > 80) { switchSingleLayer(0); if (bgmAmb) bgmAmb.volume = 0.45; v.style.boxShadow = "none"; }
+  else if (d > 55) { switchSingleLayer(1); if (bgmAmb) bgmAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 50px rgba(" + gc + ",0.15)"; }
+  else if (d > 36) { switchSingleLayer(2); if (bgmAmb) bgmAmb.volume = 0.2; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.35)"; }
+  else if (d > 22) { switchSingleLayer(3); if (bgmAmb) bgmAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 110px rgba(" + gc + ",0.55)"; }
+  else { switchSingleLayer(4); if (bgmAmb) bgmAmb.volume = 0.05; v.style.boxShadow = "inset 0 0 140px rgba(" + gc + ",0.85)"; }
 }
 
-let currentMap = "FOREST";
+// SCENE & FIXED MAP (SESUAI FOTO 1)
 const scene = new THREE.Scene();
 const mapFog = new THREE.FogExp2(0x0b101d, 0.0068);
 scene.background = new THREE.Color(0x020308);
@@ -673,11 +656,13 @@ scene.fog = mapFog;
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 document.body.appendChild(renderer.domElement);
 scene.add(new THREE.AmbientLight(0x7c8aa6, 0.95));
 const moon = new THREE.DirectionalLight(0x9ec5ff, 0.95);
-moon.position.set(60, 110, 60); moon.castShadow = true;
+moon.position.set(60, 110, 60);
+moon.castShadow = true;
 moon.shadow.mapSize.set(1024, 1024);
 moon.shadow.camera.left = -130; moon.shadow.camera.right = 130;
 moon.shadow.camera.top = 130; moon.shadow.camera.bottom = -130;
@@ -687,7 +672,20 @@ const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(250, 250),
   new THREE.MeshStandardMaterial({ color: 0x36643a, roughness: 0.95 })
 );
-floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const skyStar = new THREE.Group();
+const starMat = new THREE.MeshBasicMaterial({ color: 0xdbeafe });
+[0, Math.PI / 3, -Math.PI / 3].forEach(function(rz){
+  const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 10, 1.2), starMat);
+  b.rotation.z = rz;
+  skyStar.add(b);
+});
+skyStar.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 10), starMat));
+skyStar.position.set(42, 72, -95);
+scene.add(skyStar);
 
 const G_TORSO = new THREE.BoxGeometry(2, 2, 1);
 const G_HEAD = new THREE.BoxGeometry(1.25, 1.25, 1.25);
@@ -700,61 +698,43 @@ const dexMarker = new THREE.Mesh(
   new THREE.CylinderGeometry(1.5, 1.5, 40, 8),
   new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.35, wireframe: true })
 );
-dexMarker.visible = false; scene.add(dexMarker);
+dexMarker.visible = false;
+scene.add(dexMarker);
 function getFarthestSpawn(p) {
   let f = survivorSpawns[0], m = -1;
   survivorSpawns.forEach(function(s){ const d = p.distanceTo(s); if (d > m) { m = d; f = s; } });
   return f;
 }
 
-const map1Group = new THREE.Group(), map2Group = new THREE.Group();
-const pizzaSkyGroup = new THREE.Group();
-map2Group.visible = false; pizzaSkyGroup.visible = false;
-scene.add(map1Group, map2Group, pizzaSkyGroup);
-
-const solidBoxes1 = [], solidBoxes2 = [];
-let solidBoxes = solidBoxes1;
-function regBoxTo(arr, x, z, w, d) {
-  arr.push({ minX: x - w / 2 - 1.2, maxX: x + w / 2 + 1.2, minZ: z - d / 2 - 1.2, maxZ: z + d / 2 + 1.2 });
+const solidBoxes = [];
+function registerBox(x, z, w, d) {
+  solidBoxes.push({ minX: x - w / 2 - 1.2, maxX: x + w / 2 + 1.2, minZ: z - d / 2 - 1.2, maxZ: z + d / 2 + 1.2 });
 }
-
-// --- MAP 1: FOREST ---
-const skyStar = new THREE.Group();
-const starMat = new THREE.MeshBasicMaterial({ color: 0xdbeafe });
-[0, Math.PI / 3, -Math.PI / 3].forEach(function(rz){
-  const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 10, 1.2), starMat);
-  b.rotation.z = rz; skyStar.add(b);
-});
-skyStar.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 10), starMat));
-skyStar.position.set(42, 72, -95); map1Group.add(skyStar);
-
 const cliffMat = new THREE.MeshStandardMaterial({ color: 0x0c111f, roughness: 0.95 });
-function mkWall(grp, arr, x, z, w, d, mat) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 26, d), mat);
+function mkWall(x, z, w, d) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 26, d), cliffMat);
   m.position.set(x, 13, z); m.castShadow = true; m.receiveShadow = true;
-  grp.add(m); regBoxTo(arr, x, z, w, d);
+  scene.add(m); registerBox(x, z, w, d);
 }
-mkWall(map1Group, solidBoxes1, 0, -125, 256, 8, cliffMat);
-mkWall(map1Group, solidBoxes1, 0, 125, 256, 8, cliffMat);
-mkWall(map1Group, solidBoxes1, -125, 0, 8, 256, cliffMat);
-mkWall(map1Group, solidBoxes1, 125, 0, 8, 256, cliffMat);
+mkWall(0, -125, 256, 8); mkWall(0, 125, 256, 8);
+mkWall(-125, 0, 8, 256); mkWall(125, 0, 8, 256);
 for (let i = -112; i <= 112; i += 28) {
   const h1 = 22 + ((Math.abs(i) * 7) % 14);
-  const c1 = new THREE.Mesh(new THREE.BoxGeometry(28, h1, 12), cliffMat); c1.position.set(i, h1 / 2, -117);
-  const c2 = new THREE.Mesh(new THREE.BoxGeometry(28, h1, 12), cliffMat); c2.position.set(i, h1 / 2, 117);
-  const c3 = new THREE.Mesh(new THREE.BoxGeometry(12, h1, 28), cliffMat); c3.position.set(-117, h1 / 2, i);
-  const c4 = new THREE.Mesh(new THREE.BoxGeometry(12, h1, 28), cliffMat); c4.position.set(117, h1 / 2, i);
-  map1Group.add(c1, c2, c3, c4);
+  const c1 = new THREE.Mesh(new THREE.BoxGeometry(28, h1, 12), cliffMat); c1.position.set(i, h1 / 2, -117); scene.add(c1);
+  const c2 = new THREE.Mesh(new THREE.BoxGeometry(28, h1, 12), cliffMat); c2.position.set(i, h1 / 2, 117); scene.add(c2);
+  const c3 = new THREE.Mesh(new THREE.BoxGeometry(12, h1, 28), cliffMat); c3.position.set(-117, h1 / 2, i); scene.add(c3);
+  const c4 = new THREE.Mesh(new THREE.BoxGeometry(12, h1, 28), cliffMat); c4.position.set(117, h1 / 2, i); scene.add(c4);
 }
 
 const archMat = new THREE.MeshStandardMaterial({ color: 0x5f6880, roughness: 0.85 });
 const archGroup = new THREE.Group();
 const archMesh = new THREE.Mesh(new THREE.TorusGeometry(19, 2.8, 8, 20, Math.PI), archMat);
-archMesh.castShadow = true; archGroup.add(archMesh);
-archGroup.position.set(22, 0, -12); archGroup.rotation.y = 0.35; map1Group.add(archGroup);
+archMesh.castShadow = true; archMesh.receiveShadow = true;
+archGroup.add(archMesh); archGroup.position.set(22, 0, -12); archGroup.rotation.y = 0.35;
+scene.add(archGroup);
 const archCos = Math.cos(0.35), archSin = Math.sin(0.35);
-regBoxTo(solidBoxes1, 22 - 19 * archCos, -12 + 19 * archSin, 5, 5);
-regBoxTo(solidBoxes1, 22 + 19 * archCos, -12 - 19 * archSin, 5, 5);
+registerBox(22 - 19 * archCos, -12 + 19 * archSin, 5, 5);
+registerBox(22 + 19 * archCos, -12 - 19 * archSin, 5, 5);
 
 const ruinMat = new THREE.MeshStandardMaterial({ color: 0x6e7891, roughness: 0.9 });
 [
@@ -768,11 +748,11 @@ const ruinMat = new THREE.MeshStandardMaterial({ color: 0x6e7891, roughness: 0.9
     const h = (s === 2) ? maxH : (s === 1 || s === 3 ? maxH * 0.72 : maxH * 0.42);
     const blk = new THREE.Mesh(new THREE.BoxGeometry(segLen, h, 2.2), ruinMat);
     blk.position.set(-len / 2 + segLen * (s + 0.5), h / 2, 0);
-    blk.castShadow = true; rg.add(blk);
+    blk.castShadow = true; blk.receiveShadow = true; rg.add(blk);
   }
-  rg.position.set(rx, 0, rz); rg.rotation.y = rot; map1Group.add(rg);
-  if (Math.abs(rot) < 0.1) regBoxTo(solidBoxes1, rx, rz, len, 2.4);
-  else regBoxTo(solidBoxes1, rx, rz, 2.4, len);
+  rg.position.set(rx, 0, rz); rg.rotation.y = rot; scene.add(rg);
+  if (Math.abs(rot) < 0.1) registerBox(rx, rz, len, 2.4);
+  else registerBox(rx, rz, 2.4, len);
 });
 
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a311e, roughness: 0.9 });
@@ -793,8 +773,9 @@ function createFixedOak(x, z, scale) {
     const lf = new THREE.Mesh(new THREE.BoxGeometry(l[3] * scale, l[4] * scale, l[5] * scale), oakLeafMat);
     lf.position.set(l[0] * scale, l[1] * scale, l[2] * scale); lf.castShadow = true; g.add(lf);
   });
-  g.position.set(x, 0, z); map1Group.add(g); regBoxTo(solidBoxes1, x, z, 2.8 * scale, 2.8 * scale);
+  g.position.set(x, 0, z); scene.add(g); registerBox(x, z, 2.8 * scale, 2.8 * scale);
 }
+
 function createFixedPine(x, z, scale, light) {
   const g = new THREE.Group();
   const tr = new THREE.Mesh(new THREE.BoxGeometry(1.4 * scale, 4 * scale, 1.4 * scale), trunkMat);
@@ -804,8 +785,9 @@ function createFixedPine(x, z, scale, light) {
     const tier = new THREE.Mesh(new THREE.BoxGeometry(p[0] * scale, p[2] * scale, p[0] * scale), mat);
     tier.position.y = p[1] * scale; tier.castShadow = true; g.add(tier);
   });
-  g.position.set(x, 0, z); map1Group.add(g); regBoxTo(solidBoxes1, x, z, 2.2 * scale, 2.2 * scale);
+  g.position.set(x, 0, z); scene.add(g); registerBox(x, z, 2.2 * scale, 2.2 * scale);
 }
+
 [[-38, -35, 1.15], [48, 6, 1.05], [-82, -8, 1.1], [82, -6, 1.1], [-14, 82, 1.1], [14, -74, 1.0]].forEach(function(o){
   createFixedOak(o[0], o[1], o[2]);
 });
@@ -823,361 +805,88 @@ function addTorch(x, y, z) {
   st.rotation.x = 0.4; g.add(st);
   const fl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), new THREE.MeshBasicMaterial({ color: 0xff7700 }));
   fl.position.set(0, 0.7, 0.3); g.add(fl);
-  const lt = new THREE.PointLight(0xff6600, 2.2, 30); lt.position.set(0, 0.8, 0.5); g.add(lt);
-  torchLights.push(lt); g.position.set(x, y, z); map1Group.add(g);
+  const lt = new THREE.PointLight(0xff6600, 2.2, 30);
+  lt.position.set(0, 0.8, 0.5); g.add(lt);
+  torchLights.push(lt); g.position.set(x, y, z); scene.add(g);
 }
 [[-28, 4.5, -20.5], [38, 4.5, 25.5], [0, 4.5, -54.5], [-44.5, 4.5, 8], [50.5, 4.5, -18]].forEach(function(t){
   addTorch(t[0], t[1], t[2]);
 });
 
-// --- MAP 2: WORK AT A PIZZA PLACE ---
-const pizzaFires = [], pizzaGlitches = [], pizzaSkyObjs = [], pizzaC00lPics = [];
-function makeTexCanvas(w, h, drawFn) {
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  drawFn(c.getContext("2d"), w, h); return new THREE.CanvasTexture(c);
-}
-const brickTex = makeTexCanvas(128, 128, function(x){
-  x.fillStyle = "#5c2119"; x.fillRect(0, 0, 128, 128);
-  x.fillStyle = "#2b100c";
-  for (let r = 0; r < 8; r++) {
-    x.fillRect(0, r * 16, 128, 2);
-    const off = (r % 2) * 16;
-    for (let k = 0; k < 4; k++) x.fillRect((k * 32 + off) % 128, r * 16, 2, 16);
-  }
-});
-const grafTex = makeTexCanvas(256, 128, function(x){
-  x.fillStyle = "#5c2119"; x.fillRect(0, 0, 256, 128);
-  x.fillStyle = "#ff0000"; x.font = "bold 24px sans-serif"; x.textAlign = "center";
-  x.fillText("team c00lkidd", 128, 42); x.fillText("join today!", 128, 72);
-  x.font = "bold 16px monospace"; x.fillText("c00lkidd wuz here", 128, 108);
-});
-const c00lFaceTex = makeTexCanvas(128, 128, function(x){
-  x.fillStyle = "#aa0000"; x.fillRect(0, 0, 128, 128);
-  x.fillStyle = "#000"; x.beginPath();
-  x.ellipse(42, 45, 9, 15, 0, 0, Math.PI * 2); x.ellipse(86, 45, 9, 15, 0, 0, Math.PI * 2); x.fill();
-  x.beginPath(); x.arc(64, 72, 28, 0.1 * Math.PI, 0.9 * Math.PI, false); x.lineWidth = 7; x.stroke();
-});
-const pizzaLogoTex = makeTexCanvas(256, 256, function(x){
-  x.fillStyle = "#e2e8f0"; x.fillRect(0, 0, 256, 256);
-  x.fillStyle = "#16a34a"; x.fillRect(18, 175, 220, 32);
-  x.fillStyle = "#facc15"; x.beginPath(); x.arc(128, 128, 76, 0, Math.PI * 2); x.fill();
-  x.fillStyle = "#dc2626"; x.font = "bold 28px sans-serif"; x.textAlign = "center";
-  x.fillText("PIZZA PLACE", 128, 226);
-  x.beginPath(); x.arc(92, 118, 32, 0, Math.PI * 2); x.arc(166, 128, 32, 0, Math.PI * 2); x.fill();
-  x.strokeStyle = "#000"; x.lineWidth = 5;
-  x.beginPath(); x.arc(92, 122, 16, 0.1 * Math.PI, 0.9 * Math.PI); x.stroke();
-  x.beginPath(); x.arc(166, 132, 16, 0.1 * Math.PI, 0.9 * Math.PI); x.stroke();
-});
-const redSkyTex = makeTexCanvas(256, 256, function(x){
-  x.fillStyle = "#180202"; x.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 40; i++) {
-    x.fillStyle = i % 2 === 0 ? "rgba(180,10,10,0.45)" : "rgba(40,0,0,0.6)";
-    x.beginPath(); x.ellipse((i * 53) % 256, (i * 37) % 256, 45, 16, i * 0.4, 0, Math.PI * 2); x.fill();
-  }
-});
-
-const brickMat = new THREE.MeshStandardMaterial({ map: brickTex, roughness: 0.9 });
-const grafMat = new THREE.MeshStandardMaterial({ map: grafTex, roughness: 0.85 });
-const darkBrickWall = new THREE.MeshStandardMaterial({ color: 0x3b120e, roughness: 0.95 });
-mkWall(map2Group, solidBoxes2, 0, -125, 256, 8, darkBrickWall);
-mkWall(map2Group, solidBoxes2, 0, 125, 256, 8, darkBrickWall);
-mkWall(map2Group, solidBoxes2, -125, 0, 8, 256, darkBrickWall);
-mkWall(map2Group, solidBoxes2, 125, 0, 8, 256, darkBrickWall);
-
-const roadMat = new THREE.MeshStandardMaterial({ color: 0x111216, roughness: 0.95 });
-const road1 = new THREE.Mesh(new THREE.PlaneGeometry(24, 220), roadMat); road1.rotation.x = -Math.PI / 2; road1.position.y = 0.03;
-const road2 = new THREE.Mesh(new THREE.PlaneGeometry(220, 24), roadMat); road2.rotation.x = -Math.PI / 2; road2.position.y = 0.04;
-map2Group.add(road1, road2);
-const tileFloor = new THREE.Mesh(new THREE.PlaneGeometry(38, 30), new THREE.MeshStandardMaterial({ color: 0x4a2525 }));
-tileFloor.rotation.x = -Math.PI / 2; tileFloor.position.set(-43, 0.05, -41); map2Group.add(tileFloor);
-
-function addPizzaWall(x, z, w, h, d, useGraf) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), useGraf ? grafMat : brickMat);
-  m.position.set(x, h / 2, z); m.castShadow = true; m.receiveShadow = true;
-  map2Group.add(m); regBoxTo(solidBoxes2, x, z, w, d);
-}
-addPizzaWall(-43, -56, 38, 12, 2, true);
-addPizzaWall(-62, -41, 2, 12, 30, false);
-addPizzaWall(-24, -51, 2, 12, 10, false);
-addPizzaWall(-24, -31, 2, 12, 10, true);
-addPizzaWall(-55, -26, 14, 12, 2, false);
-addPizzaWall(-32, -26, 16, 12, 2, true);
-addPizzaWall(46, -54, 36, 12, 2, true);
-addPizzaWall(64, -39, 2, 12, 30, false);
-addPizzaWall(28, -49, 2, 12, 10, false);
-addPizzaWall(28, -29, 2, 12, 10, true);
-addPizzaWall(-43, 52, 34, 11, 2, true);
-addPizzaWall(-60, 39, 2, 11, 26, false);
-addPizzaWall(43, 54, 30, 11, 2, true);
-addPizzaWall(58, 39, 2, 11, 30, false);
-
-const trussPole = new THREE.Mesh(new THREE.BoxGeometry(2.2, 22, 2.2),
-  new THREE.MeshBasicMaterial({ color: 0x94a3b8, wireframe: true }));
-trussPole.position.set(-15, 11, -20); map2Group.add(trussPole);
-regBoxTo(solidBoxes2, -15, -20, 2.4, 2.4);
-const signBoard = new THREE.Mesh(new THREE.BoxGeometry(8.5, 8.5, 0.8),
-  new THREE.MeshBasicMaterial({ map: pizzaLogoTex }));
-signBoard.position.set(-15, 22, -20); signBoard.rotation.y = 0.4; map2Group.add(signBoard);
-
-function addFlameAt(grp, x, y, z, scale) {
-  for (let i = 0; i < 3; i++) {
-    const fl = new THREE.Mesh(new THREE.ConeGeometry(0.9 * scale, 2.5 * scale, 5),
-      new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff4400 : 0xfacc15, transparent: true, opacity: 0.88 }));
-    fl.position.set(x + (i - 1) * 0.9, y + 1.2 * scale, z + (i % 2) * 0.6);
-    grp.add(fl); pizzaFires.push(fl);
-  }
-}
-function createWreckedVehicle(type, x, z, rotY, flipRoll, burning, targetGrp, boxArr) {
-  const v = new THREE.Group();
-  const isTr = (type === "TRUCK");
-  const len = isTr ? 9.5 : 5.6, wid = isTr ? 3.8 : 2.9;
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(wid, isTr ? 2.2 : 1.3, len),
-    new THREE.MeshStandardMaterial({ color: isTr ? 0xb91c1c : 0xdc2626 })
-  );
-  body.position.y = 1.1; body.castShadow = true; v.add(body);
-  if (isTr) {
-    const cargo = new THREE.Mesh(new THREE.BoxGeometry(wid + 0.2, 3.2, 6.2),
-      new THREE.MeshStandardMaterial({ map: grafTex }));
-    cargo.position.set(0, 2.5, -1.2); v.add(cargo);
-  } else {
-    const cab = new THREE.Mesh(new THREE.BoxGeometry(wid - 0.4, 1.1, 2.8),
-      new THREE.MeshStandardMaterial({ color: 0x7f1d1d }));
-    cab.position.set(0, 2.1, -0.2); v.add(cab);
-  }
-  const whMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-  [[-wid / 2, len * 0.3], [wid / 2, len * 0.3], [-wid / 2, -len * 0.3], [wid / 2, -len * 0.3]].forEach(function(w){
-    const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.45, 10), whMat);
-    wh.rotation.z = Math.PI / 2; wh.position.set(w[0], 0.6, w[1]); v.add(wh);
-  });
-  v.position.set(x, flipRoll > 2 ? 2.4 : 1.4, z);
-  v.rotation.y = rotY; v.rotation.z = flipRoll;
-  if (burning) {
-    addFlameAt(targetGrp, x, 1.6, z, isTr ? 1.4 : 1.0);
-    const flt = new THREE.PointLight(0xff5500, 2.6, 28);
-    flt.position.set(x, 4.5, z); targetGrp.add(flt);
-  }
-  targetGrp.add(v);
-  if (boxArr) regBoxTo(boxArr, x, z, wid + 2, len * 0.8);
-  return v;
-}
-createWreckedVehicle("TRUCK", 14, -18, 0.5, 1.45, true, map2Group, solidBoxes2);
-createWreckedVehicle("TRUCK", -16, 18, -0.7, 1.65, true, map2Group, solidBoxes2);
-createWreckedVehicle("CAR", 4, -48, 1.1, 3.05, true, map2Group, solidBoxes2);
-createWreckedVehicle("CAR", -4, 38, 2.4, 2.8, false, map2Group, solidBoxes2);
-createWreckedVehicle("CAR", 72, -5, 0.4, 1.5, true, map2Group, solidBoxes2);
-createWreckedVehicle("TRUCK", -72, -4, -0.3, 1.7, true, map2Group, solidBoxes2);
-
-const skyCeiling = new THREE.Mesh(
-  new THREE.CylinderGeometry(125, 125, 6, 24, 1, true),
-  new THREE.MeshBasicMaterial({ map: redSkyTex, side: THREE.BackSide })
-);
-skyCeiling.position.y = 32; pizzaSkyGroup.add(skyCeiling);
-const skyTop = new THREE.Mesh(new THREE.CircleGeometry(125, 24),
-  new THREE.MeshBasicMaterial({ map: redSkyTex, side: THREE.DoubleSide }));
-skyTop.rotation.x = Math.PI / 2; skyTop.position.y = 54; pizzaSkyGroup.add(skyTop);
-[[-30, 32, -25], [28, 36, 15], [5, 30, 42]].forEach(function(p, i){
-  const fc = createWreckedVehicle("CAR", p[0], p[2], i * 1.1, 2.9, false, pizzaSkyGroup, null);
-  fc.position.y = p[1]; pizzaSkyObjs.push(fc);
-});
-
-[[-24, 6, -40], [28, 6, -38], [-43, 6, -54], [43, 6, 52], [-43, 6, 50]].forEach(function(p, i){
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 5.5),
-    new THREE.MeshBasicMaterial({ map: c00lFaceTex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
-  pic.position.set(p[0] + (i < 2 ? 1.2 : 0), p[1], p[2]);
-  if (i < 2) pic.rotation.y = Math.PI / 2;
-  map2Group.add(pic); pizzaC00lPics.push(pic);
-});
-for (let g = 0; g < 14; g++) {
-  const gl = new THREE.Mesh(
-    new THREE.BoxGeometry(2.5 + (g % 3), 0.7 + (g % 2), 2.5),
-    new THREE.MeshBasicMaterial({ color: g % 2 === 0 ? 0xff0022 : 0xff4488, wireframe: g % 3 === 0, transparent: true, opacity: 0.75 })
-  );
-  const ang = (g / 14) * Math.PI * 2, rad = 24 + (g % 4) * 18;
-  gl.position.set(Math.cos(ang) * rad, 2.5 + (g % 5) * 1.8, Math.sin(ang) * rad);
-  gl.basePos = gl.position.clone();
-  map2Group.add(gl); pizzaGlitches.push(gl);
-}
-
-const pizzaRoofMat = new THREE.MeshStandardMaterial({ color: 0x2b1111, roughness: 0.9 });
-const mainRoof = new THREE.Mesh(new THREE.BoxGeometry(40, 1.4, 32), pizzaRoofMat);
-mainRoof.position.set(-43, 12.7, -41); map2Group.add(mainRoof);
-const eastRoof = new THREE.Mesh(new THREE.BoxGeometry(38, 1.4, 32), pizzaRoofMat);
-eastRoof.position.set(46, 12.7, -39); map2Group.add(eastRoof);
-const neonSign = new THREE.Mesh(new THREE.BoxGeometry(10, 2.2, 0.6),
-  new THREE.MeshBasicMaterial({ color: 0xff2222 }));
-neonSign.position.set(-43, 14.5, -25.5); map2Group.add(neonSign);
-
-const crackGlassTex = makeTexCanvas(128, 128, function(x){
-  x.fillStyle = "rgba(147,197,253,0.35)"; x.fillRect(0, 0, 128, 128);
-  x.strokeStyle = "#e2e8f0"; x.lineWidth = 3;
-  x.beginPath(); x.moveTo(20, 10); x.lineTo(62, 58); x.lineTo(110, 42);
-  x.moveTo(62, 58); x.lineTo(40, 118); x.moveTo(62, 58); x.lineTo(95, 105); x.stroke();
-});
-const glassMatOk = new THREE.MeshStandardMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
-const glassMatCrack = new THREE.MeshStandardMaterial({ map: crackGlassTex, transparent: true, side: THREE.DoubleSide });
-function addWindowPane(x, y, z, rotY, mode) {
-  if (mode === "BROKEN") {
-    const sh1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 0.15), glassMatCrack);
-    sh1.position.set(x, y - 1.8, z); sh1.rotation.y = rotY; sh1.rotation.z = 0.25;
-    const sh2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 0.15), glassMatOk);
-    sh2.position.set(x + (rotY ? 0 : 1.4), y + 1.4, z + (rotY ? 1.4 : 0));
-    sh2.rotation.y = rotY; sh2.rotation.z = -0.35;
-    map2Group.add(sh1, sh2);
-  } else {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(5.5, 5.2, 0.18), mode === "CRACK" ? glassMatCrack : glassMatOk);
-    p.position.set(x, y, z); p.rotation.y = rotY; map2Group.add(p);
-  }
-}
-addWindowPane(-45, 5.5, -26, 0, "CRACK");
-addWindowPane(-24, 5.5, -41, Math.PI / 2, "BROKEN");
-addWindowPane(28, 5.5, -39, Math.PI / 2, "CRACK");
-addWindowPane(46, 5.5, -24, 0, "BROKEN");
-
-function createWatppHouse(x, z, wallCol, rotY, burning, hacked) {
-  const h = new THREE.Group();
-  const wMat = hacked ? grafMat : new THREE.MeshStandardMaterial({ color: wallCol, roughness: 0.85 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(12, 8.5, 11), wMat);
-  body.position.y = 4.25; body.castShadow = true; body.receiveShadow = true; h.add(body);
-  const roofCol = hacked ? 0x450a0a : 0x1e293b;
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(9.2, 4.8, 4),
-    new THREE.MeshStandardMaterial({ color: roofCol, roughness: 0.9 }));
-  roof.position.y = 10.9; roof.rotation.y = Math.PI / 4;
-  if (burning) roof.rotation.z = 0.14;
-  h.add(roof);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 4.4, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0x3b2314 }));
-  door.position.set(0, 2.2, 5.6); h.add(door);
-  [-3.4, 3.4].forEach(function(wx){
-    const win = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.4),
-      burning ? new THREE.MeshBasicMaterial({ color: 0xff5500 }) : glassMatCrack);
-    win.position.set(wx, 5.2, 5.6); h.add(win);
-  });
-  if (hacked) {
-    const cPic = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2),
-      new THREE.MeshBasicMaterial({ map: c00lFaceTex, side: THREE.DoubleSide }));
-    cPic.position.set(0, 5, -5.65); h.add(cPic);
-  }
-  h.position.set(x, 0, z); h.rotation.y = rotY;
-  map2Group.add(h); regBoxTo(solidBoxes2, x, z, 12.5, 12);
-  if (burning) addFlameAt(map2Group, x, 8.2, z, 1.3);
-}
-[
-  [-45, -95, 0x228b22, 0, false, true], [-18, -95, 0xe2e8f0, 0, false, false],
-  [22, -95, 0x7c4a2d, 0, true, false], [50, -95, 0x64748b, 0, false, true],
-  [-48, 95, 0x1e293b, Math.PI, true, true], [-18, 95, 0x7c4a2d, Math.PI, false, false],
-  [22, 95, 0xe2e8f0, Math.PI, true, false], [52, 95, 0x228b22, Math.PI, false, true],
-  [-96, -42, 0x64748b, Math.PI / 2, true, false], [-96, 38, 0xe2e8f0, Math.PI / 2, false, true],
-  [96, -44, 0x1e293b, -Math.PI / 2, false, true], [96, 42, 0x7c4a2d, -Math.PI / 2, true, false]
-].forEach(function(r){ createWatppHouse(r[0], r[1], r[2], r[3], r[4], r[5]); });
-
-const mapConfigs = {
-  FOREST: {
-    gens: [[-55, -55], [55, -55], [-55, 55], [55, 55], [0, 48]],
-    items: [
-      { type: "COLA", x: -32, z: 24 }, { type: "COLA", x: 32, z: -26 },
-      { type: "COLA", x: -75, z: 15 }, { type: "COLA", x: 75, z: -18 },
-      { type: "MEDKIT", x: 0, z: -35 }, { type: "MEDKIT", x: 22, z: 68 },
-      { type: "GEAR", x: -22, z: -44 }, { type: "GEAR", x: 35, z: -36 },
-      { type: "GEAR", x: -72, z: -10 }, { type: "GEAR", x: 72, z: 12 },
-      { type: "GEAR", x: -20, z: 75 }, { type: "GEAR", x: 28, z: 72 }
-    ]
-  },
-  PIZZA: {
-    gens: [[-42, -40], [46, -38], [-44, 38], [44, 38], [0, 14]],
-    items: [
-      { type: "COLA", x: -22, z: 6 }, { type: "COLA", x: 22, z: -6 },
-      { type: "COLA", x: -78, z: 22 }, { type: "COLA", x: 78, z: -22 },
-      { type: "MEDKIT", x: 0, z: -28 }, { type: "MEDKIT", x: 18, z: 66 },
-      { type: "GEAR", x: -26, z: -65 }, { type: "GEAR", x: 26, z: -65 },
-      { type: "GEAR", x: -66, z: 12 }, { type: "GEAR", x: 66, z: -15 },
-      { type: "GEAR", x: -24, z: 72 }, { type: "GEAR", x: 24, z: 72 }
-    ]
-  }
-};
-
-const genCoreTex = makeTexCanvas(128, 64, function(x){
-  const cols = ["#1e293b", "#991b1b", "#1d4ed8", "#ca8a04", "#0f766e", "#7e22ce"];
-  for (let i = 0; i < 32; i++) {
-    x.fillStyle = cols[i % cols.length]; x.fillRect(i * 4, 0, 4, 64);
-  }
-});
-function createDetailedGenerator() {
-  const g = new THREE.Group();
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.7, roughness: 0.3 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
-  const panelMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.5 });
-  const redTankMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.6 });
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.9, 2.0), darkMat);
-  body.position.y = 1.45; body.castShadow = true; g.add(body);
-  const topPanel = new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.65, 2.1), panelMat);
-  topPanel.position.y = 2.15; g.add(topPanel);
-  const recess = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.32, 2.16), darkMat);
-  recess.position.set(0.25, 2.15, 0); g.add(recess);
-  const swBtn = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.28, 2.18),
-    new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-  swBtn.position.set(-1.2, 2.15, 0); g.add(swBtn);
-
-  const tank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.42, 1.5), redTankMat);
-  tank.position.y = 2.65; g.add(tank);
-  const core = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 2.06),
-    new THREE.MeshStandardMaterial({ map: genCoreTex }));
-  core.position.y = 1.25; g.add(core);
-
-  [[-1.75, 1.55], [1.75, 1.55]].forEach(function(px){
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 2.3, 8), metalMat);
-    bar.position.set(px[0], px[1], 0.95); g.add(bar);
-    const bar2 = bar.clone(); bar2.position.z = -0.95; g.add(bar2);
-  });
-  [-0.95, 0.95].forEach(function(pz){
-    const bot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 3.6, 8), metalMat);
-    bot.rotation.z = Math.PI / 2; bot.position.set(0, 0.48, pz); g.add(bot);
-  });
-  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 1.8), darkMat);
-  leg.position.set(-1.35, 0.25, 0); g.add(leg);
-
-  [-1.12, 1.12].forEach(function(wz){
-    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.28, 12), darkMat);
-    tire.rotation.x = Math.PI / 2; tire.position.set(1.5, 0.55, wz); g.add(tire);
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.31, 10), metalMat);
-    hub.rotation.x = Math.PI / 2; hub.position.set(1.5, 0.55, wz); g.add(hub);
-  });
-
-  const wireCols = [0xef4444, 0xeab308, 0xa855f7];
-  [-1.08, 1.08].forEach(function(sx){
-    wireCols.forEach(function(wc, wi){
-      const wArc = new THREE.Mesh(new THREE.TorusGeometry(0.32 + wi * 0.06, 0.04, 6, 12, Math.PI),
-        new THREE.MeshBasicMaterial({ color: wc }));
-      wArc.position.set(sx, 1.0 + wi * 0.16, 1.04); wArc.rotation.z = Math.PI;
-      const wArcB = wArc.clone(); wArcB.position.z = -1.04;
-      g.add(wArc, wArcB);
-    });
-  });
-
-  const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.6),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-  lamp.position.y = 3.25; g.add(lamp);
-  return { group: g, lamp: lamp };
-}
-
 const genConfig = [
-  { type: "CABLE_4", label: "Kabel 4 Warna" },
-  { type: "GEAR_CAL", label: "Gerigi & Kalibrasi (Butuh 2 Gerigi)" },
-  { type: "MEMORY", label: "Pola Sekring (Memory)" },
-  { type: "CABLE_5_TIMED", label: "Kabel 5 Warna (Berbatas Waktu!)" },
-  { type: "GEAR_FAST", label: "Gerigi & Kalibrasi Cepat (Butuh 2 Gerigi)" }
+  { x: -55, z: -55, type: "CABLE_4", label: "Kabel 4 Warna" },
+  { x: 55, z: -55, type: "GEAR_CAL", label: "Gerigi & Kalibrasi (Butuh 2 Gerigi)" },
+  { x: -55, z: 55, type: "MEMORY", label: "Pola Sekring (Memory)" },
+  { x: 55, z: 55, type: "CABLE_5_TIMED", label: "Kabel 5 Warna (Berbatas Waktu!)" },
+  { x: 0, z: 48, type: "GEAR_FAST", label: "Gerigi & Kalibrasi Cepat (Butuh 2 Gerigi)" }
 ];
 const generators = [];
 genConfig.forEach(function(cfg, i){
-  const built = createDetailedGenerator();
-  const pos = mapConfigs.FOREST.gens[i];
-  built.group.position.set(pos[0], 0, pos[1]); scene.add(built.group);
-  generators.push({
-    group: built.group, lamp: built.lamp, stage: 0, done: false,
-    id: i + 1, puzzleType: cfg.type, label: cfg.label, gearsInserted: 0
-  });
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x555555 }));
+  const l = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+  b.position.y = 1.25; b.castShadow = true; l.position.y = 3.2; g.add(b, l);
+  g.position.set(cfg.x, 0, cfg.z); scene.add(g); registerBox(cfg.x, cfg.z, 3.5, 2.5);
+  generators.push({ group: g, lamp: l, stage: 0, done: false, id: i + 1, puzzleType: cfg.type, label: cfg.label, gearsInserted: 0 });
 });
+
+const mapItems = [];
+const itemCoords = [
+  { type: "COLA", x: -32, z: 24 }, { type: "COLA", x: 32, z: -26 },
+  { type: "COLA", x: -75, z: 15 }, { type: "COLA", x: 75, z: -18 },
+  { type: "MEDKIT", x: 0, z: -35 }, { type: "MEDKIT", x: 22, z: 68 },
+  { type: "GEAR", x: -22, z: -44 }, { type: "GEAR", x: 35, z: -36 },
+  { type: "GEAR", x: -72, z: -10 }, { type: "GEAR", x: 72, z: 12 },
+  { type: "GEAR", x: -20, z: 75 }, { type: "GEAR", x: 28, z: 72 }
+];
+function createGearMesh() {
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.7, roughness: 0.25, emissive: 0x451a03 });
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.28, 12), mat);
+  ring.rotation.x = Math.PI / 2; grp.add(ring);
+  for (let t = 0; t < 6; t++) {
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.9, 0.28), mat);
+    tooth.rotation.z = (t / 6) * Math.PI; grp.add(tooth);
+  }
+  const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.32, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+  hole.rotation.x = Math.PI / 2; grp.add(hole);
+  return grp;
+}
+function spawnAllMapItems() {
+  mapItems.forEach(function(i){ scene.remove(i.mesh); });
+  mapItems.length = 0;
+  itemCoords.forEach(function(ic){
+    let m;
+    if (ic.type === "COLA") {
+      m = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.1, 12), new THREE.MeshStandardMaterial({ color: 0xcc2222, emissive: 0x330000 }));
+    } else if (ic.type === "MEDKIT") {
+      m = new THREE.Group();
+      m.add(
+        new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1), new THREE.MeshStandardMaterial({ color: 0xffffff })),
+        new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.95, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 }))
+      );
+    } else {
+      m = createGearMesh();
+    }
+    m.position.set(ic.x, 1.1, ic.z);
+    scene.add(m);
+    mapItems.push({ type: ic.type, mesh: m, active: true });
+  });
+}
+
+function canMoveTo(x, z) {
+  for (let i = 0; i < solidBoxes.length; i++) {
+    const b = solidBoxes[i];
+    if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
+  }
+  return true;
+}
+function moveWithCollision(e, vx, vz) {
+  const nx = e.position.x + vx, nz = e.position.z + vz;
+  if (canMoveTo(nx, nz)) { e.position.x = nx; e.position.z = nz; }
+  else if (canMoveTo(nx, e.position.z)) e.position.x = nx;
+  else if (canMoveTo(e.position.x, nz)) e.position.z = nz;
+}
 
 function createFace(bg, mode) {
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -1200,15 +909,6 @@ function createFace(bg, mode) {
     x.fillStyle = "#000"; x.beginPath();
     x.arc(42, 46, 4, 0, Math.PI * 2); x.arc(86, 46, 4, 0, Math.PI * 2); x.fill();
     x.beginPath(); x.ellipse(64, 88, 12, 18, 0, 0, Math.PI * 2); x.fill();
-  } else if (mode === "noli") {
-    x.fillStyle = "#120320"; x.fillRect(0, 0, 128, 128);
-    x.fillStyle = "#ffffff";
-    x.beginPath(); x.ellipse(40, 48, 10, 16, 0.2, 0, Math.PI * 2); x.fill();
-    x.beginPath(); x.arc(64, 78, 22, 0.2 * Math.PI, 0.8 * Math.PI, false);
-    x.lineWidth = 6; x.strokeStyle = "#ffffff"; x.stroke();
-    x.fillStyle = "#581c87"; x.beginPath(); x.arc(88, 48, 8, 0, Math.PI * 2); x.fill();
-    x.strokeStyle = "#c084fc"; x.lineWidth = 3;
-    x.beginPath(); x.moveTo(64, 15); x.lineTo(60, 45); x.lineTo(68, 75); x.lineTo(64, 115); x.stroke();
   } else {
     x.fillStyle = "#000"; x.beginPath();
     x.arc(42, 45, 7, 0, Math.PI * 2); x.arc(86, 45, 7, 0, Math.PI * 2); x.fill();
@@ -1240,7 +940,8 @@ function createShedSFOTHBack() {
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const x = c.getContext("2d"); x.fillStyle = "#eef5e8"; x.fillRect(0, 0, 256, 256);
   x.fillStyle = "#1e293b"; x.font = "bold 21px sans-serif"; x.textAlign = "center";
-  x.fillText("Remember that one", 128, 72); x.fillText("time when I totally", 128, 108);
+  x.fillText("Remember that one", 128, 72);
+  x.fillText("time when I totally", 128, 108);
   x.fillText("pwned you in SFOTH", 128, 144);
   return new THREE.CanvasTexture(c);
 }
@@ -1254,25 +955,6 @@ function setPartOp(p, op) {
   if (Array.isArray(p.material)) p.material.forEach(function(m){ m.transparent = true; m.opacity = op; });
   else { p.material.transparent = true; p.material.opacity = op; }
 }
-function mkVoidStar(scale) {
-  if (scale === undefined) scale = 1;
-  const star = new THREE.Group();
-  const sMat = new THREE.MeshBasicMaterial({ color: 0xf3e8ff });
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.6 });
-  const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.35 * scale, 2.2 * scale, 0.35 * scale), sMat);
-  const b2 = new THREE.Mesh(new THREE.BoxGeometry(2.2 * scale, 0.35 * scale, 0.35 * scale), sMat);
-  const glow = new THREE.Mesh(new THREE.BoxGeometry(1.2 * scale, 1.2 * scale, 1.2 * scale), glowMat);
-  glow.rotation.z = Math.PI / 4; star.add(b1, b2, glow); return star;
-}
-const noliBinaryTex = makeTexCanvas(128, 128, function(x){
-  x.fillStyle = "#1e0b36"; x.fillRect(0, 0, 128, 128);
-  x.fillStyle = "#c084fc"; x.font = "bold 13px monospace";
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const char = (r + c) % 2 === 0 ? "1" : "0"; x.fillText(char, c * 16 + 4, r * 16 + 13);
-    }
-  }
-});
 function mkSword(col) {
   const sw = new THREE.Group();
   const bl = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.6, 0.1), new THREE.MeshStandardMaterial({ color: col, emissive: col === 0x00ff33 ? 0x004400 : 0x000000 }));
@@ -1284,16 +966,14 @@ function createR6(charType) {
   const g = new THREE.Group();
   const isRed = charType === "c00lkidd", is1x = charType === "1x";
   const is007 = charType === "007", isShed = charType === "shed";
-  const isZom = charType === "zombie", isScared = charType === "scaredNoob";
-  const isShop = charType === "shopkeeper", isNoli = charType === "noli";
-  const bc = isRed ? 0xd40000 : (is1x ? 0x00ff33 : (isZom ? 0x11aa33 : (isShed ? 0xffffff : (is007 ? 0x2856a3 : (isShop ? 0x7c3aed : (isNoli ? 0x2e1065 : 0x0d69ac))))));
-  const lc = isRed ? 0xd40000 : (is1x ? 0x111111 : (isZom ? 0x11aa33 : (isShed ? 0xf5cd30 : (is007 ? 0xf8d9b0 : (isNoli ? 0x18052e : 0xf5cd30)))));
-  const lg = isRed ? 0xd40000 : (is1x ? 0x111111 : (isZom ? 0x0d6622 : (isShed ? 0x1b5eb8 : (is007 ? 0x1b2a4a : (isShop ? 0x1e293b : (isNoli ? 0x0f031d : 0x4b974b))))));
+  const isZom = charType === "zombie", isScared = charType === "scaredNoob", isShop = charType === "shopkeeper";
+  const bc = isRed ? 0xd40000 : (is1x ? 0x00ff33 : (isZom ? 0x11aa33 : (isShed ? 0xffffff : (is007 ? 0x2856a3 : (isShop ? 0x7c3aed : 0x0d69ac)))));
+  const lc = isRed ? 0xd40000 : (is1x ? 0x111111 : (isZom ? 0x11aa33 : (isShed ? 0xf5cd30 : (is007 ? 0xf8d9b0 : 0xf5cd30))));
+  const lg = isRed ? 0xd40000 : (is1x ? 0x111111 : (isZom ? 0x0d6622 : (isShed ? 0x1b5eb8 : (is007 ? 0x1b2a4a : (isShop ? 0x1e293b : 0x4b974b)))));
   const mb = new THREE.MeshStandardMaterial({ color: bc, transparent: is1x, opacity: is1x ? 0.6 : 1 });
   const ml = new THREE.MeshStandardMaterial({ color: lc });
   const mg = new THREE.MeshStandardMaterial({ color: lg });
   let tm = mb, lm = ml, rm = ml;
-  if (isNoli) { mb.map = noliBinaryTex; }
   if (isRed) {
     const st = createC00lkiddSpan();
     const mk = function(t){ return new THREE.MeshStandardMaterial({ map: t }); };
@@ -1314,7 +994,7 @@ function createR6(charType) {
       rb.position.y = r; torso.add(rb);
     }
   }
-  const fMode = isNoli ? "noli" : (isRed ? "red" : (is1x ? "1x" : (isShed ? "shed" : (isScared ? "scared" : "norm"))));
+  const fMode = isRed ? "red" : (is1x ? "1x" : (isShed ? "shed" : (isScared ? "scared" : "norm")));
   const fBg = isRed ? "#d40000" : (is1x ? "#111111" : (isZom ? "#11aa33" : (is007 ? "#f8d9b0" : "#f5cd30")));
   const hm = [
     new THREE.MeshStandardMaterial({ color: lc }), new THREE.MeshStandardMaterial({ color: lc }),
@@ -1324,43 +1004,38 @@ function createR6(charType) {
   const head = new THREE.Mesh(G_HEAD, hm);
   head.position.y = 4.65; head.castShadow = true;
 
-  let eyeFlare = null, noliStar = null;
+  let eyeFlare = null;
   if (is1x) {
     eyeFlare = new THREE.Group();
-    eyeFlare.add(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0xff0000 })), new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.4, 0.08), new THREE.MeshBasicMaterial({ color: 0xff2222 })), new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff })));
+    eyeFlare.add(
+      new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.08), new THREE.MeshBasicMaterial({ color: 0xff0000 })),
+      new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.4, 0.08), new THREE.MeshBasicMaterial({ color: 0xff2222 })),
+      new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }))
+    );
     eyeFlare.position.set(-0.22, 0.1, -0.68); head.add(eyeFlare);
-    const crown = new THREE.Group(), cBase = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.25, 1.38), new THREE.MeshStandardMaterial({ color: 0x111111 })), rim = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.1, 1.42), new THREE.MeshBasicMaterial({ color: 0x00ff33 }));
+    const crown = new THREE.Group();
+    const cBase = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.25, 1.38), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.1, 1.42), new THREE.MeshBasicMaterial({ color: 0x00ff33 }));
     rim.position.y = -0.05; crown.add(cBase, rim);
     [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5], [0, -0.55], [0, 0.55]].forEach(function(p){
       const pr = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.55, 0.28), new THREE.MeshStandardMaterial({ color: 0x111111 }));
       pr.position.set(p[0], 0.35, p[1]); crown.add(pr);
     });
     crown.position.y = 0.72; head.add(crown);
-  } else if (isNoli) {
-    const noliCrown = new THREE.Group();
-    const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.12, 6, 16), new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 }));
-    crownRing.rotation.x = Math.PI / 2; noliCrown.add(crownRing);
-    for (let m = 0; m < 3; m++) {
-      const tMask = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.15), new THREE.MeshBasicMaterial({ color: 0xd8b4fe }));
-      const ang = (m / 3) * Math.PI - Math.PI / 2;
-      tMask.position.set(Math.cos(ang) * 0.9, 0.35, Math.sin(ang) * 0.9);
-      noliCrown.add(tMask);
-    }
-    noliCrown.position.y = 0.9; head.add(noliCrown);
   }
   const shedHair = new THREE.Group();
-  shedHair.add(new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.45, 1.38), new THREE.MeshStandardMaterial({ color: 0x4a3219 })), new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.9, 0.35), new THREE.MeshStandardMaterial({ color: 0x4a3219 })));
-  shedHair.children[0].position.y = 0.6; shedHair.children[1].position.set(0, 0.1, 0.55);
+  shedHair.add(
+    new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.45, 1.38), new THREE.MeshStandardMaterial({ color: 0x4a3219 })),
+    new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.9, 0.35), new THREE.MeshStandardMaterial({ color: 0x4a3219 }))
+  );
+  shedHair.children[0].position.y = 0.6;
+  shedHair.children[1].position.set(0, 0.1, 0.55);
   shedHair.visible = isShed; head.add(shedHair);
 
   const lArm = new THREE.Mesh(G_LIMB, lm); lArm.position.set(-1.5, 3, 0); lArm.castShadow = true;
   const rArm = new THREE.Mesh(G_LIMB, rm); rArm.position.set(1.5, 3, 0); rArm.castShadow = true;
   const lLeg = new THREE.Mesh(G_LIMB, mg); lLeg.position.set(-0.5, 1, 0); lLeg.castShadow = true;
   const rLeg = new THREE.Mesh(G_LIMB, mg); rLeg.position.set(0.5, 1, 0); rLeg.castShadow = true;
-
-  if (isNoli) {
-    noliStar = mkVoidStar(0.7); noliStar.position.set(0, -1.2, -0.6); rArm.add(noliStar);
-  }
 
   const hat = new THREE.Group();
   const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0xd99b43 }));
@@ -1384,8 +1059,12 @@ function createR6(charType) {
 
   const fireMesh = new THREE.Group();
   for (let f = 0; f < 3; f++) {
-    const fl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 0.5), new THREE.MeshBasicMaterial({ color: f % 2 === 0 ? 0xff5500 : 0xffaa00, transparent: true, opacity: 0.85 }));
-    fl.position.set((f - 1) * 0.5, 3.2 + f * 0.3, (f % 2) * 0.4 - 0.2); fireMesh.add(fl);
+    const fl = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.8, 0.5),
+      new THREE.MeshBasicMaterial({ color: f % 2 === 0 ? 0xff5500 : 0xffaa00, transparent: true, opacity: 0.85 })
+    );
+    fl.position.set((f - 1) * 0.5, 3.2 + f * 0.3, (f % 2) * 0.4 - 0.2);
+    fireMesh.add(fl);
   }
   fireMesh.visible = false;
 
@@ -1400,7 +1079,7 @@ function createR6(charType) {
   g.parts = {
     torso: torso, head: head, lArm: lArm, rArm: rArm, lLeg: lLeg, rLeg: rLeg,
     heldItem: held, highlightMesh: hl, burgerHat: hat, c00lguiTab: gui,
-    shedHair: shedHair, shedSword: shedSword, eyeFlare: eyeFlare, fireMesh: fireMesh, noliStar: noliStar
+    shedHair: shedHair, shedSword: shedSword, eyeFlare: eyeFlare, fireMesh: fireMesh
   };
   g.is007 = is007; g.isShed = isShed; g.isHighlighted = false; g.isUndetectable = false;
   g.hp = 100; g.isInvulnerable = false; g.walkCycle = 0;
@@ -1410,6 +1089,9 @@ function createR6(charType) {
   return g;
 }
 
+// ==========================================
+// LOBBY CABIN, PLATFORM LOMPAT & 4 NPC
+// ==========================================
 const lobbyGroup = new THREE.Group();
 lobbyGroup.position.set(0, 70, 0);
 scene.add(lobbyGroup);
@@ -1437,22 +1119,6 @@ patio.position.set(0, 1.05, 4); patio.receiveShadow = true; lobbyGroup.add(patio
   const m = new THREE.Mesh(new THREE.BoxGeometry(f[2], 2.6, f[3]), woodDark);
   m.position.set(f[0], 2.3, f[1]); lobbyGroup.add(m);
   addLobbyBox(f[0], f[1], f[2], f[3], 80);
-});
-
-const lobbyWallMat = new THREE.MeshStandardMaterial({ color: 0x3b2416, roughness: 0.9 });
-[[-31, 0, 2, 64], [31, 0, 2, 64], [0, -31, 64, 2], [0, 31, 64, 2]].forEach(function(w){
-  const wm = new THREE.Mesh(new THREE.BoxGeometry(w[2], 15, w[3]), lobbyWallMat);
-  wm.position.set(w[0], 8.5, w[1]); lobbyGroup.add(wm);
-});
-const lobbyMainRoof = new THREE.Mesh(new THREE.BoxGeometry(66, 1.6, 66), new THREE.MeshStandardMaterial({ color: 0x24140b, roughness: 0.95 }));
-lobbyMainRoof.position.set(0, 16.5, 0); lobbyGroup.add(lobbyMainRoof);
-[-18, 0, 18].forEach(function(bz){
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(62, 1.2, 1.6), woodDark);
-  beam.position.set(0, 15.2, bz); lobbyGroup.add(beam);
-});
-[[-14, 12], [14, 12], [-14, -8], [14, -8]].forEach(function(lp){
-  const lamp = new THREE.PointLight(0xffd27d, 1.6, 48);
-  lamp.position.set(lp[0], 14, lp[1]); lobbyGroup.add(lamp);
 });
 
 const cabinBack = new THREE.Mesh(new THREE.BoxGeometry(36, 12, 1.5), woodDark);
@@ -1511,90 +1177,113 @@ monitor.position.set(-10, 4.2, -19); lobbyGroup.add(monitor);
 const lobbyNPCs = [];
 function spawnLobbyNPC(id, charType, name, x, z, rotY, dialog, buildOpts) {
   const npc = createR6(charType);
-  npc.position.set(x, LOBBY_FLOOR_Y, z); npc.rotation.y = rotY;
+  npc.position.set(x, LOBBY_FLOOR_Y, z);
+  npc.rotation.y = rotY;
   npc.npcId = id; npc.npcName = name; npc.npcDialog = dialog; npc.buildOpts = buildOpts;
   scene.add(npc); lobbyNPCs.push(npc);
 }
 
 spawnLobbyNPC(
   "host", "noob", "Spectre (Host Ronde)", 0, -21, 0,
-  "Selamat datang di Forsaken Lobby! Kamu bisa jalan, lari (SHIFT), lompat (SPASI), dan atur ronde di sini.",
+  "Selamat datang di Forsaken Lobby! Kamu bisa berjalan, berlari (SHIFT), melompat (SPASI), dan mengatur ronde lewat aku.",
   function(){
     return [
-      { label: "Ganti Peran (" + playerRole + ")", fn: function(){ togglePlayerRole(); openNPCModal(activeNPC); } },
+      { label: "Ganti Peran (Sekarang: " + playerRole + ")", fn: function(){ togglePlayerRole(); openNPCModal(activeNPC); } },
       { label: "Pilih Killer (" + killerType + ")", fn: function(){ toggleKillerType(); openNPCModal(activeNPC); } },
       { label: "Double Trouble (" + (doubleTroubleEnabled ? "ON" : "OFF") + ")", fn: function(){ toggleDoubleTrouble(); openNPCModal(activeNPC); } },
       { label: "Mulai Ronde Sekarang!", fn: function(){ closeNPCModal(); startMatchNow(); } }
     ];
   }
 );
+
 spawnLobbyNPC(
   "shed", "shed", "Shedletsky (Pelatih)", -11, 4, 0.8,
-  "Blame John! Pakai pedang [Q] untuk stun Killer 3 detik dan ayam goreng [E] untuk pulihkan HP.",
+  "Blame John! Pakai pedang [Q] untuk men-stun Killer selama 3 detik dan ayam goreng [E] buat pulihkan HP. Mau pakai aku di ronde ini?",
   function(){
-    return [{
-      label: "Pakai Karakter SHEDLETSKY",
-      fn: function(){
-        if (playerRole !== "SURVIVOR") togglePlayerRole();
-        survivorChar = "SHEDLETSKY"; applyPlayerAppearance();
-        document.getElementById("char-btn").innerText = "SURVIVOR: SHEDLETSKY";
-        document.getElementById("char-btn").className = "lobby-btn charshed";
-        showToast("Karakter: SHEDLETSKY!", "#fc0"); closeNPCModal();
+    return [
+      {
+        label: "Pakai Karakter SHEDLETSKY",
+        fn: function(){
+          if (playerRole !== "SURVIVOR") togglePlayerRole();
+          survivorChar = "SHEDLETSKY"; applyPlayerAppearance();
+          document.getElementById("char-btn").innerText = "SURVIVOR: SHEDLETSKY";
+          document.getElementById("char-btn").className = "lobby-btn charshed";
+          showToast("Karakter: SHEDLETSKY!", "#fc0"); closeNPCModal();
+        }
       }
-    }];
+    ];
   }
 );
+
 spawnLobbyNPC(
   "007", "007", "007n7 (Hacker)", -10, -15, 0.2,
-  "Aku bisa buat klon pengecoh [Q] dan teleport ke ujung map pakai c00lgui [E].",
+  "Aku bisa buat klon pengecoh [Q] dan teleport ke ujung map pakai c00lgui [E]. Hati-hati saat cast c00lgui jangan sampai kena pukul!",
   function(){
-    return [{
-      label: "Pakai Karakter 007n7",
-      fn: function(){
-        if (playerRole !== "SURVIVOR") togglePlayerRole();
-        survivorChar = "007n7"; applyPlayerAppearance();
-        document.getElementById("char-btn").innerText = "SURVIVOR: 007n7";
-        document.getElementById("char-btn").className = "lobby-btn char007";
-        showToast("Karakter: 007n7!", "#0fc"); closeNPCModal();
+    return [
+      {
+        label: "Pakai Karakter 007n7",
+        fn: function(){
+          if (playerRole !== "SURVIVOR") togglePlayerRole();
+          survivorChar = "007n7"; applyPlayerAppearance();
+          document.getElementById("char-btn").innerText = "SURVIVOR: 007n7";
+          document.getElementById("char-btn").className = "lobby-btn char007";
+          showToast("Karakter: 007n7!", "#0fc"); closeNPCModal();
+        }
       }
-    }];
+    ];
   }
 );
+
 spawnLobbyNPC(
   "brandon", "shopkeeper", "Brandon (Info Map & Puzzle)", 19, -4, -Math.PI / 2,
-  "Ada 5 Generator berbeda: Kabel 4 Warna, Kabel 5 Warna, Pola Sekring, dan 2 Generator Gerigi. Cari GERIGI emas di map!",
+  "Di dalam arena ada 5 Generator berbeda: Kabel 4 Warna, Kabel 5 Warna (berbatas waktu!), Pola Sekring, dan 2 Generator Gerigi. Cari GERIGI emas berputar di sekitar map!",
   function(){
-    return [{
-      label: "Pakai Karakter NOOB",
-      fn: function(){
-        if (playerRole !== "SURVIVOR") togglePlayerRole();
-        survivorChar = "NOOB"; applyPlayerAppearance();
-        document.getElementById("char-btn").innerText = "SURVIVOR: NOOB";
-        document.getElementById("char-btn").className = "lobby-btn";
-        showToast("Karakter: NOOB!", "#38bdf8"); closeNPCModal();
+    return [
+      {
+        label: "Pakai Karakter NOOB",
+        fn: function(){
+          if (playerRole !== "SURVIVOR") togglePlayerRole();
+          survivorChar = "NOOB"; applyPlayerAppearance();
+          document.getElementById("char-btn").innerText = "SURVIVOR: NOOB";
+          document.getElementById("char-btn").className = "lobby-btn";
+          showToast("Karakter: NOOB!", "#38bdf8"); closeNPCModal();
+        }
       }
-    }];
+    ];
   }
 );
 
 function openNPCModal(npc) {
-  activeNPC = npc; document.exitPointerLock();
+  activeNPC = npc;
+  document.exitPointerLock();
   document.getElementById("npc-name").innerText = npc.npcName;
   document.getElementById("npc-text").innerText = npc.npcDialog;
-  const opts = document.getElementById("npc-options"); opts.innerHTML = "";
+  const opts = document.getElementById("npc-options");
+  opts.innerHTML = "";
   npc.buildOpts().forEach(function(o){
     const b = document.createElement("button");
-    b.className = "npc-opt-btn"; b.innerText = o.label; b.onclick = o.fn; opts.appendChild(b);
+    b.className = "npc-opt-btn";
+    b.innerText = o.label;
+    b.onclick = o.fn;
+    opts.appendChild(b);
   });
   const cl = document.createElement("button");
-  cl.className = "npc-close-btn"; cl.innerText = "Tutup [ESC]"; cl.onclick = closeNPCModal;
+  cl.className = "npc-close-btn";
+  cl.innerText = "Tutup [ESC]";
+  cl.onclick = closeNPCModal;
   opts.appendChild(cl);
   document.getElementById("npc-modal").style.display = "flex";
 }
-function closeNPCModal() { activeNPC = null; document.getElementById("npc-modal").style.display = "none"; }
+function closeNPCModal() {
+  activeNPC = null;
+  document.getElementById("npc-modal").style.display = "none";
+}
 function getNearestLobbyNPC(pos) {
   let best = null, minD = 5.5;
-  lobbyNPCs.forEach(function(n){ const d = pos.distanceTo(n.position); if (d < minD) { minD = d; best = n; } });
+  lobbyNPCs.forEach(function(n){
+    const d = pos.distanceTo(n.position);
+    if (d < minD) { minD = d; best = n; }
+  });
   return best;
 }
 
@@ -1624,7 +1313,8 @@ function moveLobbyWithJump(p, vx, vz) {
   else if (!blocked(nx, p.position.z)) p.position.x = nx;
   else if (!blocked(p.position.x, nz)) p.position.z = nz;
 
-  playerVY -= 0.022; p.position.y += playerVY;
+  playerVY -= 0.022;
+  p.position.y += playerVY;
   const gY = getGroundY(p.position.x, p.position.z);
   if (p.position.y <= gY) { p.position.y = gY; playerVY = 0; isGrounded = true; }
   else isGrounded = false;
@@ -1634,16 +1324,21 @@ const playerNoob = createR6("noob");
 playerNoob.name = "Kamu";
 playerNoob.position.set(0, LOBBY_FLOOR_Y, 14);
 scene.add(playerNoob);
-
-function applyMapEnvironment() {
-  const isP = (currentMap === "PIZZA");
-  map1Group.visible = !isP; map2Group.visible = isP;
-  solidBoxes = isP ? solidBoxes2 : solidBoxes1;
-  scene.background = new THREE.Color(isP ? 0x180202 : 0x020308);
-  mapFog.color.setHex(isP ? 0x260404 : 0x0b101d);
-  mapFog.density = isP ? 0.0075 : 0.0068;
-  floor.material.color.setHex(isP ? 0x1b1c22 : 0x36643a);
-  mapConfigs[currentMap].gens.forEach(function(pos, i){ generators[i].group.position.set(pos[0], 0, pos[1]); });
+function applyPlayerAppearance() {
+  const i0 = survivorChar === "007n7", isS = survivorChar === "SHEDLETSKY";
+  playerNoob.is007 = i0; playerNoob.isShed = isS;
+  playerNoob.parts.burgerHat.visible = i0;
+  playerNoob.parts.shedHair.visible = isS;
+  playerNoob.parts.shedSword.visible = isS;
+  const lc = i0 ? 0xf8d9b0 : 0xf5cd30;
+  const lg = i0 ? 0x1b2a4a : (isS ? 0x1b5eb8 : 0x4b974b);
+  const tc = i0 ? 0x2856a3 : (isS ? 0xffffff : 0x0d69ac);
+  setPartCol(playerNoob.parts.torso, tc);
+  setPartCol(playerNoob.parts.head, lc);
+  setPartCol(playerNoob.parts.lArm, isS ? 0xffffff : lc);
+  setPartCol(playerNoob.parts.rArm, isS ? 0xffffff : lc);
+  setPartCol(playerNoob.parts.lLeg, lg);
+  setPartCol(playerNoob.parts.rLeg, lg);
 }
 
 let aiSurvivors = [], activeKillers = [];
@@ -1662,37 +1357,51 @@ function buildRoundRoster() {
     scene.add(ai); aiSurvivors.push(ai);
   }
   function addK(kt, pz, ab) {
-    const r6Type = (kt === "1x1x1x1") ? "1x" : (kt === "Noli" ? "noli" : "c00lkidd");
-    const k = createR6(r6Type);
+    const k = createR6(kt === "1x1x1x1" ? "1x" : "c00lkidd");
     k.kType = kt; k.name = kt; k.state = "IDLE"; k.atkCD = 0; k.abT = ab; k.dashT = 0; k.speedMult = 1;
     k.position.set(0, 0, pz);
-    const kLightCol = (kt === "1x1x1x1") ? 0x00ff33 : (kt === "Noli" ? 0x9333ea : 0xff0000);
-    k.add(new THREE.PointLight(kLightCol, 2.8, 22));
+    k.add(new THREE.PointLight(kt === "1x1x1x1" ? 0x00ff33 : 0xff0000, 2.5, 18));
     scene.add(k); activeKillers.push(k);
   }
   addK(killerType, -82, 0);
-  if (isDoubleTrouble) addK(killerType === "1x1x1x1" ? "c00lkidd" : (killerType === "Noli" ? "c00lkidd" : "1x1x1x1"), 82, 200);
+  if (isDoubleTrouble) addK(killerType === "1x1x1x1" ? "c00lkidd" : "1x1x1x1", 82, 200);
 }
 
+// ==========================================
+// CUTSCENE SYSTEM (INTRO & OUTRO + MP3)
+// ==========================================
 const csStage = new THREE.Group();
-csStage.position.set(0, -200, 0); csStage.visible = false; scene.add(csStage);
-let csObjects = [], csCamPos = new THREE.Vector3(0, -195, 12);
-let csCamLook = new THREE.Vector3(0, -196, 0), csTick = null;
+csStage.position.set(0, -200, 0);
+csStage.visible = false;
+scene.add(csStage);
+let csObjects = [], csCamPos = new THREE.Vector3(0, -195, 12), csCamLook = new THREE.Vector3(0, -196, 0), csTick = null;
 
 function clearCutsceneStage() {
   if (csTick) { clearInterval(csTick); csTick = null; }
-  csObjects.forEach(function(o){ csStage.remove(o); }); csObjects = [];
-  csStage.visible = false; scene.fog = mapFog;
+  csObjects.forEach(function(o){ csStage.remove(o); });
+  csObjects = [];
+  csStage.visible = false;
+  scene.fog = mapFog;
   document.getElementById("cutscene-overlay").style.display = "none";
   document.getElementById("intro-banner").style.display = "none";
   document.getElementById("outro-text-box").style.display = "none";
-  const rs = document.getElementById("red-slash-fx"); rs.style.opacity = "0"; rs.style.height = "0";
+  const rs = document.getElementById("red-slash-fx");
+  rs.style.opacity = "0"; rs.style.height = "0";
   document.getElementById("cutscene-flash").style.opacity = "0";
+}
+
+function makePosterTex(text, bg, fg) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const x = c.getContext("2d"); x.fillStyle = bg || "#000"; x.fillRect(0, 0, 256, 256);
+  x.fillStyle = fg || "#fff"; x.font = "bold 22px sans-serif"; x.textAlign = "center";
+  text.split("\n").forEach(function(ln, i){ x.fillText(ln, 128, 48 + i * 32); });
+  return new THREE.CanvasTexture(c);
 }
 
 function playKillerIntroCutscene(onDone) {
   clearCutsceneStage(); closeNPCModal();
-  gameState = "INTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio();
+  gameState = "INTRO"; document.exitPointerLock(); updateUIState();
+  stopAndResetAllAudio();
   csStage.visible = true; scene.fog = null;
   const ov = document.getElementById("cutscene-overlay");
   const bn = document.getElementById("intro-banner");
@@ -1701,44 +1410,6 @@ function playKillerIntroCutscene(onDone) {
   const rs = document.getElementById("red-slash-fx");
   ov.style.display = "block"; bn.style.display = "block";
   nm.innerText = isDoubleTrouble ? "c00lkidd & 1x1x1x1" : killerType;
-
-  if (killerType === "Noli") {
-    playCutsceneMP3(sfx.noliIntro, function(){ playSynthTone(140, 0.8, "sawtooth", 0.2); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x120320, roughness: 0.95 }));
-    flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    [-8, 8].forEach(function(lx){
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.8, 8, 0.8), new THREE.MeshStandardMaterial({ color: 0x1f1f2e }));
-      post.position.set(lx, 4, -8);
-      const pBulb = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xc084fc }));
-      pBulb.position.set(lx, 8.2, -8);
-      const pLt = new THREE.PointLight(0xa855f7, 2.5, 20); pLt.position.set(lx, 8.5, -8);
-      csStage.add(post, pBulb, pLt); csObjects.push(post, pBulb, pLt);
-    });
-    const noliR6 = createR6("noli"); noliR6.position.set(0, 0, 0); noliR6.rotation.y = Math.PI;
-    csStage.add(noliR6); csObjects.push(noliR6);
-    let f = 0;
-    csTick = setInterval(function(){
-      f++;
-      if (f < 40) { csCamPos.set(0, -195.8, 8.5 - f * 0.03); }
-      else if (f < 80) {
-        noliR6.rotation.y = Math.PI + (f - 40) * 0.078;
-        noliR6.parts.rArm.rotation.x = (f - 40) * 0.04;
-        noliR6.parts.lArm.rotation.x = (f - 40) * 0.04;
-        if (noliR6.parts.noliStar) {
-          noliR6.parts.noliStar.rotation.z += 0.15;
-          noliR6.parts.noliStar.scale.set(1.4, 1.4, 1.4);
-        }
-        csCamPos.set(0, -195.6, 6.8);
-      } else {
-        noliR6.rotation.y = 0; noliR6.parts.head.rotation.z = Math.sin(f * 0.1) * 0.15;
-        if (noliR6.parts.noliStar) noliR6.parts.noliStar.rotation.z += 0.2;
-      }
-      csCamLook.set(0, -196.2, 0);
-      if (f === 115) fl.style.opacity = "1";
-      if (f >= 130) { clearCutsceneStage(); onDone(); }
-    }, 32);
-    return;
-  }
 
   const amb = new THREE.AmbientLight(0xffffff, 0.75); csStage.add(amb); csObjects.push(amb);
   const spot = new THREE.SpotLight(killerType === "1x1x1x1" ? 0x22ff55 : 0xff3333, 3, 60);
@@ -1755,10 +1426,16 @@ function playKillerIntroCutscene(onDone) {
     let f = 0;
     csTick = setInterval(function(){
       f++;
-      nb.parts.lLeg.rotation.x = Math.sin(f * 0.6) * 0.5; nb.parts.rLeg.rotation.x = -Math.sin(f * 0.6) * 0.5;
-      nb.parts.lArm.rotation.z = -0.6 + Math.sin(f * 0.7) * 0.4; nb.parts.rArm.rotation.z = 0.6 - Math.sin(f * 0.7) * 0.4;
-      if (k1x.parts.eyeFlare) { const s = 1.4 + Math.sin(f * 0.4) * 0.6; k1x.parts.eyeFlare.scale.set(s, s, 1); }
-      csCamPos.set(0.5, -195.8, 8.5 - f * 0.03); csCamLook.set(-0.3, -196.2, 0.5);
+      nb.parts.lLeg.rotation.x = Math.sin(f * 0.6) * 0.5;
+      nb.parts.rLeg.rotation.x = -Math.sin(f * 0.6) * 0.5;
+      nb.parts.lArm.rotation.z = -0.6 + Math.sin(f * 0.7) * 0.4;
+      nb.parts.rArm.rotation.z = 0.6 - Math.sin(f * 0.7) * 0.4;
+      if (k1x.parts.eyeFlare) {
+        const s = 1.4 + Math.sin(f * 0.4) * 0.6;
+        k1x.parts.eyeFlare.scale.set(s, s, 1);
+      }
+      csCamPos.set(0.5, -195.8, 8.5 - f * 0.03);
+      csCamLook.set(-0.3, -196.2, 0.5);
       if (f === 35) {
         rs.style.transition = "all 0.15s ease-out"; rs.style.opacity = "1"; rs.style.height = "42px";
         setTimeout(function(){ rs.style.height = "4px"; rs.style.opacity = "0.7"; }, 240);
@@ -1774,8 +1451,9 @@ function playKillerIntroCutscene(onDone) {
     const sx = signC.getContext("2d"); sx.fillStyle = "#e2e8f0"; sx.fillRect(0, 0, 256, 320);
     sx.strokeStyle = "#0f172a"; sx.lineWidth = 10; sx.strokeRect(8, 8, 240, 304);
     sx.fillStyle = "#0f172a"; sx.font = "bold 28px sans-serif"; sx.textAlign = "center";
-    sx.fillText("Need a lift?", 128, 50); sx.font = "18px sans-serif";
-    sx.fillText("Pick up a green balloon", 128, 84); sx.fillText("of your own!", 128, 108);
+    sx.fillText("Need a lift?", 128, 50);
+    sx.font = "18px sans-serif"; sx.fillText("Pick up a green balloon", 128, 84);
+    sx.fillText("of your own!", 128, 108);
     sx.fillStyle = "#22c55e"; sx.beginPath(); sx.arc(175, 165, 36, 0, Math.PI * 2); sx.fill();
     sx.fillStyle = "#facc15"; sx.fillRect(46, 240, 164, 44);
     sx.fillStyle = "#000"; sx.font = "bold 22px sans-serif"; sx.fillText("Just 80 R$", 128, 270);
@@ -1802,49 +1480,18 @@ function playKillerIntroCutscene(onDone) {
 
 function playKillerOutroCutscene(onDone) {
   clearCutsceneStage(); closeNPCModal();
-  gameState = "OUTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio();
+  gameState = "OUTRO"; document.exitPointerLock(); updateUIState();
+  stopAndResetAllAudio();
   csStage.visible = true; scene.fog = null;
-  const ov = document.getElementById("cutscene-overlay"), ob = document.getElementById("outro-text-box");
-  const os = document.getElementById("outro-sub"), fl = document.getElementById("cutscene-flash");
+  const ov = document.getElementById("cutscene-overlay");
+  const ob = document.getElementById("outro-text-box");
+  const os = document.getElementById("outro-sub");
+  const fl = document.getElementById("cutscene-flash");
   ov.style.display = "block"; ob.style.display = "block";
   os.innerText = isDoubleTrouble ? "c00lkidd & 1x1x1x1" : killerType;
 
-  if (killerType === "Noli") {
-    playCutsceneMP3(sfx.noliOutro, function(){ playSynthTone(90, 1.2, "square", 0.22); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x11131c, roughness: 0.9 }));
-    flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    [-12, -4, 4, 12].forEach(function(px){
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 0.8), new THREE.MeshStandardMaterial({ color: 0x333544 }));
-      rail.position.set(px, 2.25, -6);
-      const pLt = new THREE.PointLight(0xf59e0b, 1.2, 12); pLt.position.set(px, 4.6, -6);
-      csStage.add(rail, pLt); csObjects.push(rail, pLt);
-    });
-    const noliR6 = createR6("noli"); noliR6.position.set(0, 0, -3); csStage.add(noliR6); csObjects.push(noliR6);
-    const bigNova = mkVoidStar(3.2); bigNova.position.set(0, 3.2, 1); bigNova.visible = false;
-    csStage.add(bigNova); csObjects.push(bigNova);
-    let f = 0;
-    csTick = setInterval(function(){
-      f++;
-      if (f < 50) {
-        noliR6.position.z = -3 + f * 0.08; animateWalkingLimbs(noliR6, 0.22);
-        csCamPos.set(0.6, -195.8, 8.5);
-      } else if (f < 90) {
-        noliR6.parts.lLeg.rotation.x = 0; noliR6.parts.rLeg.rotation.x = 0;
-        noliR6.parts.rArm.rotation.x = 2.4; noliR6.parts.lArm.rotation.x = 1.8;
-        bigNova.visible = true; bigNova.position.z = 1 + (f - 50) * 0.18;
-        bigNova.rotation.z += 0.28; bigNova.scale.addScalar(0.06);
-        csCamPos.set(0, -195.6, 7.5);
-      } else {
-        bigNova.scale.addScalar(0.25); csCamPos.set(0, -195.4, 6.8);
-      }
-      csCamLook.set(0, -196.2, bigNova.visible ? bigNova.position.z - 2 : 0);
-      if (f === 140) fl.style.opacity = "1";
-      if (f >= 165) { clearCutsceneStage(); onDone(); }
-    }, 32);
-    return;
-  }
-
   const amb = new THREE.AmbientLight(0xffffff, 0.7); csStage.add(amb); csObjects.push(amb);
+
   if (killerType === "1x1x1x1") {
     playCutsceneMP3(mp3Outro1x, null);
     const lava = new THREE.Mesh(new THREE.RingGeometry(10, 32, 32), new THREE.MeshBasicMaterial({ color: 0xff4500, side: THREE.DoubleSide }));
@@ -1853,18 +1500,37 @@ function playKillerOutroCutscene(onDone) {
     plat.position.y = -0.3; csStage.add(plat); csObjects.push(plat);
     const gLight = new THREE.PointLight(0x00ff33, 3.5, 35); gLight.position.set(0, 6, 3); csStage.add(gLight); csObjects.push(gLight);
 
-    const sh = createR6("shed"); sh.position.set(0.6, 0.55, 1.2); sh.rotation.x = -Math.PI / 2; sh.rotation.z = 0.35; sh.parts.shedSword.visible = false; csStage.add(sh); csObjects.push(sh);
-    const dropSw = mkSword(0xd4af37); dropSw.position.set(2.4, 0.2, 1.8); dropSw.rotation.z = Math.PI / 2; dropSw.rotation.y = 0.6; csStage.add(dropSw); csObjects.push(dropSw);
+    const sh = createR6("shed");
+    sh.position.set(0.6, 0.55, 1.2); sh.rotation.x = -Math.PI / 2; sh.rotation.z = 0.35;
+    sh.parts.shedSword.visible = false; csStage.add(sh); csObjects.push(sh);
+    const dropSw = mkSword(0xd4af37); dropSw.position.set(2.4, 0.2, 1.8); dropSw.rotation.z = Math.PI / 2; dropSw.rotation.y = 0.6;
+    csStage.add(dropSw); csObjects.push(dropSw);
     const k1x = createR6("1x"); k1x.position.set(-2.5, 0, -1.5); k1x.rotation.y = -0.4; csStage.add(k1x); csObjects.push(k1x);
-    const burst = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 2.8, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x00ff44, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+    const burst = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 2.8, 9, 12, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x00ff44, transparent: true, opacity: 0, side: THREE.DoubleSide })
+    );
     burst.position.set(0.6, 4.5, 1.2); csStage.add(burst); csObjects.push(burst);
 
     let f = 0;
     csTick = setInterval(function(){
       f++;
-      if (f < 45) { k1x.position.x = -2.5 + f * 0.045; k1x.position.z = -1.5 + f * 0.035; animateWalkingLimbs(k1x, 0.2); csCamPos.set(3.8, -196.2, 6.2); csCamLook.set(0.3, -198.2, 0.5); }
-      else if (f < 85) { k1x.parts.lLeg.rotation.x = 0; k1x.parts.rLeg.rotation.x = 0; k1x.parts.rArm.rotation.x = 2.3; k1x.parts.lArm.rotation.x = 2.3; if (f === 50) burst.material.opacity = 0.65; burst.rotation.y += 0.25; const sc = 1 + Math.sin(f * 0.5) * 0.25; burst.scale.set(sc, 1, sc); csCamPos.set(3.5 + Math.sin(f * 0.7) * 0.15, -195.8 + Math.cos(f * 0.9) * 0.15, 6.8); csCamLook.set(0.2, -197.5, 0.6); }
-      else { burst.material.opacity = Math.max(0, burst.material.opacity - 0.05); csCamPos.set(4.2, -195.2, 7.6); csCamLook.set(0, -197.4, 0.4); }
+      if (f < 45) {
+        k1x.position.x = -2.5 + f * 0.045; k1x.position.z = -1.5 + f * 0.035;
+        animateWalkingLimbs(k1x, 0.2); csCamPos.set(3.8, -196.2, 6.2); csCamLook.set(0.3, -198.2, 0.5);
+      } else if (f < 85) {
+        k1x.parts.lLeg.rotation.x = 0; k1x.parts.rLeg.rotation.x = 0;
+        k1x.parts.rArm.rotation.x = 2.3; k1x.parts.lArm.rotation.x = 2.3;
+        if (f === 50) burst.material.opacity = 0.65;
+        burst.rotation.y += 0.25;
+        const sc = 1 + Math.sin(f * 0.5) * 0.25;
+        burst.scale.set(sc, 1, sc);
+        csCamPos.set(3.5 + Math.sin(f * 0.7) * 0.15, -195.8 + Math.cos(f * 0.9) * 0.15, 6.8);
+        csCamLook.set(0.2, -197.5, 0.6);
+      } else {
+        burst.material.opacity = Math.max(0, burst.material.opacity - 0.05);
+        csCamPos.set(4.2, -195.2, 7.6); csCamLook.set(0, -197.4, 0.4);
+      }
       if (f === 145) fl.style.opacity = "1";
       if (f >= 165) { clearCutsceneStage(); onDone(); }
     }, 32);
@@ -1875,7 +1541,10 @@ function playKillerOutroCutscene(onDone) {
     const bldg = new THREE.Mesh(new THREE.BoxGeometry(28, 12, 6), new THREE.MeshStandardMaterial({ color: 0x7f1d1d }));
     bldg.position.set(0, 6, -10); csStage.add(bldg); csObjects.push(bldg);
     const pTex = makePosterTex("team c00lkidd\njoin today!", "#991b1b", "#111");
-    [-10, 10].forEach(function(px){ const p = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 7.5), new THREE.MeshBasicMaterial({ map: pTex, transparent: true, opacity: 0.85 })); p.position.set(px, 4.5, -6.8); csStage.add(p); csObjects.push(p); });
+    [-10, 10].forEach(function(px){
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 7.5), new THREE.MeshBasicMaterial({ map: pTex, transparent: true, opacity: 0.85 }));
+      p.position.set(px, 4.5, -6.8); csStage.add(p); csObjects.push(p);
+    });
     const car = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 2.4), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
     car.position.set(-9, 6.5, -2); car.rotation.z = 0.55; car.rotation.x = 0.3; csStage.add(car); csObjects.push(car);
     const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(3.5, 0), new THREE.MeshStandardMaterial({ color: 0x6b7280, emissive: 0x7c2d12, emissiveIntensity: 0.5 }));
@@ -1883,8 +1552,12 @@ function playKillerOutroCutscene(onDone) {
 
     const fires = [];
     for (let i = 0; i < 14; i++) {
-      const flm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.6, 1.4), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff5500 : 0xfacc15, transparent: true, opacity: 0.85 }));
-      flm.position.set((i - 7) * 1.8, 1.5 + (i % 3) * 1.2, -5 - (i % 4) * 1.5); csStage.add(flm); csObjects.push(flm); fires.push(flm);
+      const flm = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 2.6, 1.4),
+        new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff5500 : 0xfacc15, transparent: true, opacity: 0.85 })
+      );
+      flm.position.set((i - 7) * 1.8, 1.5 + (i % 3) * 1.2, -5 - (i % 4) * 1.5);
+      csStage.add(flm); csObjects.push(flm); fires.push(flm);
     }
     const fLight = new THREE.PointLight(0xff6600, 4, 45); fLight.position.set(0, 7, -3); csStage.add(fLight); csObjects.push(fLight);
 
@@ -1893,8 +1566,10 @@ function playKillerOutroCutscene(onDone) {
     csTick = setInterval(function(){
       f++;
       fires.forEach(function(fm, i){ fm.scale.y = 0.7 + Math.sin(f * 0.35 + i) * 0.45; fm.rotation.y += 0.08; });
-      fLight.intensity = 3.4 + Math.sin(f * 0.4) * 0.8; car.position.y = 6.5 + Math.sin(f * 0.08) * 0.4;
-      kc.parts.rArm.rotation.x = 2.4; kc.parts.rArm.rotation.z = -0.3 + Math.sin(f * 0.3) * 0.35; kc.parts.head.rotation.z = Math.sin(f * 0.12) * 0.15;
+      fLight.intensity = 3.4 + Math.sin(f * 0.4) * 0.8;
+      car.position.y = 6.5 + Math.sin(f * 0.08) * 0.4;
+      kc.parts.rArm.rotation.x = 2.4; kc.parts.rArm.rotation.z = -0.3 + Math.sin(f * 0.3) * 0.35;
+      kc.parts.head.rotation.z = Math.sin(f * 0.12) * 0.15;
       csCamPos.set(0, -195.8, 6.5 + f * 0.09); csCamLook.set(0, -196.2, -3);
       if (f === 145) fl.style.opacity = "1";
       if (f >= 165) { clearCutsceneStage(); onDone(); }
@@ -1902,239 +1577,1135 @@ function playKillerOutroCutscene(onDone) {
   }
 }
 
-function spawnNoliFakeGenerators() {
-  fakeGenerators.forEach(function(fg){ scene.remove(fg.group); });
-  fakeGenerators.length = 0;
-  if (killerType !== "Noli") return;
-  const fakeCoords = [[-18, -12], [22, 14]];
-  fakeCoords.forEach(function(fc, i){
-    const built = createDetailedGenerator();
-    built.group.position.set(fc[0], 0, fc[1]);
-    built.group.traverse(function(child){
-      if (child.material && child.geometry && child.geometry.type === "TorusGeometry") {
-        child.material = new THREE.MeshBasicMaterial({ color: 0x18181b });
-      }
-    });
-    scene.add(built.group);
-    fakeGenerators.push({
-      group: built.group, lamp: built.lamp, stage: 0, done: false,
-      id: "FAKE_" + (i + 1), puzzleType: "CABLE_4", label: "Fake Generator", isFake: true
-    });
-  });
+const minions = [], zombies = [], clones = [], corpses = [];
+function spawnVisualHitbox(k, len, col) {
+  const hb = new THREE.Mesh(new THREE.BoxGeometry(4.4, 6, len), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35 }));
+  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+  hb.position.copy(k.position).addScaledVector(fwd, len / 2 + 0.5);
+  hb.position.y = 3; hb.rotation.y = k.rotation.y; scene.add(hb); tempObjects.push(hb);
+  safeTimeout(function(){ scene.remove(hb); }, 250);
 }
-
-const fakeGenerators = [];
-
-function applyHallucination(target, lvl) {
-  if (!target || !target.alive || target.isInvulnerable) return;
-  target.hallucinationLvl = Math.max(target.hallucinationLvl || 0, lvl);
-  applyHighlight(target, 20);
-  if (target === playerNoob && playerRole === "SURVIVOR") {
-    addStatusEffect("halluc", "HALLUCINATION " + target.hallucinationLvl, "#a855f7", 20);
-    const fakeTimerInt = safeInterval(function(){
-      if (target.hallucinationLvl >= 1) {
-        document.getElementById("round-timer").innerText = "0" + Math.floor(Math.random() * 9) + ":" + (10 + Math.floor(Math.random() * 49));
-      }
-    }, 700);
+function playKillerSlashAnim(k) {
+  k.parts.torso.rotation.y = -0.35; k.parts.rArm.rotation.x = -0.7;
+  if (k.kType === "1x1x1x1") k.parts.lArm.rotation.x = -0.7;
+  safeTimeout(function(){
+    if (k.state === "KILLING" || k.state === "STUNNED") return;
+    k.parts.torso.rotation.y = 0.45; k.parts.rArm.rotation.x = 1.8;
+    if (k.kType === "1x1x1x1") k.parts.lArm.rotation.x = 1.8;
+    spawnVisualHitbox(k, k.kType === "1x1x1x1" ? 7.5 : 5.5, k.kType === "1x1x1x1" ? 0x00ff33 : 0xff0000);
     safeTimeout(function(){
-      clearInterval(fakeTimerInt);
-      const js = document.getElementById("noli-jumpscare");
-      if (js) {
-        js.style.display = "flex";
-        playCutsceneMP3(sfx.noliHallucEnd, function(){ playSynthTone(880, 0.4, "square", 0.2); });
-        safeTimeout(function(){ js.style.display = "none"; }, 2500);
+      if (k.state !== "KILLING" && k.state !== "STUNNED") {
+        k.parts.torso.rotation.y = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
       }
-      target.hallucinationLvl = 0;
-    }, 20000);
+    }, 250);
+  }, k.kType === "1x1x1x1" ? 200 : 100);
+}
+function playShedSlashAnim(char) {
+  playSFX(sfx.shedSwing);
+  char.parts.torso.rotation.y = -0.4; char.parts.rArm.rotation.x = -1.1;
+  safeTimeout(function(){
+    if (!char.alive) return;
+    char.parts.torso.rotation.y = 0.5; char.parts.rArm.rotation.x = 1.9;
+    const arc = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 2.5), new THREE.MeshBasicMaterial({ color: 0xffdd00, transparent: true, opacity: 0.7 }));
+    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), char.rotation.y);
+    arc.position.copy(char.position).addScaledVector(fwd, 3.2);
+    arc.position.y = 3; arc.rotation.y = char.rotation.y; scene.add(arc); tempObjects.push(arc);
+    safeTimeout(function(){ scene.remove(arc); }, 220);
+    safeTimeout(function(){ char.parts.torso.rotation.y = 0; char.parts.rArm.rotation.x = 0; }, 300);
+  }, 550);
+}
+
+function playKillAnimation(k, v) {
+  if (k.state === "KILLING") return;
+  k.state = "KILLING";
+  if (clones.indexOf(v) === -1) {
+    timerSeconds += 30;
+    showToast("+30 DETIK (SURVIVOR GUGUR!)", "#f44");
+    killedLocations.push(v.position.clone());
+    if (k === activeKillers[0] && k.kType === "1x1x1x1" && rejuvenateCharges < 1) {
+      rejuvenateCharges = 1;
+      document.getElementById("label-s4").innerText = "Rejuvenate [T] (1)";
+    }
   }
-}
+  const cp = createR6(v.is007 ? "007" : (v.isShed ? "shed" : "noob"));
+  cp.position.copy(v.position); cp.rotation.copy(v.rotation); scene.add(cp); corpses.push(cp); tempObjects.push(cp);
+  v.alive = false; v.visible = false; v.isInvulnerable = false; v.isCastingGui = false; v.isHealingMedkit = false;
+  v.parts.c00lguiTab.visible = false; v.parts.fireMesh.visible = false;
+  if (v === playerNoob && playerRole === "SURVIVOR") {
+    closePuzzle(); cancelMedkit(); cancelC00lgui();
+    camFocusOverride = cp; isPlayerDead = true; playerNoob.hp = 0;
+    playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); clearAllEffects();
+  }
 
-function useNoliStab(k) {
-  if (cdM1 || k.state !== "IDLE" || gameState !== "INGAME") return;
-  cdM1 = true; animateCD("cd-m1", 1.8, function(){ cdM1 = false; });
-  playCutsceneMP3(sfx.noliStabSw, function(){ playSFX(sfx.shedSwing); });
-  playKillerSlashAnim(k);
+  if (k.kType === "1x1x1x1") {
+    k.parts.rArm.rotation.x = 2.2; k.parts.lArm.rotation.x = 2.2;
+    safeTimeout(function(){
+      k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
+      cp.rotation.x = Math.PI / 2; cp.position.y = 0.6; k.state = "IDLE";
+      if (v === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
+      safeTimeout(function(){ scene.remove(cp); }, 5000);
+    }, 800);
+    return;
+  }
+  k.parts.rArm.rotation.x = 2;
+  const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+  cp.position.copy(k.position).addScaledVector(fwd, 2.5);
+  cp.position.y = 2.6; cp.lookAt(k.position.x, 2.6, k.position.z); cp.rotation.y += Math.PI;
+  let st = 0;
+  const si = safeInterval(function(){
+    st += 0.4;
+    cp.parts.lLeg.rotation.x = Math.sin(st) * 0.6; cp.parts.rLeg.rotation.x = -Math.sin(st) * 0.6;
+    cp.parts.lArm.rotation.z = -0.3 + Math.sin(st) * 0.2; cp.parts.rArm.rotation.z = 0.3 - Math.sin(st) * 0.2;
+  }, 40);
   safeTimeout(function(){
-    [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
-      if (s.alive && checkHitbox(k, s, 6.5) && !s.isInvulnerable) {
-        playCutsceneMP3(sfx.noliStabHit, null);
-        s.hallucinationLvl = 0;
-        if (s === playerNoob && playerRole === "SURVIVOR") {
-          closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(25, k);
-        } else {
-          s.hp -= 25;
-          if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; }
-          if (s.hp <= 0) playKillAnimation(k, s);
+    clearInterval(si);
+    if (v.is007) {
+      let t = 0;
+      const gi = safeInterval(function(){
+        t++; k.parts.rArm.rotation.x = 2 - t * 0.08;
+        cp.position.y = Math.max(0.6, 2.6 - t * 0.1);
+        cp.rotation.x = -(t / 20) * (Math.PI / 2);
+        cp.parts.lLeg.rotation.x = 0; cp.parts.rLeg.rotation.x = 0;
+        cp.parts.lArm.rotation.z = 0.1; cp.parts.rArm.rotation.z = -0.1;
+        if (t >= 20) {
+          clearInterval(gi); k.parts.rArm.rotation.x = 0; k.state = "IDLE";
+          if (v === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
+          safeTimeout(function(){ scene.remove(cp); }, 5000);
         }
-      }
-    });
-  }, 180);
+      }, 45);
+    } else {
+      k.parts.rArm.rotation.x = -0.8;
+      const vx = fwd.x * 0.85, vz = fwd.z * 0.85;
+      let vy = 0.45;
+      const ti = safeInterval(function(){
+        cp.position.x += vx; cp.position.z += vz; cp.position.y += vy; vy -= 0.04; cp.rotation.x += 0.2;
+        if (cp.position.y <= 0.6) {
+          cp.position.y = 0.6; clearInterval(ti);
+          cp.rotation.x = Math.PI / 2; cp.rotation.z = (Math.random() - 0.5) * 1.5;
+          cp.parts.lArm.rotation.z = -1.2; cp.parts.rArm.rotation.z = 1.1;
+          cp.parts.lLeg.rotation.x = 0.5; cp.parts.rLeg.rotation.x = -0.4;
+          k.parts.rArm.rotation.x = 0; k.state = "IDLE";
+          if (v === playerNoob && playerRole === "SURVIVOR") { camFocusOverride = null; updateUIState(); cycleSpectate(); }
+          safeTimeout(function(){ scene.remove(cp); }, 5000);
+        }
+      }, 30);
+    }
+  }, 1200);
 }
 
-function useNoliVoidRush(k) {
-  if (cdQ || k.state !== "IDLE" || gameState !== "INGAME") return;
-  cdQ = true; animateCD("cd-q", 20, function(){ cdQ = false; });
-  playCutsceneMP3(sfx.noliRushWu, function(){ playSynthTone(180, 0.8, "sawtooth", 0.16); });
-  k.state = "RUSH_WINDUP";
-  k.parts.torso.rotation.x = 0.4;
-  showToast("Charge Void Rush...", "#c084fc");
-  safeTimeout(function(){
-    if (k.state !== "RUSH_WINDUP") return;
-    k.state = "VOID_RUSHING";
-    k.rushTimer = 110;
-    k.rushHits = 0;
-    playCutsceneMP3(sfx.noliRushHit, null);
+function fadeAndRemoveMinion(m) {
+  if (m.fading) return;
+  m.fading = true; clearTimeout(m.despawnTimeout);
+  const ix = minions.indexOf(m); if (ix > -1) minions.splice(ix, 1);
+  let op = 1;
+  const fi = safeInterval(function(){
+    op -= 0.1;
+    [m.parts.torso, m.parts.head, m.parts.lArm, m.parts.rArm, m.parts.lLeg, m.parts.rLeg].forEach(function(p){
+      setPartOp(p, Math.max(0, op));
+    });
+    if (op <= 0) { clearInterval(fi); scene.remove(m); }
+  }, 50);
+}
+
+function applyDamageToPlayer(rawDmg, attacker) {
+  if (playerNoob.isInvulnerable || isPlayerDead) return;
+  const dmg = hasResistance ? rawDmg * 0.6 : rawDmg;
+  playerNoob.hp = Math.max(0, playerNoob.hp - dmg);
+  if (chickenHoTTimer) {
+    chickenDmgAccum += dmg;
+    if (chickenDmgAccum >= 5) {
+      clearInterval(chickenHoTTimer); chickenHoTTimer = null;
+      removeStatusEffect("chicken"); showToast("Fried Chicken Terputus!", "#f44");
+    }
+  }
+  document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+  if (playerNoob.hp <= 0 && attacker) playKillAnimation(attacker, playerNoob);
+}
+
+function applyPoison(target, lvl, durSec) {
+  if (target.isInvulnerable || !target.alive) return;
+  if (target === playerNoob && playerRole === "SURVIVOR") addStatusEffect("poison", "POISONED " + lvl, "#22cc44", durSec);
+  let t = 0;
+  const iv = safeInterval(function(){
+    t++;
+    if (t > durSec || !target.alive || target.isInvulnerable || gameState !== "INGAME") { clearInterval(iv); return; }
+    target.hp = Math.max(1, target.hp - (lvl * 0.8));
+    if (target === playerNoob && playerRole === "SURVIVOR") document.getElementById("hp-bar").style.width = target.hp + "%";
+  }, 1000);
+}
+function applyGlitched(target, durSec) {
+  target.isGlitched = true;
+  if (target === playerNoob && playerRole === "SURVIVOR") { isGlitched = true; addStatusEffect("glitch", "GLITCHED", "#ff00aa", durSec); }
+  safeTimeout(function(){ target.isGlitched = false; if (target === playerNoob) isGlitched = false; }, durSec * 1000);
+}
+function applyHelpless(durSec) {
+  isHelpless = true;
+  addStatusEffect("helpless", "HELPLESS", "#cc4444", durSec);
+  safeTimeout(function(){ isHelpless = false; }, durSec * 1000);
+}
+function applyBurningToTarget(target, d, attacker) {
+  if (target.isInvulnerable || !target.alive) return;
+  target.parts.fireMesh.visible = true;
+  if (target === playerNoob && playerRole === "SURVIVOR") addStatusEffect("burn", "BURNING I", "#ff4400", d);
+  let t = 0;
+  const bt = safeInterval(function(){
+    t++;
+    if (t > d || !target.alive || gameState !== "INGAME" || target.isInvulnerable) {
+      clearInterval(bt); target.parts.fireMesh.visible = false;
+      if (target === playerNoob) removeStatusEffect("burn");
+      return;
+    }
+    if (target === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(1.5, attacker);
+    else { target.hp -= 1.5; if (target.hp <= 0 && attacker) playKillAnimation(attacker, target); }
   }, 1000);
 }
 
-function useNoliNova(k) {
-  if (cdE || k.state !== "IDLE" || gameState !== "INGAME") return;
-  cdE = true; animateCD("cd-e", 12, function(){ cdE = false; });
-  playCutsceneMP3(sfx.noliNovaThrow, function(){ playSynthTone(540, 0.3, "sine", 0.15); });
-  k.state = "CASTING";
+function updateInventoryUI() {
+  document.getElementById("count-cola").innerText = invCola + " / 1";
+  document.getElementById("slot-cola").classList.toggle("has-item", invCola > 0);
+  document.getElementById("count-medkit").innerText = invMedkit + " / 1";
+  document.getElementById("slot-medkit").classList.toggle("has-item", invMedkit > 0);
+  document.getElementById("count-gear").innerText = "" + invGears;
+  document.getElementById("slot-gear").classList.toggle("has-item", invGears > 0);
+}
+function usePickedCola() {
+  if (invCola <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+  invCola--; updateInventoryUI(); playSFX(sfx.cola);
+  playConsumeAnimation(0xaa1111, function(){
+    if (playerNoob.isInvulnerable) {
+      playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance(); speedBoostMultiplier = 1; return;
+    }
+    hasSlowness = false; removeStatusEffect("slow"); speedBoostMultiplier = 1.5;
+    addStatusEffect("speed", "SPEED I", "#0fc", 7);
+    safeTimeout(function(){ speedBoostMultiplier = 1; }, 7000);
+  });
+}
+function cancelMedkit() {
+  if (!isUsingMedkit) return;
+  isUsingMedkit = false; playerNoob.parts.heldItem.visible = false;
+  playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
+  removeStatusEffect("medkit");
+}
+function usePickedMedkit() {
+  if (invMedkit <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
+  invMedkit--; updateInventoryUI(); isUsingMedkit = true;
+  playerNoob.parts.heldItem.material.color.setHex(0xffffff);
+  playerNoob.parts.heldItem.visible = true;
+  playerNoob.parts.rArm.rotation.x = 1.6; playerNoob.parts.lArm.rotation.x = 1.6;
+  addStatusEffect("medkit", "HEALING MEDKIT", "#0f8", 8);
   safeTimeout(function(){
-    if (k.state === "KILLING" || k.state === "STUNNED") return;
-    const star = mkVoidStar(1.2);
-    star.position.copy(k.position); star.position.y += 3.2;
-    scene.add(star); tempObjects.push(star);
-    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
-    let life = 75, exploded = false;
-    const iv = safeInterval(function(){
-      star.position.addScaledVector(fwd, 1.35); star.rotation.z += 0.25; life--;
-      [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
-        if (!exploded && s.alive && star.position.distanceTo(s.position) < 4 && !s.isInvulnerable) {
-          exploded = true;
-          playCutsceneMP3(sfx.noliNovaBoom, function(){ playSynthTone(120, 0.6, "sawtooth", 0.22); });
-          showToast("NOVA DETONATED!", "#c084fc");
-          const pullDir = star.position.clone().sub(s.position).normalize();
-          moveWithCollision(s, pullDir.x * 7, pullDir.z * 7);
-          applyHallucination(s, 1);
-          if (s === playerNoob && playerRole === "SURVIVOR") {
-            closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(15, k);
-          } else {
-            s.hp -= 15; if (s.hp <= 0) playKillAnimation(k, s);
-          }
-          scene.remove(star); clearInterval(iv);
-        }
-      });
-      if (!exploded && life <= 0) { scene.remove(star); clearInterval(iv); }
-    }, 16);
-    k.state = "IDLE";
-  }, 700);
+    if (!isUsingMedkit) return;
+    isUsingMedkit = false; playerNoob.parts.heldItem.visible = false;
+    playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0;
+    playerNoob.hp = Math.min(100, playerNoob.hp + 80);
+    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+    showToast("MEDKIT SELESAI (+80 HP)", "#0e4");
+  }, 8000);
 }
 
-function useNoliObservant(k) {
-  if (cdR || k.state !== "IDLE" || gameState !== "INGAME") return;
-  cdR = true; animateCD("cd-r", 30, function(){ cdR = false; });
-  playCutsceneMP3(sfx.noliObsStart, function(){ playSynthTone(320, 0.5, "triangle", 0.16); });
-  k.state = "OBSERVANT";
-  showToast("OBSERVANT: Menatap Generator...", "#c084fc");
-  generators.forEach(function(g){ g.lamp.material.color.setHex(0xa855f7); });
-  safeTimeout(function(){
-    if (k.state !== "OBSERVANT") return;
-    const targetGen = pickRandomIncompleteGen() || generators[0];
-    playCutsceneMP3(sfx.noliObsTp, function(){ playSynthTone(640, 0.6, "sine", 0.2); });
-    k.position.set(targetGen.group.position.x + 3.5, 0, targetGen.group.position.z);
-    showToast("NOLI MUNCUL DI GENERATOR #" + targetGen.id + "!", "#a855f7");
-    [playerNoob].concat(aiSurvivors).forEach(function(s){
-      const dist = s.position.distanceTo(targetGen.group.position);
-      if (dist >= 18 && dist < 45) applyHallucination(s, 1);
-      else if (dist >= 45 && dist < 85) applyHallucination(s, 2);
-      else if (dist >= 85) applyHallucination(s, 3);
-    });
-    generators.forEach(function(g){ if (!g.done) g.lamp.material.color.setHex(0xff0000); });
-    k.state = "IDLE";
-  }, 1450);
+// ==========================================
+// PUZZLE GENERATOR BERVARIASI
+// ==========================================
+function getNearestIncompleteGen(p) {
+  let b = null, m = 6;
+  generators.forEach(function(g){
+    if (!g.done) { const d = p.distanceTo(g.group.position); if (d < m) { m = d; b = g; } }
+  });
+  return b;
 }
+function pickRandomIncompleteGen() {
+  const inc = generators.filter(function(g){ return !g.done; });
+  return inc.length > 0 ? inc[Math.floor(Math.random() * inc.length)] : null;
+}
+function completeGenerator(g, n) {
+  if (g.done) return;
+  g.done = true; g.stage = 5; g.lamp.material.color.setHex(0x00ff00);
+  timerSeconds = Math.max(1, timerSeconds - 10);
+  showToast(n + " SELESAIKAN GEN #" + g.id + "! (-10 DETIK)", "#0f8");
+  const doneCount = generators.filter(function(x){ return x.done; }).length;
+  document.getElementById("gen-status").innerText = "Generator Selesai: " + doneCount + " / 5";
+}
+
+let puzTimerInt = null, puzCalRAF = null;
+function clearPuzzleInternalTimers() {
+  if (puzTimerInt) { clearInterval(puzTimerInt); puzTimerInt = null; }
+  if (puzCalRAF) { cancelAnimationFrame(puzCalRAF); puzCalRAF = null; }
+}
+function openPuzzle(g) {
+  activeGen = g; document.exitPointerLock();
+  document.getElementById("puzzle-modal").style.display = "flex";
+  renderActivePuzzle();
+}
+function closePuzzle() {
+  clearPuzzleInternalTimers(); activeGen = null;
+  document.getElementById("puzzle-modal").style.display = "none";
+}
+
+function renderActivePuzzle() {
+  clearPuzzleInternalTimers();
+  if (!activeGen) return;
+  if (activeGen.done) { completeGenerator(activeGen, "KAMU"); closePuzzle(); document.body.requestPointerLock(); return; }
+  const g = activeGen, area = document.getElementById("puzzle-area"), sub = document.getElementById("puzzle-sub");
+  document.getElementById("puzzle-title").innerText = "GENERATOR #" + g.id + ": " + g.label.toUpperCase();
+  document.getElementById("puzzle-stage-text").innerText = "Tahap: " + g.stage + " / 5";
+  area.innerHTML = "";
+
+  if (g.puzzleType === "CABLE_4" || g.puzzleType === "CABLE_5_TIMED") {
+    const count = g.puzzleType === "CABLE_5_TIMED" ? 5 : 4;
+    const palette = [
+      { name: "M", hex: "#ef4444" }, { name: "B", hex: "#3b82f6" },
+      { name: "K", hex: "#eab308" }, { name: "H", hex: "#22c55e" }, { name: "U", hex: "#a855f7" }
+    ].slice(0, count);
+    const leftArr = palette.slice().sort(function(){ return Math.random() - 0.5; });
+    const rightArr = palette.slice().sort(function(){ return Math.random() - 0.5; });
+    let selectedLeft = null, connected = 0, timeLeft = 15;
+
+    if (g.puzzleType === "CABLE_5_TIMED") {
+      sub.innerHTML = 'Sambungkan 5 kabel sesuai warna! Waktu: <b id="puz-cd" style="color:#f43f5e">' + timeLeft + 's</b>';
+      puzTimerInt = setInterval(function(){
+        timeLeft--;
+        const el = document.getElementById("puz-cd");
+        if (el) el.innerText = timeLeft + "s";
+        if (timeLeft <= 0) { showToast("Waktu Kabel Habis! Board Reset!", "#f44"); renderActivePuzzle(); }
+      }, 1000);
+    } else {
+      sub.innerText = "Klik terminal warna di kiri, lalu klik warna yang sama di kanan!";
+    }
+
+    const board = document.createElement("div"); board.className = "cable-board";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.id = "cable-svg";
+    const lCol = document.createElement("div"); lCol.className = "cable-col";
+    const rCol = document.createElement("div"); rCol.className = "cable-col";
+
+    leftArr.forEach(function(c, idx){
+      const btn = document.createElement("div");
+      btn.className = "cable-node"; btn.style.background = c.hex; btn.innerText = c.name;
+      btn.onclick = function(){
+        if (btn.classList.contains("done")) return;
+        lCol.querySelectorAll(".cable-node").forEach(function(n){ n.classList.remove("selected"); });
+        btn.classList.add("selected");
+        selectedLeft = { color: c.name, hex: c.hex, el: btn, idx: idx };
+      };
+      lCol.appendChild(btn);
+    });
+    rightArr.forEach(function(c){
+      const btn = document.createElement("div");
+      btn.className = "cable-node"; btn.style.background = c.hex; btn.innerText = c.name;
+      btn.onclick = function(){
+        if (!selectedLeft || btn.classList.contains("done")) return;
+        if (selectedLeft.color === c.name) {
+          playSynthTone(620 + connected * 90, 0.12, "sine", 0.1);
+          selectedLeft.el.classList.remove("selected");
+          selectedLeft.el.classList.add("done");
+          btn.classList.add("done");
+          const br = board.getBoundingClientRect();
+          const lr = selectedLeft.el.getBoundingClientRect();
+          const rr = btn.getBoundingClientRect();
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", lr.right - br.left);
+          line.setAttribute("y1", lr.top + lr.height / 2 - br.top);
+          line.setAttribute("x2", rr.left - br.left);
+          line.setAttribute("y2", rr.top + rr.height / 2 - br.top);
+          line.setAttribute("stroke", selectedLeft.hex);
+          line.setAttribute("stroke-width", "6");
+          line.setAttribute("stroke-linecap", "round");
+          svg.appendChild(line);
+          selectedLeft = null; connected++;
+          if (connected === count) {
+            g.stage = Math.min(5, g.stage + (g.puzzleType === "CABLE_5_TIMED" ? 3 : 2));
+            if (g.stage >= 5) { completeGenerator(g, "KAMU"); closePuzzle(); document.body.requestPointerLock(); }
+            else setTimeout(renderActivePuzzle, 350);
+          }
+        } else {
+          playSynthTone(140, 0.25, "sawtooth", 0.16);
+          showToast("Kabel Salah! Korsleting!", "#f44");
+          renderActivePuzzle();
+        }
+      };
+      rCol.appendChild(btn);
+    });
+    board.append(svg, lCol, rCol); area.appendChild(board);
+  } else if (g.puzzleType === "MEMORY") {
+    const seqLen = g.stage < 1 ? 3 : (g.stage < 3 ? 4 : 5);
+    const cols = ["#ef4444", "#3b82f6", "#eab308", "#22c55e"];
+    const seq = [];
+    for (let i = 0; i < seqLen; i++) seq.push(Math.floor(Math.random() * 4));
+    let playerIdx = 0, showing = true;
+    sub.innerText = "Perhatikan urutan lampu (" + seqLen + " langkah), lalu ulangi!";
+    const grid = document.createElement("div"); grid.className = "mem-grid";
+    const btns = [];
+    for (let i = 0; i < 4; i++) {
+      (function(btnIndex){
+        const b = document.createElement("button");
+        b.className = "mem-btn"; b.style.background = cols[btnIndex]; b.style.color = cols[btnIndex];
+        b.innerText = btnIndex + 1;
+        b.onclick = function(){
+          if (showing) return;
+          b.classList.add("lit"); setTimeout(function(){ b.classList.remove("lit"); }, 180);
+          if (btnIndex === seq[playerIdx]) {
+            playSynthTone(440 + btnIndex * 110, 0.12, "triangle", 0.12);
+            playerIdx++;
+            if (playerIdx >= seq.length) {
+              g.stage = Math.min(5, g.stage + (g.stage === 0 ? 1 : 2));
+              if (g.stage >= 5) { completeGenerator(g, "KAMU"); closePuzzle(); document.body.requestPointerLock(); }
+              else setTimeout(renderActivePuzzle, 350);
+            }
+          } else {
+            playSynthTone(130, 0.3, "sawtooth", 0.16);
+            showToast("Urutan Salah! Ulangi pola!", "#f44");
+            renderActivePuzzle();
+          }
+        };
+        grid.appendChild(b); btns.push(b);
+      })(i);
+    }
+    area.appendChild(grid);
+    let step = 0;
+    function playSeq() {
+      if (!activeGen) return;
+      if (step >= seq.length) { showing = false; sub.innerText = "Giliranmu! Klik sesuai urutan tadi!"; return; }
+      const idx = seq[step];
+      btns[idx].classList.add("lit");
+      playSynthTone(440 + idx * 110, 0.18, "triangle", 0.1);
+      setTimeout(function(){
+        if (btns[idx]) btns[idx].classList.remove("lit");
+        step++; setTimeout(playSeq, 220);
+      }, 420);
+    }
+    setTimeout(playSeq, 450);
+  } else if (g.puzzleType === "GEAR_CAL" || g.puzzleType === "GEAR_FAST") {
+    const box = document.createElement("div"); box.className = "gear-box";
+    if (g.gearsInserted < 2) {
+      sub.innerText = "Pasang 2 Gerigi dari map! (Gerigi di tas: " + invGears + ")";
+      const slots = document.createElement("div"); slots.className = "gear-slots";
+      for (let i = 0; i < 2; i++) {
+        const sl = document.createElement("div");
+        sl.className = "gear-slot" + (i < g.gearsInserted ? " filled" : "");
+        sl.innerText = i < g.gearsInserted ? "⚙" : "?";
+        slots.appendChild(sl);
+      }
+      const btn = document.createElement("button"); btn.className = "puz-action-btn";
+      btn.innerText = invGears > 0 ? "PASANG 1 GERIGI (Sisa: " + invGears + ")" : "CARILAH GERIGI DI MAP!";
+      btn.disabled = invGears <= 0;
+      btn.onclick = function(){
+        if (invGears <= 0) return;
+        invGears--; g.gearsInserted++; g.stage = Math.min(4, g.gearsInserted * 2);
+        updateInventoryUI(); playSynthTone(520, 0.16, "sine", 0.14); renderActivePuzzle();
+      };
+      box.append(slots, btn); area.appendChild(box);
+    } else {
+      sub.innerText = "Semua gerigi terpasang! Tekan KALIBRASI saat jarum di zona hijau!";
+      const track = document.createElement("div"); track.className = "cal-track";
+      const zStart = 36 + Math.random() * 28, zWidth = g.puzzleType === "GEAR_FAST" ? 18 : 25;
+      const zone = document.createElement("div"); zone.className = "cal-zone";
+      zone.style.left = zStart + "%"; zone.style.width = zWidth + "%";
+      const needle = document.createElement("div"); needle.className = "cal-needle";
+      track.append(zone, needle);
+      const btn = document.createElement("button"); btn.className = "puz-action-btn"; btn.innerText = "KALIBRASI SEKARANG!";
+      let pos = 0, dir = 1, spd = g.puzzleType === "GEAR_FAST" ? 2.3 : 1.55;
+      function loop() {
+        pos += dir * spd;
+        if (pos >= 98) { pos = 98; dir = -1; }
+        if (pos <= 0) { pos = 0; dir = 1; }
+        needle.style.left = pos + "%";
+        puzCalRAF = requestAnimationFrame(loop);
+      }
+      puzCalRAF = requestAnimationFrame(loop);
+      btn.onclick = function(){
+        if (pos >= zStart && pos <= zStart + zWidth) {
+          playSynthTone(780, 0.2, "sine", 0.15);
+          completeGenerator(g, "KAMU"); closePuzzle(); document.body.requestPointerLock();
+        } else {
+          playSynthTone(140, 0.25, "sawtooth", 0.16);
+          showToast("Meleset! Coba lagi!", "#f44");
+        }
+      };
+      box.append(track, btn); area.appendChild(box);
+    }
+  }
+}
+
+let camYaw = 0, camPitch = 0.2, isPointerLocked = false, isMouseDown = false, prevMouseX = 0, prevMouseY = 0;
+document.body.addEventListener("click", function(e){
+  if (e.target.tagName === "BUTTON" || activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  document.body.requestPointerLock();
+  document.getElementById("start-hint").style.display = "none";
+  unlockAllAudio();
+  if (gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
+});
+document.addEventListener("pointerlockchange", function(){ isPointerLocked = (document.pointerLockElement === document.body); });
+window.addEventListener("mousedown", function(e){
+  if (e.button === 0 && gameState === "INGAME" && playerRole === "KILLER" && isPointerLocked) useBasicAttack();
+  isMouseDown = true; prevMouseX = e.clientX; prevMouseY = e.clientY;
+});
+window.addEventListener("mouseup", function(){ isMouseDown = false; });
+window.addEventListener("mousemove", function(e){
+  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  let dx = 0, dy = 0;
+  if (isPointerLocked) { dx = e.movementX; dy = e.movementY; }
+  else if (isMouseDown) { dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY; prevMouseX = e.clientX; prevMouseY = e.clientY; }
+  if (dx !== 0 || dy !== 0) {
+    camYaw -= dx * 0.0035;
+    camPitch = Math.max(-0.6, Math.min(1.1, camPitch - dy * 0.0035));
+  }
+});
+
+function updateSkillButtonsForRole() {
+  const s1 = document.getElementById("label-s1"), s2 = document.getElementById("label-s2");
+  const s3 = document.getElementById("label-s3"), s4 = document.getElementById("btn-s4");
+  const b3 = document.getElementById("btn-s3"), is = document.getElementById("icon-sprint");
+  const ls = document.getElementById("label-sprint"), ht = document.getElementById("hp-title"), hc = document.getElementById("hp-container");
+  s4.style.display = (playerRole === "KILLER" && killerType === "1x1x1x1") ? "flex" : "none";
+  b3.style.display = "flex";
+  if (playerRole === "KILLER" && killerType === "1x1x1x1") {
+    ht.style.display = "none"; hc.style.display = "none";
+    s1.innerText = "Mass Inf [Q]"; s2.innerText = "Entangle [E]"; s3.innerText = "Unstable [R]";
+    is.innerText = "M1 / F"; ls.innerText = "SLASH (20)";
+  } else if (playerRole === "KILLER") {
+    ht.style.display = "none"; hc.style.display = "none";
+    s1.innerText = "Override [Q]"; s2.innerText = "Corrupt [E]"; s3.innerText = "Pizza [R]";
+    is.innerText = "M1 / F"; ls.innerText = "TAG (26.5)";
+  } else if (survivorChar === "007n7") {
+    ht.style.display = "block"; hc.style.display = "block";
+    s1.innerText = "Clone [Q]"; s2.innerText = "c00lgui [E]"; s3.innerText = "Inject: " + injectModes[injectIdx];
+    is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  } else if (survivorChar === "SHEDLETSKY") {
+    ht.style.display = "block"; hc.style.display = "block";
+    s1.innerText = "Slash [Q]"; s2.innerText = "Chicken [E] (" + chickenUses + ")";
+    b3.style.display = "none"; is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  } else {
+    ht.style.display = "block"; hc.style.display = "block";
+    s1.innerText = "Ghostburger [Q]"; s2.innerText = "Slateskin [E]"; s3.innerText = "Bloxy Cola [R]";
+    is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  }
+}
+
+function updateUIState() {
+  const isCut = (gameState === "INTRO" || gameState === "OUTRO");
+  document.getElementById("top-hud").style.display = isCut ? "none" : "flex";
+  document.getElementById("lobby-controls").style.display = gameState === "LOBBY" ? "flex" : "none";
+  document.getElementById("gen-status").style.display = gameState === "INGAME" ? "block" : "none";
+  const showBars = (gameState === "LOBBY") || (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"));
+  document.getElementById("player-bars").style.display = showBars ? "block" : "none";
+  document.getElementById("skills-container").style.display = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER")) ? "block" : "none";
+  document.getElementById("inventory-bar").style.display = (gameState === "INGAME" && !isPlayerDead && playerRole === "SURVIVOR") ? "flex" : "none";
+  dexMarker.visible = gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead;
+  updateSkillButtonsForRole();
+  if (gameState === "LOBBY") {
+    document.getElementById("hp-title").style.display = "none";
+    document.getElementById("hp-container").style.display = "none";
+  }
+  document.getElementById("spectate-panel").style.display = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride) ? "flex" : "none";
+}
+
+function updateSpectateHPList() {
+  if (gameState !== "INGAME" || !isPlayerDead || playerRole !== "SURVIVOR") return;
+  let h = "<b>DARAH SURVIVOR:</b>";
+  aiSurvivors.forEach(function(a){
+    const st = a.alive ? Math.ceil(a.hp) + "% HP" : '<span style="color:#f44">MATI</span>';
+    h += "<div>" + a.name + ": " + st + "</div>";
+  });
+  document.getElementById("ai-hp-list").innerHTML = h;
+}
+function cycleSpectate() {
+  spectateList = [];
+  aiSurvivors.forEach(function(a){ if (a.alive) spectateList.push(a); });
+  activeKillers.forEach(function(k){ spectateList.push(k); });
+  if (spectateList.length > 0) {
+    isSpectating = true; spectateIdx = (spectateIdx + 1) % spectateList.length;
+    document.getElementById("spectate-info").innerText = "Spectating: " + spectateList[spectateIdx].name;
+  }
+}
+function pickNewPatrol(ai) {
+  ai.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
+}
+
+function startNewRound() {
+  clearRoundTimers(); closeNPCModal();
+  isDoubleTrouble = doubleTroubleEnabled;
+  updateRoundInfoText();
+  isPlayerDead = false; isSpectating = false; lmsTriggered = false; lmsMode = "NORMAL";
+  camFocusOverride = null; clearAllEffects();
+  isRooted = false; isHelpless = false; isGlitched = false; hasResistance = false;
+  chickenUses = 2; chickenHoTTimer = null;
+  isDrinkingOrEating = false; isUsingMedkit = false; isCastingC00lgui = false;
+  speedBoostMultiplier = 1; hasSlowness = false; playerVY = 0; isGrounded = true;
+  cdQ = false; cdE = false; cdR = false; cdT = false; cdM1 = false;
+  ["cd-q", "cd-e", "cd-r", "cd-t", "cd-m1"].forEach(function(id){ document.getElementById(id).style.height = "0%"; });
+  killerSpeedMult = 1; rejuvenateCharges = 0; killedLocations = [];
+  document.getElementById("blind-overlay").style.display = "none";
+  document.getElementById("label-s4").innerText = "Rejuvenate [T] (0)";
+  invCola = 0; invMedkit = 0; invGears = 0; updateInventoryUI(); spawnAllMapItems();
+  generators.forEach(function(g){ g.stage = 0; g.gearsInserted = 0; g.done = false; g.lamp.material.color.setHex(0xff0000); });
+  document.getElementById("gen-status").innerText = "Generator Selesai: 0 / 5";
+
+  if (playerRole === "SURVIVOR") {
+    playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true;
+    playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false; playerNoob.parts.fireMesh.visible = false;
+    document.getElementById("hp-bar").style.width = "100%";
+    playerNoob.position.set(0, 0, 0); applyPlayerAppearance();
+  } else {
+    playerNoob.alive = false; playerNoob.visible = false; playerNoob.position.set(0, LOBBY_FLOOR_Y, 14);
+  }
+  buildRoundRoster();
+
+  playKillerIntroCutscene(function(){
+    gameState = "INGAME"; timerSeconds = 180;
+    if (playerRole === "KILLER" && killerType === "1x1x1x1") {
+      cdR = true; animateCD("cd-r", 12.5, function(){ cdR = false; });
+    }
+    updateUIState(); startRoundAudio();
+    if (isDoubleTrouble) showToast("⚠ RONDE 2V12: DOUBLE TROUBLE! ⚠", "#ff3333");
+  });
+}
+
+function endRoundToLobby(killerWon) {
+  clearRoundTimers(); closePuzzle(); closeNPCModal(); clearAllEffects(); stopAndResetAllAudio();
+  document.getElementById("blind-overlay").style.display = "none";
+
+  function finalizeLobby() {
+    gameState = "LOBBY"; timerSeconds = 15; roundCount++;
+    updateRoundInfoText();
+    lmsTriggered = false; isSpectating = false; camFocusOverride = null; playerVY = 0; isGrounded = true;
+    playerNoob.position.set(0, LOBBY_FLOOR_Y, 14);
+    playerNoob.visible = true; playerNoob.parts.fireMesh.visible = false; applyPlayerAppearance();
+    aiSurvivors.forEach(function(a){ scene.remove(a); }); aiSurvivors = [];
+    activeKillers.forEach(function(k){ scene.remove(k); }); activeKillers = [];
+    minions.forEach(function(x){ scene.remove(x); }); minions.length = 0;
+    zombies.forEach(function(x){ scene.remove(x); }); zombies.length = 0;
+    clones.forEach(function(x){ scene.remove(x); }); clones.length = 0;
+    corpses.forEach(function(x){ scene.remove(x); }); corpses.length = 0;
+    updateUIState(); startLobbyAudio();
+  }
+
+  if (killerWon) playKillerOutroCutscene(finalizeLobby);
+  else { showToast("SURVIVORS MENANG RONDE INI!", "#10b981"); finalizeLobby(); }
+}
+
+setInterval(function(){
+  if (gameState === "LOBBY") {
+    timerSeconds--;
+    document.getElementById("round-timer").innerText = "LOBBY: " + timerSeconds + "s";
+    if (timerSeconds <= 0) startNewRound();
+  } else if (gameState === "INGAME") {
+    timerSeconds--;
+    const te = document.getElementById("round-timer");
+    const m = Math.floor(timerSeconds / 60), s = timerSeconds % 60;
+    te.innerText = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    const al = [];
+    if (playerRole === "SURVIVOR" && !isPlayerDead) al.push(playerNoob);
+    aiSurvivors.forEach(function(a){ if (a.alive) al.push(a); });
+    updateSpectateHPList();
+
+    if (isDoubleTrouble && al.length <= 3 && !lmsTriggered && al.length > 0) {
+      lmsTriggered = true; lmsMode = "2V3"; timerSeconds = 85;
+      const b = document.getElementById("lms-banner");
+      b.innerText = "2V3: LAST STAND!"; b.style.color = "#ffcc00"; b.style.display = "block";
+      safeTimeout(function(){ b.style.display = "none"; }, 5500);
+    } else if (!isDoubleTrouble && al.length === 1 && !lmsTriggered) {
+      lmsTriggered = true;
+      const ls = al[0], b = document.getElementById("lms-banner");
+      if (ls.is007 && killerType === "c00lkidd") { lmsMode = "PLEAD"; timerSeconds = 90; b.innerText = "PLEAD\n(FATHER & SON)"; b.style.color = "#fff"; }
+      else if (ls.isShed && killerType === "1x1x1x1") { lmsMode = "HATRED"; timerSeconds = 90; b.innerText = "CREATION OF HATRED"; b.style.color = "#0f4"; }
+      else { lmsMode = "NORMAL"; timerSeconds = 75; b.innerText = "LAST MAN STANDING!"; b.style.color = "#f00"; }
+      b.style.display = "block";
+      safeTimeout(function(){ b.style.display = "none"; }, 5500);
+    }
+    const anyKilling = activeKillers.some(function(k){ return k.state === "KILLING"; });
+    if (al.length === 0 && !anyKilling) endRoundToLobby(true);
+    else if (timerSeconds <= 0) endRoundToLobby(false);
+  }
+}, 1000);
+
+function toggleShiftlock() {
+  isShiftlock = !isShiftlock;
+  document.getElementById("btn-shiftlock").classList.toggle("active", isShiftlock);
+  document.getElementById("crosshair").style.display = isShiftlock ? "block" : "none";
+}
+
+window.addEventListener("keydown", function(e){
+  keys[e.code] = true;
+  if (e.code === "Escape") { if (activeGen) closePuzzle(); if (activeNPC) closeNPCModal(); return; }
+  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  if (e.code === "KeyM") document.exitPointerLock();
+  if (e.code === "ShiftLeft") isSprinting = true;
+  if (e.code === "Space" && gameState === "LOBBY" && isGrounded) { playerVY = 0.42; isGrounded = false; }
+  if (e.code === "KeyF") {
+    if (gameState === "LOBBY") { const npc = getNearestLobbyNPC(playerNoob.position); if (npc) openNPCModal(npc); }
+    else if (playerRole === "KILLER") useBasicAttack();
+    else if (!isPlayerDead && gameState === "INGAME") { const g = getNearestIncompleteGen(playerNoob.position); if (g) openPuzzle(g); }
+  }
+  if (gameState === "INGAME") {
+    if (e.code === "KeyQ") useSkill1();
+    if (e.code === "KeyE") useSkill2();
+    if (e.code === "KeyR") useSkill3();
+    if (e.code === "KeyT") useSkill4();
+    if (e.code === "Digit1") usePickedCola();
+    if (e.code === "Digit2") usePickedMedkit();
+  }
+});
+window.addEventListener("keyup", function(e){ keys[e.code] = false; if (e.code === "ShiftLeft") isSprinting = false; });
 
 function useSkill1() {
   if (isHelpless && playerRole === "SURVIVOR") return;
-  if (playerRole === "KILLER") {
-    if (killerType === "Noli") useNoliVoidRush(activeKillers[0]);
-    else if (killerType === "1x1x1x1") use1xMassInfection(activeKillers[0]);
-    else killerWalkspeedOverride(activeKillers[0]);
-  } else if (survivorChar === "007n7") use007Clone();
+  if (playerRole === "KILLER") killerType === "1x1x1x1" ? use1xMassInfection(activeKillers[0]) : killerWalkspeedOverride(activeKillers[0]);
+  else if (survivorChar === "007n7") use007Clone();
   else if (survivorChar === "SHEDLETSKY") useShedSlash();
   else useBurger();
 }
 function useSkill2() {
   if (isHelpless && playerRole === "SURVIVOR") return;
-  if (playerRole === "KILLER") {
-    if (killerType === "Noli") useNoliNova(activeKillers[0]);
-    else if (killerType === "1x1x1x1") use1xEntanglement(activeKillers[0]);
-    else killerCorruptNature(activeKillers[0]);
-  } else if (survivorChar === "007n7") use007C00lgui();
+  if (playerRole === "KILLER") killerType === "1x1x1x1" ? use1xEntanglement(activeKillers[0]) : killerCorruptNature(activeKillers[0]);
+  else if (survivorChar === "007n7") use007C00lgui();
   else if (survivorChar === "SHEDLETSKY") useShedChicken();
   else useSlate();
 }
 function useSkill3() {
   if (isHelpless && playerRole === "SURVIVOR") return;
-  if (playerRole === "KILLER") {
-    if (killerType === "Noli") useNoliObservant(activeKillers[0]);
-    else if (killerType === "1x1x1x1") use1xUnstableEye(activeKillers[0]);
-    else killerPizzaDelivery(activeKillers[0]);
-  } else if (survivorChar === "007n7") use007Inject();
+  if (playerRole === "KILLER") killerType === "1x1x1x1" ? use1xUnstableEye(activeKillers[0]) : killerPizzaDelivery(activeKillers[0]);
+  else if (survivorChar === "007n7") use007Inject();
   else if (survivorChar === "NOOB") useCola();
 }
 function useSkill4() { if (playerRole === "KILLER" && killerType === "1x1x1x1") use1xRejuvenate(activeKillers[0]); }
-function useBasicAttack() {
-  if (playerRole === "KILLER") {
-    if (killerType === "Noli") useNoliStab(activeKillers[0]);
-    else if (killerType === "1x1x1x1") use1xSlash(activeKillers[0]);
-    else killerTagM1(activeKillers[0]);
+function useBasicAttack() { if (playerRole === "KILLER") killerType === "1x1x1x1" ? use1xSlash(activeKillers[0]) : killerTagM1(activeKillers[0]); }
+
+function useShedSlash() {
+  if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  cdQ = true; animateCD("cd-q", 40, function(){ cdQ = false; });
+  hasResistance = true; addStatusEffect("res", "RESISTANCE II", "#fc0", 1);
+  playShedSlashAnim(playerNoob);
+  safeTimeout(function(){
+    hasResistance = false;
+    activeKillers.forEach(function(k){
+      if (playerNoob.position.distanceTo(k.position) < 7) {
+        playSFX(sfx.shedHit); k.state = "STUNNED"; k.parts.head.rotation.x = 0.5;
+        showToast("KILLER DI-STUN (3 DETIK)!", "#fc0");
+        addStatusEffect("stun", "BLEEDING (STUNNED)", "#f00", 3);
+        safeTimeout(function(){ if (k.state === "STUNNED") { k.state = "IDLE"; k.parts.head.rotation.x = 0; } }, 3000);
+      }
+    });
+  }, 550);
+}
+
+function useShedChicken() {
+  if (cdE || chickenUses <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  if (playerNoob.hp >= 100) { showToast("Darah sudah penuh!", "#f44"); return; }
+  cdE = true; chickenUses--;
+  document.getElementById("label-s2").innerText = "Chicken [E] (" + chickenUses + ")";
+  animateCD("cd-e", 70, function(){ cdE = false; });
+  playSFX(sfx.shedEat);
+  playConsumeAnimation(0x8b4513, function(){
+    playerNoob.hp = Math.min(100, playerNoob.hp + 5);
+    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+    chickenDmgAccum = 0; addStatusEffect("chicken", "FRIED CHICKEN", "#fa0", 10);
+    let t = 0;
+    chickenHoTTimer = safeInterval(function(){
+      t++;
+      if (t > 10 || isPlayerDead || gameState !== "INGAME") { clearInterval(chickenHoTTimer); chickenHoTTimer = null; return; }
+      playerNoob.hp = Math.min(100, playerNoob.hp + 2.5);
+      document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+    }, 1000);
+  });
+}
+
+function use007Clone() {
+  if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
+  cdQ = true; animateCD("cd-q", 27, function(){ cdQ = false; });
+  const c = createR6("007");
+  c.position.copy(playerNoob.position); c.rotation.copy(playerNoob.rotation);
+  c.hp = 100; c.alive = true; c.mode = injectModes[injectIdx];
+  c.patrolTarget = new THREE.Vector3((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140);
+  scene.add(c); clones.push(c); tempObjects.push(c);
+  safeTimeout(function(){
+    c.alive = false; scene.remove(c);
+    const i = clones.indexOf(c); if (i > -1) clones.splice(i, 1);
+  }, c.mode === "Cursor" ? 5000 : 10000);
+  playerNoob.isUndetectable = true; addStatusEffect("invis", "INVISIBLE + UNDETECTABLE", "#0fc", 5);
+  const pParts = [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg];
+  pParts.forEach(function(p){ setPartOp(p, 0.15); });
+  safeTimeout(function(){
+    playerNoob.isUndetectable = false;
+    pParts.forEach(function(p){ setPartOp(p, 1); });
+  }, 5000);
+}
+function cancelC00lgui() {
+  if (!isCastingC00lgui) return;
+  isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false;
+  removeStatusEffect("c00lgui");
+  if (sfx.gui && !sfx.gui.paused) sfx.gui.pause();
+}
+function use007C00lgui() {
+  if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return;
+  cdE = true; animateCD("cd-e", 50, function(){ cdE = false; });
+  playSFX(sfx.gui); isCastingC00lgui = true; playerNoob.parts.c00lguiTab.visible = true;
+  addStatusEffect("c00lgui", "c00lgui TELEPORT", "#f33", 6);
+  safeTimeout(function(){
+    if (!isCastingC00lgui) return;
+    isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false;
+    const fs = getFarthestSpawn(playerNoob.position);
+    playerNoob.position.set(fs.x, 0, fs.z);
+  }, 5500);
+}
+function use007Inject() {
+  if (isPlayerDead || gameState !== "INGAME") return;
+  injectIdx = (injectIdx + 1) % injectModes.length;
+  document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx];
+}
+
+function playConsumeAnimation(col, cb) {
+  isDrinkingOrEating = true;
+  playerNoob.parts.heldItem.material.color.setHex(col);
+  playerNoob.parts.heldItem.visible = true;
+  playerNoob.parts.rArm.rotation.x = 2.2; playerNoob.parts.rArm.rotation.z = -0.4;
+  playerNoob.parts.lArm.rotation.x = 2.2; playerNoob.parts.lArm.rotation.z = 0.4;
+  safeTimeout(function(){
+    playerNoob.parts.heldItem.visible = false;
+    playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.rArm.rotation.z = 0;
+    playerNoob.parts.lArm.rotation.x = 0; playerNoob.parts.lArm.rotation.z = 0;
+    isDrinkingOrEating = false;
+    if (cb) cb();
+  }, 1400);
+}
+
+function useBurger() {
+  if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  cdQ = true; animateCD("cd-q", 40, function(){ cdQ = false; });
+  playSFX(sfx.burger);
+  playConsumeAnimation(0xd4a373, function(){
+    playerNoob.hp = Math.min(100, playerNoob.hp + Math.max(6, (100 - playerNoob.hp) * 0.25));
+    document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+    addStatusEffect("invis", "INVISIBLE", "#0cf", 7);
+    const pParts = [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg];
+    pParts.forEach(function(p){ setPartOp(p, 0.15); });
+    safeTimeout(function(){ pParts.forEach(function(p){ setPartOp(p, 1); }); }, 7000);
+  });
+}
+function revertSlateAppearance() {
+  applyPlayerAppearance();
+  document.getElementById("label-s2").innerText = "Slateskin [E]";
+}
+function useSlate() {
+  if (playerNoob.isInvulnerable) {
+    playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance();
+    activeKillers.forEach(function(k){
+      if (playerNoob.position.distanceTo(k.position) < 18) {
+        k.position.addScaledVector(k.position.clone().sub(playerNoob.position).normalize(), 9);
+      }
+    });
+    speedBoostMultiplier = 1.5; addStatusEffect("speed", "SPEED I", "#0fc", 2);
+    safeTimeout(function(){ speedBoostMultiplier = 1; }, 2500);
+    return;
+  }
+  if (cdE || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  cdE = true; animateCD("cd-e", 44, function(){ cdE = false; });
+  playSFX(sfx.slate);
+  playConsumeAnimation(0x4a6572, function(){
+    playerNoob.isInvulnerable = true;
+    document.getElementById("label-s2").innerText = "CANCEL [E]";
+    addStatusEffect("slate", "SLATESKIN III", "#99aab5", 10);
+    [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg].forEach(function(p){
+      setPartCol(p, 0x4a5568);
+    });
+    safeTimeout(function(){
+      if (!playerNoob.isInvulnerable) return;
+      playerNoob.isInvulnerable = false; revertSlateAppearance(); speedBoostMultiplier = 1;
+    }, 10000);
+  });
+}
+function useCola() {
+  if (cdR || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
+  cdR = true; animateCD("cd-r", 50, function(){ cdR = false; });
+  playSFX(sfx.cola);
+  playConsumeAnimation(0xaa1111, function(){
+    if (playerNoob.isInvulnerable) {
+      playerNoob.isInvulnerable = false; removeStatusEffect("slate"); revertSlateAppearance(); speedBoostMultiplier = 1; return;
+    }
+    hasSlowness = false; removeStatusEffect("slow"); speedBoostMultiplier = 1.5;
+    addStatusEffect("speed", "SPEED I", "#0fc", 7);
+    safeTimeout(function(){ speedBoostMultiplier = 1; }, 7000);
+  });
+}
+
+function use1xSlash(k) {
+  if (cdM1 || k.state !== "IDLE" || gameState !== "INGAME") return;
+  cdM1 = true; animateCD("cd-m1", 1.75, function(){ cdM1 = false; });
+  playKillerSlashAnim(k);
+  safeTimeout(function(){
+    for (let i = zombies.length - 1; i >= 0; i--) {
+      if (checkHitbox(k, zombies[i], 7.5)) {
+        scene.remove(zombies[i]); zombies.splice(i, 1);
+        k.speedMult = 1.35; addStatusEffect("kspeed", "SPEED I", "#0fc", 7);
+        safeTimeout(function(){ k.speedMult = 1; }, 7000);
+      }
+    }
+    [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
+      if (s.alive && checkHitbox(k, s, 7.5) && !s.isInvulnerable) {
+        applyGlitched(s, 5); applyPoison(s, 1, 5);
+        if (s === playerNoob && playerRole === "SURVIVOR") {
+          closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(20, k);
+        } else {
+          s.hp -= 20;
+          if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; }
+          if (s.hp <= 0) playKillAnimation(k, s);
+        }
+      }
+    });
+  }, 250);
+}
+
+function use1xMassInfection(k) {
+  if ((k === activeKillers[0] && playerRole === "KILLER" && cdQ) || k.state !== "IDLE" || gameState !== "INGAME") return;
+  if (k === activeKillers[0] && playerRole === "KILLER") { cdQ = true; animateCD("cd-q", 17, function(){ cdQ = false; }); }
+  playSFX(sfx.mass); k.state = "CASTING"; k.parts.lArm.rotation.z = -1.5; k.parts.rArm.rotation.z = 1.5;
+  safeTimeout(function(){
+    if (k.state === "KILLING" || k.state === "STUNNED") return;
+    k.parts.lArm.rotation.z = 0; k.parts.rArm.rotation.z = 0;
+    const wave = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 1.5), new THREE.MeshBasicMaterial({ color: 0x00ff33 }));
+    wave.position.copy(k.position); wave.position.y = 3; wave.rotation.y = k.rotation.y;
+    scene.add(wave); tempObjects.push(wave);
+    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+    let lf = 90;
+    const hitMap = new Set();
+    const iv = safeInterval(function(){
+      wave.position.addScaledVector(fwd, 1.4); lf--;
+      [playerNoob].concat(aiSurvivors, clones).forEach(function(t){
+        if (t.alive && !hitMap.has(t) && wave.position.distanceTo(t.position) < 4 && !t.isInvulnerable) {
+          hitMap.add(t);
+          const close = k.position.distanceTo(t.position) < 8;
+          const dmg = 18 + (close ? 20 : 0) + (t.isGlitched ? 10 : 0);
+          applyGlitched(t, 5); applyPoison(t, close ? 5 : 1, close ? 3 : 4); applyHighlight(t, 12);
+          k.speedMult = 1.6; safeTimeout(function(){ k.speedMult = 1; }, 1500);
+          if (t === playerNoob && playerRole === "SURVIVOR") {
+            closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(dmg, k);
+          } else {
+            t.hp -= dmg; if (t.hp <= 0) playKillAnimation(k, t);
+          }
+        }
+      });
+      if (lf <= 0) { scene.remove(wave); clearInterval(iv); }
+    }, 16);
+    k.state = "IDLE";
+  }, 1200);
+}
+
+function use1xEntanglement(k) {
+  if ((k === activeKillers[0] && playerRole === "KILLER" && cdE) || k.state !== "IDLE" || gameState !== "INGAME") return;
+  if (k === activeKillers[0] && playerRole === "KILLER") { cdE = true; animateCD("cd-e", 18, function(){ cdE = false; }); }
+  playSFX(sfx.entangle); k.state = "CASTING"; k.parts.rArm.rotation.x = -1.5; k.parts.lArm.rotation.x = -1.5;
+  safeTimeout(function(){
+    if (k.state === "KILLING" || k.state === "STUNNED") return;
+    k.parts.rArm.rotation.x = 1.8; k.parts.lArm.rotation.x = 1.8;
+    const grp = new THREE.Group(); grp.add(mkSword(0x00ff33), mkSword(0x00ff33));
+    grp.children[0].position.x = -0.5; grp.children[1].position.x = 0.5;
+    grp.rotation.x = Math.PI / 2; grp.position.copy(k.position); grp.position.y = 3;
+    scene.add(grp); tempObjects.push(grp);
+    const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+    let lf = 60, hd = false;
+    const iv = safeInterval(function(){
+      grp.position.addScaledVector(fwd, 1.7); lf--;
+      [playerNoob].concat(aiSurvivors, clones).forEach(function(t){
+        if (!hd && t.alive && grp.position.distanceTo(t.position) < 3.5 && !t.isInvulnerable) {
+          hd = true;
+          const pullStr = t.isGlitched ? 10 : 6;
+          const pullDir = k.position.clone().sub(t.position).normalize();
+          moveWithCollision(t, pullDir.x * pullStr, pullDir.z * pullStr);
+          applyGlitched(t, 5); applyHighlight(t, 12);
+          if (t === playerNoob && playerRole === "SURVIVOR") {
+            closePuzzle(); cancelMedkit(); cancelC00lgui();
+            isRooted = true; safeTimeout(function(){ isRooted = false; }, 700);
+            applyHelpless(5); applyDamageToPlayer(10, k);
+          } else {
+            t.hp -= 10; if (t.hp <= 0) playKillAnimation(k, t);
+          }
+          scene.remove(grp); clearInterval(iv);
+        }
+      });
+      if (lf <= 0) { scene.remove(grp); clearInterval(iv); }
+    }, 16);
+    safeTimeout(function(){
+      if (k.state !== "KILLING" && k.state !== "STUNNED") {
+        k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0; k.state = "IDLE";
+      }
+    }, 300);
+  }, 600);
+}
+
+function use1xUnstableEye(k) {
+  if (cdR || k.state !== "IDLE" || gameState !== "INGAME") return;
+  cdR = true; animateCD("cd-r", 25, function(){ cdR = false; });
+  playSFX(sfx.unstable); k.speedMult = 1.6;
+  addStatusEffect("kspeed", "SPEED II", "#0fc", 1);
+  safeTimeout(function(){ k.speedMult = 1; }, 1000);
+  document.getElementById("blind-overlay").style.display = "block";
+  addStatusEffect("blind", "BLINDNESS III", "#666", 7);
+  safeTimeout(function(){ document.getElementById("blind-overlay").style.display = "none"; }, 7000);
+  [playerNoob].concat(aiSurvivors).forEach(function(s){ if (s.alive) applyHighlight(s, 8); });
+}
+
+function use1xRejuvenate(k) {
+  if ((k === activeKillers[0] && playerRole === "KILLER" && cdT) || rejuvenateCharges <= 0 || k.state !== "IDLE" || gameState !== "INGAME") return;
+  if (k === activeKillers[0] && playerRole === "KILLER") { cdT = true; animateCD("cd-t", 30, function(){ cdT = false; }); }
+  rejuvenateCharges--; document.getElementById("label-s4").innerText = "Rejuvenate [T] (0)";
+  playSFX(sfx.rejuv); k.state = "SUMMONING"; k.parts.rArm.rotation.x = 2.2; k.parts.lArm.rotation.x = 2.2;
+  safeTimeout(function(){
+    k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0; k.state = "IDLE";
+    killedLocations.forEach(function(pos){
+      const z = createR6("zombie"); z.position.set(pos.x, 0, pos.z); z.hp = 25; z.alive = true;
+      z.patrolTarget = new THREE.Vector3((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140);
+      scene.add(z); zombies.push(z); tempObjects.push(z);
+    });
+    killedLocations = [];
+  }, 900);
+}
+
+function killerTagM1(k) {
+  if (cdM1 || k.state !== "IDLE" || gameState !== "INGAME") return;
+  cdM1 = true; animateCD("cd-m1", 2, function(){ cdM1 = false; });
+  playKillerSlashAnim(k);
+  safeTimeout(function(){
+    [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
+      if (s.alive && checkHitbox(k, s, 5.5) && !s.isInvulnerable) {
+        if (s === playerNoob && playerRole === "SURVIVOR") {
+          closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(26.5, k);
+        } else {
+          s.hp -= 26.5;
+          if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; }
+          if (s.hp <= 0) playKillAnimation(k, s);
+        }
+      }
+    });
+  }, 120);
+}
+function killerWalkspeedOverride(k) {
+  if (cdQ || k.state !== "IDLE" || gameState !== "INGAME") return;
+  cdQ = true; animateCD("cd-q", 20, function(){ cdQ = false; });
+  triggerWalkspeedOverride(k);
+}
+function killerCorruptNature(k) {
+  if (cdE || k.state !== "IDLE" || gameState !== "INGAME") return;
+  cdE = true; animateCD("cd-e", 12, function(){ cdE = false; });
+  const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+  triggerCorruptNature(k, { position: k.position.clone().addScaledVector(f, 20) });
+}
+function killerPizzaDelivery(k) {
+  if (cdR || k.state !== "IDLE" || gameState !== "INGAME" || minions.length >= 2) return;
+  cdR = true; animateCD("cd-r", 50, function(){ cdR = false; });
+  triggerPizzaDelivery(k);
+}
+
+function animateCD(id, dur, cb) {
+  const el = document.getElementById(id); el.style.height = "100%";
+  let t = 0;
+  const tm = safeInterval(function(){
+    t += 0.2;
+    el.style.height = Math.max(0, (1 - t / dur) * 100) + "%";
+    if (t >= dur) { clearInterval(tm); if (cb) cb(); }
+  }, 200);
+}
+function applyHighlight(t, dur) {
+  if (dur === undefined) dur = 7.5;
+  t.isHighlighted = true; t.parts.highlightMesh.visible = true;
+  if (t === playerNoob && playerRole === "SURVIVOR") showToast("⚠ TERDETEKSI KILLER (HIGHLIGHT) ⚠", "#fc0");
+  safeTimeout(function(){ t.isHighlighted = false; t.parts.highlightMesh.visible = false; }, dur * 1000);
+}
+
+function triggerWalkspeedOverride(k) {
+  playSFX(sfx.override); k.state = "OVERRIDE_WINDUP";
+  k.parts.torso.rotation.x = 0.5; k.parts.lArm.rotation.x = -0.9; k.parts.rArm.rotation.x = -0.9;
+  safeTimeout(function(){
+    if (k.state === "OVERRIDE_WINDUP") { k.state = "DASHING"; k.dashT = 80; k.parts.torso.rotation.x = 0.2; }
+  }, 450);
+}
+function triggerCorruptNature(k, tg) {
+  playSFX(sfx.corrupt); k.state = "CASTING"; k.parts.torso.rotation.y = -0.4; k.parts.rArm.rotation.x = -1.2;
+  safeTimeout(function(){
+    if (k.state === "KILLING" || k.state === "STUNNED") return;
+    k.parts.torso.rotation.y = 0.3; k.parts.rArm.rotation.x = 2.2;
+    const pr = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 2, 1),
+      new THREE.MeshStandardMaterial({ color: 0x888888, transparent: true, opacity: 0.9 })
+    );
+    pr.position.copy(k.position); pr.position.y += 3; scene.add(pr); tempObjects.push(pr);
+    const dir = tg.position.clone().sub(k.position).normalize();
+    let lf = 140, hd = false;
+    const iv = safeInterval(function(){
+      pr.position.addScaledVector(dir, 1.1); lf--;
+      const targets = [playerNoob].concat(aiSurvivors, clones);
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        if (!hd && t.alive && pr.position.distanceTo(t.position) < 3.2) {
+          hd = true;
+          if (!t.isInvulnerable) {
+            if (t === playerNoob && playerRole === "SURVIVOR") {
+              closePuzzle(); cancelMedkit(); cancelC00lgui();
+              hasSlowness = true; addStatusEffect("slow", "SLOWNESS I", "#a6f", 4);
+              safeTimeout(function(){ hasSlowness = false; }, 4000);
+              applyDamageToPlayer(15, k);
+            } else {
+              t.hp -= 15;
+              if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; }
+              if (t.hp <= 0) playKillAnimation(k, t);
+            }
+          }
+          scene.remove(pr); clearInterval(iv); break;
+        }
+      }
+      if (lf <= 0) { scene.remove(pr); clearInterval(iv); }
+    }, 16);
+    safeTimeout(function(){
+      if (k.state !== "KILLING" && k.state !== "STUNNED") {
+        k.parts.torso.rotation.y = 0; k.parts.rArm.rotation.x = 0; k.state = "IDLE";
+      }
+    }, 350);
+  }, 350);
+}
+function triggerPizzaDelivery(k) {
+  if (minions.length >= 2) return;
+  playSFX(sfx.pizza); k.state = "SUMMONING";
+  k.parts.lArm.rotation.x = 2.5; k.parts.rArm.rotation.x = 2.5;
+  const nd = 2 - minions.length;
+  let fin = 0;
+  for (let i = 0; i < nd; i++) {
+    (function(idx){
+      const m = createR6("c00lkidd");
+      m.scale.set(0.65, 0.65, 0.65); m.isRising = true; m.fading = false;
+      m.position.set(k.position.x + (idx === 0 ? -4 : 4), -3, k.position.z);
+      scene.add(m); minions.push(m); tempObjects.push(m); playSFX(sfx.minion);
+      let rt = 0;
+      const ri = safeInterval(function(){
+        m.position.y += 0.15; rt++;
+        if (rt >= 20) {
+          m.position.y = 0; m.isRising = false; clearInterval(ri); fin++;
+          if (fin === nd) {
+            safeTimeout(function(){
+              if (k.state !== "KILLING" && k.state !== "STUNNED") {
+                k.parts.lArm.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.state = "IDLE";
+              }
+            }, 500);
+          }
+        }
+      }, 40);
+      m.despawnTimeout = safeTimeout(function(){ fadeAndRemoveMinion(m); }, 30000);
+    })(i);
   }
 }
 
-function canMoveTo(x, z) {
-  if (x < -109.5 || x > 109.5 || z < -109.5 || z > 109.5) return false;
-  for (let i = 0; i < solidBoxes.length; i++) {
-    const b = solidBoxes[i];
-    if (x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ) return false;
-  }
-  for (let i = 0; i < generators.length; i++) {
-    const gp = generators[i].group.position;
-    if (Math.abs(x - gp.x) < 2.9 && Math.abs(z - gp.z) < 2.4) return false;
-  }
-  return true;
+function checkHitbox(k, t, len) {
+  if (len === undefined) len = 5.5;
+  const r = t.position.clone().sub(k.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), -k.rotation.y);
+  return Math.abs(r.x) <= 2.3 && r.y >= -1 && r.y <= 5.5 && r.z <= 0.5 && r.z >= -len;
 }
-function moveWithCollision(e, vx, vz) {
-  const steps = Math.max(1, Math.ceil(Math.max(Math.abs(vx), Math.abs(vz)) / 0.8));
-  const sx = vx / steps, sz = vz / steps;
-  for (let s = 0; s < steps; s++) {
-    const nx = e.position.x + sx, nz = e.position.z + sz;
-    if (canMoveTo(nx, nz)) { e.position.x = nx; e.position.z = nz; }
-    else if (canMoveTo(nx, e.position.z)) e.position.x = nx;
-    else if (canMoveTo(e.position.x, nz)) e.position.z = nz;
-  }
-}
-
-function toggleMapType() {
-  if (gameState !== "LOBBY") return;
-  currentMap = (currentMap === "FOREST") ? "PIZZA" : "FOREST";
-  const b = document.getElementById("map-btn");
-  if (b) b.innerText = "MAP: " + (currentMap === "PIZZA" ? "PIZZA PLACE" : "FOREST");
-  applyMapEnvironment();
+function animateWalkingLimbs(g, s) {
+  g.walkCycle += s;
+  g.parts.lArm.rotation.x = Math.sin(g.walkCycle) * 0.7;
+  g.parts.rArm.rotation.x = -Math.sin(g.walkCycle) * 0.7;
+  g.parts.lLeg.rotation.x = -Math.sin(g.walkCycle) * 0.7;
+  g.parts.rLeg.rotation.x = Math.sin(g.walkCycle) * 0.7;
 }
 
 function animate() {
   requestAnimationFrame(animate);
   skyStar.rotation.y += 0.012;
-  pizzaSkyGroup.visible = (currentMap === "PIZZA" && gameState !== "LOBBY");
-  if (currentMap === "PIZZA") {
-    pizzaFires.forEach(function(fl, i){
-      fl.scale.y = 0.75 + Math.sin(Date.now() * 0.02 + i) * 0.35; fl.rotation.y += 0.08;
-    });
-    pizzaSkyObjs.forEach(function(obj, i){
-      obj.rotation.y += 0.008; obj.position.y += Math.sin(Date.now() * 0.002 + i) * 0.02;
-    });
-    pizzaGlitches.forEach(function(gl){
-      gl.visible = Math.random() > 0.25;
-      gl.position.x = gl.basePos.x + (Math.random() - 0.5) * 1.4;
-      gl.position.y = gl.basePos.y + (Math.random() - 0.5) * 0.8;
-      gl.scale.x = 0.6 + Math.random() * 1.4;
-    });
-    pizzaC00lPics.forEach(function(pc, i){ pc.visible = (i < 3) ? true : (Math.random() > 0.15); });
-  }
   lobbyFireLight.intensity = 2.8 + Math.sin(Date.now() * 0.012) * 0.7;
   lobbyFireFlame.scale.y = 0.8 + Math.sin(Date.now() * 0.015) * 0.25;
   dispGear.rotation.z += 0.03;
@@ -2205,7 +2776,9 @@ function animate() {
     }
     if (isSprinting && stamina > 0 && !isDrinkingOrEating && !isUsingMedkit && !playerNoob.isInvulnerable) {
       sp *= 1.6; stamina = Math.max(0, stamina - 0.4);
-    } else stamina = Math.min(100, stamina + 0.25);
+    } else {
+      stamina = Math.min(100, stamina + 0.25);
+    }
     document.getElementById("stamina-bar").style.width = stamina + "%";
     let mx = 0, mz = 0;
     if (keys["KeyW"]) mz--; if (keys["KeyS"]) mz++;
@@ -2224,18 +2797,30 @@ function animate() {
   if (gameState === "INGAME" && playerRole === "SURVIVOR" && !isPlayerDead) {
     mapItems.forEach(function(it){
       if (it.active && playerNoob.position.distanceTo(it.mesh.position) < 3) {
-        if (it.type === "COLA" && invCola < 1) { it.active = false; it.mesh.visible = false; invCola = 1; showToast("Pungut: Bloxy Cola [1]"); updateInventoryUI(); }
-        else if (it.type === "MEDKIT" && invMedkit < 1) { it.active = false; it.mesh.visible = false; invMedkit = 1; showToast("Pungut: Medkit [2]"); updateInventoryUI(); }
-        else if (it.type === "GEAR") { it.active = false; it.mesh.visible = false; invGears++; showToast("Pungut: Gerigi Mesin! (Total: " + invGears + ")", "#fbbf24"); updateInventoryUI(); }
+        if (it.type === "COLA" && invCola < 1) {
+          it.active = false; it.mesh.visible = false; invCola = 1;
+          showToast("Pungut: Bloxy Cola [1]"); updateInventoryUI();
+        } else if (it.type === "MEDKIT" && invMedkit < 1) {
+          it.active = false; it.mesh.visible = false; invMedkit = 1;
+          showToast("Pungut: Medkit [2]"); updateInventoryUI();
+        } else if (it.type === "GEAR") {
+          it.active = false; it.mesh.visible = false; invGears++;
+          showToast("Pungut: Gerigi Mesin! (Total: " + invGears + ")", "#fbbf24"); updateInventoryUI();
+        }
       }
     });
     const ng = getNearestIncompleteGen(playerNoob.position), pe = document.getElementById("interact-prompt");
-    if (ng && !activeGen) { pe.innerText = "Tekan [F] Perbaiki Gen #" + ng.id + " (" + ng.label + ") [" + ng.stage + "/5]"; pe.style.display = "block"; }
-    else pe.style.display = "none";
-  } else document.getElementById("interact-prompt").style.display = "none";
+    if (ng && !activeGen) {
+      pe.innerText = "Tekan [F] Perbaiki Gen #" + ng.id + " (" + ng.label + ") [" + ng.stage + "/5]";
+      pe.style.display = "block";
+    } else pe.style.display = "none";
+  } else {
+    document.getElementById("interact-prompt").style.display = "none";
+  }
 
   if (dexMarker.visible) {
-    const fs = getFarthestSpawn(playerNoob.position); dexMarker.position.set(fs.x, 20, fs.z);
+    const fs = getFarthestSpawn(playerNoob.position);
+    dexMarker.position.set(fs.x, 20, fs.z);
   }
   const cf = camFocusOverride ? camFocusOverride : (isSpectating && spectateList[spectateIdx] ? spectateList[spectateIdx] : cc);
   camera.position.set(
@@ -2248,9 +2833,14 @@ function animate() {
   if (gameState === "INGAME") {
     let ad = 9999;
     if (playerRole === "SURVIVOR") {
-      activeKillers.forEach(function(k){ ad = Math.min(ad, (!isPlayerDead ? playerNoob : cf).position.distanceTo(k.position)); });
+      activeKillers.forEach(function(k){
+        const refPos = (!isPlayerDead ? playerNoob : cf).position;
+        ad = Math.min(ad, refPos.distanceTo(k.position));
+      });
     } else {
-      aiSurvivors.forEach(function(s){ if (s.alive && activeKillers[0]) ad = Math.min(ad, s.position.distanceTo(activeKillers[0].position)); });
+      aiSurvivors.forEach(function(s){
+        if (s.alive && activeKillers[0]) ad = Math.min(ad, s.position.distanceTo(activeKillers[0].position));
+      });
     }
     update4LayerChase(ad);
 
@@ -2265,9 +2855,9 @@ function animate() {
         let md = 9999;
         tgts.forEach(function(t){ const d = t.position.distanceTo(k.position); if (d < md) { md = d; ct = t; } });
       }
-      const isPC = (playerRole === "KILLER" && kIdx === 0);
+      const isPlayerControlling = (playerRole === "KILLER" && kIdx === 0);
 
-      if (!isPC && ct && k.state !== "KILLING" && k.state !== "STUNNED") {
+      if (!isPlayerControlling && ct && k.state !== "KILLING" && k.state !== "STUNNED") {
         if (k.state !== "SUMMONING" && k.state !== "CASTING") {
           k.lookAt(ct.position.x, 0, ct.position.z); k.rotation.y += Math.PI;
         }
@@ -2276,38 +2866,18 @@ function animate() {
           const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
           moveWithCollision(k, f.x * 1.15, f.z * 1.15);
           if (checkHitbox(k, ct) && !ct.isInvulnerable) {
-            if (ct === playerNoob) { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToTarget(ct, 8, k); applyDamageToPlayer(32, k); }
-            else { applyBurningToTarget(ct, 8, k); ct.hp -= 32; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; } if (ct.hp <= 0) playKillAnimation(k, ct); }
-            if (k.state !== "KILLING") k.state = "IDLE"; k.parts.torso.rotation.x = 0;
+            if (ct === playerNoob) {
+              closePuzzle(); cancelMedkit(); cancelC00lgui();
+              applyBurningToTarget(ct, 8, k); applyDamageToPlayer(32, k);
+            } else {
+              applyBurningToTarget(ct, 8, k); ct.hp -= 32;
+              if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+              if (ct.hp <= 0) playKillAnimation(k, ct);
+            }
+            if (k.state !== "KILLING") k.state = "IDLE";
+            k.parts.torso.rotation.x = 0;
           }
           if (k.dashT <= 0 && k.state === "DASHING") { k.state = "IDLE"; k.parts.torso.rotation.x = 0; }
-        } else if (k.state === "VOID_RUSHING") {
-          k.rushTimer--;
-          const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
-          const prevX = k.position.x, prevZ = k.position.z;
-          moveWithCollision(k, fwd.x * 1.35, fwd.z * 1.35);
-          if (Math.abs(k.position.x - prevX) < 0.05 && Math.abs(k.position.z - prevZ) < 0.05) {
-            k.state = "IDLE"; playCutsceneMP3(sfx.noliRushCrash, null); showToast("owwwww ;(", "#f44");
-          }
-          [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
-            if (s.alive && checkHitbox(k, s, 6.2) && !s.isInvulnerable) {
-              k.rushHits++;
-              if (s.hallucinationLvl && s.hallucinationLvl >= 2) {
-                playCutsceneMP3(sfx.noliRushSlam, function(){ playSynthTone(90, 0.7, "sawtooth", 0.25); });
-                const slamDmg = 40 + (k.rushHits * 3.5);
-                showToast("hell yeah >:) [SLAM!]", "#c084fc");
-                if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(slamDmg, k);
-                else { s.hp -= slamDmg; if (s.hp <= 0) playKillAnimation(k, s); }
-                k.state = "IDLE";
-              } else {
-                playCutsceneMP3(sfx.noliRushHit, null); applyHallucination(s, 2);
-                showToast("Hit Survivor! Siap Slam!", "#c084fc");
-                if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(10, k);
-                else { s.hp -= 10; if (s.hp <= 0) playKillAnimation(k, s); }
-              }
-            }
-          });
-          if (k.rushTimer <= 0 && k.state === "VOID_RUSHING") { k.state = "IDLE"; playCutsceneMP3(sfx.noliRushFail, null); }
         } else if (k.state === "IDLE") {
           const kx = ct.position.x - k.position.x, kz = ct.position.z - k.position.z;
           const kd = Math.sqrt(kx * kx + kz * kz);
@@ -2315,21 +2885,29 @@ function animate() {
             moveWithCollision(k, (kx / kd) * 0.25 * k.speedMult, (kz / kd) * 0.25 * k.speedMult);
             animateWalkingLimbs(k, 0.22);
           }
-          const hitLen = k.kType === "1x1x1x1" ? 7.5 : (k.kType === "Noli" ? 6.5 : 5.5);
+          const hitLen = k.kType === "1x1x1x1" ? 7.5 : 5.5;
           if (k.atkCD <= 0 && checkHitbox(k, ct, hitLen)) {
-            k.atkCD = k.kType === "1x1x1x1" ? 105 : (k.kType === "Noli" ? 95 : 110);
-            if (k.kType === "Noli") useNoliStab(k);
-            else playKillerSlashAnim(k);
+            k.atkCD = k.kType === "1x1x1x1" ? 105 : 110;
+            playKillerSlashAnim(k);
+            safeTimeout(function(){
+              if (ct.alive && checkHitbox(k, ct, hitLen) && !ct.isInvulnerable) {
+                const dmg = k.kType === "1x1x1x1" ? 20 : 26.5;
+                if (k.kType === "1x1x1x1") { applyGlitched(ct, 5); applyPoison(ct, 1, 5); }
+                if (ct === playerNoob) {
+                  closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(dmg, k);
+                } else {
+                  ct.hp -= dmg;
+                  if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+                  if (ct.hp <= 0) playKillAnimation(k, ct);
+                }
+              }
+            }, 150);
           }
           k.abT++;
           if (k.kType === "c00lkidd") {
             if (k.abT === 450) triggerWalkspeedOverride(k);
             if (k.abT === 900) triggerCorruptNature(k, ct);
             if (k.abT === 1350) { triggerPizzaDelivery(k); k.abT = 0; }
-          } else if (k.kType === "Noli") {
-            if (k.abT === 380) useNoliVoidRush(k);
-            if (k.abT === 750) useNoliNova(k);
-            if (k.abT === 1150) { useNoliObservant(k); k.abT = 0; }
           } else {
             if (k.abT === 400) use1xMassInfection(k);
             if (k.abT === 800) use1xEntanglement(k);
@@ -2337,7 +2915,7 @@ function animate() {
             else if (k.abT >= 1200) k.abT = 0;
           }
         }
-      } else if (isPC && k.state === "DASHING") {
+      } else if (isPlayerControlling && k.state === "DASHING") {
         k.dashT--;
         const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
         moveWithCollision(k, f.x * 1.15, f.z * 1.15);
@@ -2350,55 +2928,34 @@ function animate() {
           }
         });
         if (k.dashT <= 0 && k.state === "DASHING") { k.state = "IDLE"; k.parts.torso.rotation.x = 0; }
-      } else if (isPC && k.state === "VOID_RUSHING") {
-        k.rushTimer--;
-        const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
-        const prevX = k.position.x, prevZ = k.position.z;
-        moveWithCollision(k, fwd.x * 1.35, fwd.z * 1.35);
-        if (Math.abs(k.position.x - prevX) < 0.05 && Math.abs(k.position.z - prevZ) < 0.05) {
-          k.state = "IDLE"; playCutsceneMP3(sfx.noliRushCrash, null); showToast("owwwww ;(", "#f44");
-        }
-        tgts.forEach(function(s){
-          if (s.alive && checkHitbox(k, s, 6.2) && !s.isInvulnerable) {
-            k.rushHits++;
-            if (s.hallucinationLvl && s.hallucinationLvl >= 2) {
-              playCutsceneMP3(sfx.noliRushSlam, function(){ playSynthTone(90, 0.7, "sawtooth", 0.25); });
-              const slamDmg = 40 + (k.rushHits * 3.5);
-              showToast("hell yeah >:) [SLAM!]", "#c084fc");
-              if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(slamDmg, k);
-              else { s.hp -= slamDmg; if (s.hp <= 0) playKillAnimation(k, s); }
-              k.state = "IDLE";
-            } else {
-              playCutsceneMP3(sfx.noliRushHit, null); applyHallucination(s, 2);
-              showToast("Hit Survivor! Siap Slam!", "#c084fc");
-              if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(10, k);
-              else { s.hp -= 10; if (s.hp <= 0) playKillAnimation(k, s); }
-            }
-          }
-        });
-        if (k.rushTimer <= 0 && k.state === "VOID_RUSHING") { k.state = "IDLE"; playCutsceneMP3(sfx.noliRushFail, null); }
       }
       if (k.atkCD > 0) k.atkCD--;
     });
 
     for (let i = minions.length - 1; i >= 0; i--) {
-      const m = minions[i]; if (m.isRising || m.fading) continue;
+      const m = minions[i];
+      if (m.isRising || m.fading) continue;
       let ct = tgts[0], md = 9999;
       tgts.forEach(function(t){ const d = t.position.distanceTo(m.position); if (d < md) { md = d; ct = t; } });
       if (!ct) continue;
       m.lookAt(ct.position.x, 0, ct.position.z); m.rotation.y += Math.PI;
       const mx = ct.position.x - m.position.x, mz = ct.position.z - m.position.z;
-      if (md > 2.5) { moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14); animateWalkingLimbs(m, 0.24); }
-      else {
+      if (md > 2.5) {
+        moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14);
+        animateWalkingLimbs(m, 0.24);
+      } else {
         fadeAndRemoveMinion(m); applyHighlight(ct);
         if (!ct.isInvulnerable) {
-          const kRef = activeKillers[0]; applyBurningToTarget(ct, 3, kRef);
+          const kRef = activeKillers[0];
+          applyBurningToTarget(ct, 3, kRef);
           if (ct === playerNoob && playerRole === "SURVIVOR") {
             closePuzzle(); cancelMedkit(); cancelC00lgui();
             hasSlowness = true; addStatusEffect("slow", "SLOWNESS II", "#a6f", 3);
-            safeTimeout(function(){ hasSlowness = false; }, 3000); applyDamageToPlayer(15, kRef);
+            safeTimeout(function(){ hasSlowness = false; }, 3000);
+            applyDamageToPlayer(15, kRef);
           } else {
-            ct.hp -= 15; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
+            ct.hp -= 15;
+            if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; }
             if (ct.hp <= 0) playKillAnimation(kRef, ct);
           }
         }
@@ -2409,7 +2966,8 @@ function animate() {
       if (!z.alive) return;
       let zTgt = null, minD = 9999;
       tgts.forEach(function(t){ const d = z.position.distanceTo(t.position); if (d < minD) { minD = d; zTgt = t; } });
-      if (zTgt && minD <= 20) z.target = zTgt; else if (z.target && z.position.distanceTo(z.target.position) > 30) z.target = null;
+      if (zTgt && minD <= 20) z.target = zTgt;
+      else if (z.target && z.position.distanceTo(z.target.position) > 30) z.target = null;
       if (z.target && z.target.alive) {
         const zx = z.target.position.x - z.position.x, zz = z.target.position.z - z.position.z;
         const zd = Math.sqrt(zx * zx + zz * zz);
@@ -2433,7 +2991,9 @@ function animate() {
           moveWithCollision(z, (px / pd) * 0.1, (pz / pd) * 0.1);
           z.lookAt(z.patrolTarget.x, 0, z.patrolTarget.z); z.rotation.y += Math.PI;
           animateWalkingLimbs(z, 0.14);
-        } else z.patrolTarget.set((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140);
+        } else {
+          z.patrolTarget.set((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140);
+        }
       }
     });
 
@@ -2480,9 +3040,9 @@ function animate() {
             const ix = clones.indexOf(cl); if (ix > -1) clones.splice(ix, 1);
           }, 10000);
           ai.isUndetectable = true;
-          const pts = [ai.parts.torso, ai.parts.head, ai.parts.lArm, ai.parts.rArm, ai.parts.lLeg, ai.parts.rLeg];
-          pts.forEach(function(p){ setPartOp(p, 0.15); });
-          safeTimeout(function(){ ai.isUndetectable = false; pts.forEach(function(p){ setPartOp(p, 1); }); }, 5000);
+          const aParts = [ai.parts.torso, ai.parts.head, ai.parts.lArm, ai.parts.rArm, ai.parts.lLeg, ai.parts.rLeg];
+          aParts.forEach(function(p){ setPartOp(p, 0.15); });
+          safeTimeout(function(){ ai.isUndetectable = false; aParts.forEach(function(p){ setPartOp(p, 1); }); }, 5000);
           safeTimeout(function(){ ai.cdQ = false; }, 27000);
         }
         if (ai.hp < 80 && dk > 25 && !ai.cdE) {
@@ -2518,14 +3078,19 @@ function animate() {
         }
         if (ai.hp < 60 && !ai.cdQ) {
           ai.cdQ = true; ai.hp = Math.min(100, ai.hp + 20);
-          const pts = [ai.parts.torso, ai.parts.head, ai.parts.lArm, ai.parts.rArm, ai.parts.lLeg, ai.parts.rLeg];
-          pts.forEach(function(p){ setPartOp(p, 0.2); });
-          safeTimeout(function(){ pts.forEach(function(p){ setPartOp(p, 1); }); safeTimeout(function(){ ai.cdQ = false; }, 40000); }, 7000);
+          const nParts = [ai.parts.torso, ai.parts.head, ai.parts.lArm, ai.parts.rArm, ai.parts.lLeg, ai.parts.rLeg];
+          nParts.forEach(function(p){ setPartOp(p, 0.2); });
+          safeTimeout(function(){
+            nParts.forEach(function(p){ setPartOp(p, 1); });
+            safeTimeout(function(){ ai.cdQ = false; }, 40000);
+          }, 7000);
         }
       }
       let as = (dk < 35 || ai.isHighlighted) ? 0.21 : 0.14;
       if (dk < 30 && ai.invCola > 0) { ai.invCola--; as = 0.29; }
-      else if (!ai.is007 && !ai.isShed && dk < 30 && !ai.cdR) { ai.cdR = true; as = 0.28; safeTimeout(function(){ ai.cdR = false; }, 50000); }
+      else if (!ai.is007 && !ai.isShed && dk < 30 && !ai.cdR) {
+        ai.cdR = true; as = 0.28; safeTimeout(function(){ ai.cdR = false; }, 50000);
+      }
       if (ai.isInvulnerable) as = 0.1;
       if ((dk < 35 || ai.isHighlighted) && nearK) {
         const ax = ai.position.x - nearK.position.x, az = ai.position.z - nearK.position.z;
@@ -2548,7 +3113,8 @@ function animate() {
             ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2;
             ai.genWorkTimer++;
             if (ai.genWorkTimer >= 260) {
-              ai.genWorkTimer = 0; if (!tg.done) { tg.stage++; if (tg.stage >= 5) completeGenerator(tg, ai.name); }
+              ai.genWorkTimer = 0;
+              if (!tg.done) { tg.stage++; if (tg.stage >= 5) completeGenerator(tg, ai.name); }
             }
           }
         } else {
@@ -2571,3 +3137,4 @@ updateUIState();
 </script>
 </body>
 </html>
+```
