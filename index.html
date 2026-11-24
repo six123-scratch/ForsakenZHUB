@@ -776,6 +776,90 @@ addPizzaWall(-43, 52, 34, 11, 2, true);
 addPizzaWall(-60, 39, 2, 11, 26, false);
 addPizzaWall(43, 54, 30, 11, 2, true);
 addPizzaWall(58, 39, 2, 11, 30, false);
+  // ATAP RESTORAN & KACA RETAK / PECAH
+const pizzaRoofMat = new THREE.MeshStandardMaterial({ color: 0x2b1111, roughness: 0.9 });
+const mainRoof = new THREE.Mesh(new THREE.BoxGeometry(40, 1.4, 32), pizzaRoofMat);
+mainRoof.position.set(-43, 12.7, -41); map2Group.add(mainRoof);
+const eastRoof = new THREE.Mesh(new THREE.BoxGeometry(38, 1.4, 32), pizzaRoofMat);
+eastRoof.position.set(46, 12.7, -39); map2Group.add(eastRoof);
+const neonSign = new THREE.Mesh(new THREE.BoxGeometry(10, 2.2, 0.6),
+  new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+neonSign.position.set(-43, 14.5, -25.5); map2Group.add(neonSign);
+
+const crackGlassTex = makeTexCanvas(128, 128, function(x){
+  x.fillStyle = "rgba(147,197,253,0.35)"; x.fillRect(0, 0, 128, 128);
+  x.strokeStyle = "#e2e8f0"; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(20, 10); x.lineTo(62, 58); x.lineTo(110, 42);
+  x.moveTo(62, 58); x.lineTo(40, 118); x.moveTo(62, 58); x.lineTo(95, 105); x.stroke();
+});
+const glassMatOk = new THREE.MeshStandardMaterial({
+  color: 0x93c5fd, transparent: true, opacity: 0.35, side: THREE.DoubleSide
+});
+const glassMatCrack = new THREE.MeshStandardMaterial({
+  map: crackGlassTex, transparent: true, side: THREE.DoubleSide
+});
+function addWindowPane(x, y, z, rotY, mode) {
+  if (mode === "BROKEN") {
+    const sh1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 0.15), glassMatCrack);
+    sh1.position.set(x, y - 1.8, z); sh1.rotation.y = rotY; sh1.rotation.z = 0.25;
+    const sh2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 0.15), glassMatOk);
+    sh2.position.set(x + (rotY ? 0 : 1.4), y + 1.4, z + (rotY ? 1.4 : 0));
+    sh2.rotation.y = rotY; sh2.rotation.z = -0.35;
+    map2Group.add(sh1, sh2);
+  } else {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(5.5, 5.2, 0.18),
+      mode === "CRACK" ? glassMatCrack : glassMatOk);
+    p.position.set(x, y, z); p.rotation.y = rotY; map2Group.add(p);
+  }
+}
+addWindowPane(-45, 5.5, -26, 0, "CRACK");
+addWindowPane(-24, 5.5, -41, Math.PI / 2, "BROKEN");
+addWindowPane(28, 5.5, -39, Math.PI / 2, "CRACK");
+addWindowPane(46, 5.5, -24, 0, "BROKEN");
+
+// 12 RUMAH WARNA-WARNI (HIJAU, PUTIH, ABU, HITAM, COKLAT) DI SEKELILING MAP WATPP
+function createWatppHouse(x, z, wallCol, rotY, burning, hacked) {
+  const h = new THREE.Group();
+  const wMat = hacked ? grafMat : new THREE.MeshStandardMaterial({ color: wallCol, roughness: 0.85 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(12, 8.5, 11), wMat);
+  body.position.y = 4.25; body.castShadow = true; body.receiveShadow = true; h.add(body);
+  const roofCol = hacked ? 0x450a0a : 0x1e293b;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(9.2, 4.8, 4),
+    new THREE.MeshStandardMaterial({ color: roofCol, roughness: 0.9 }));
+  roof.position.y = 10.9; roof.rotation.y = Math.PI / 4;
+  if (burning) roof.rotation.z = 0.14;
+  h.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 4.4, 0.4),
+    new THREE.MeshStandardMaterial({ color: 0x3b2314 }));
+  door.position.set(0, 2.2, 5.6); h.add(door);
+  [-3.4, 3.4].forEach(function(wx){
+    const win = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.4),
+      burning ? new THREE.MeshBasicMaterial({ color: 0xff5500 }) : glassMatCrack);
+    win.position.set(wx, 5.2, 5.6); h.add(win);
+  });
+  if (hacked) {
+    const cPic = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2),
+      new THREE.MeshBasicMaterial({ map: c00lFaceTex, side: THREE.DoubleSide }));
+    cPic.position.set(0, 5, -5.65); h.add(cPic);
+  }
+  h.position.set(x, 0, z); h.rotation.y = rotY;
+  map2Group.add(h); regBoxTo(solidBoxes2, x, z, 12.5, 12);
+  if (burning) addFlameAt(map2Group, x, 8.2, z, 1.3);
+}
+[
+  [-45, -95, 0x228b22, 0, false, true],
+  [-18, -95, 0xe2e8f0, 0, false, false],
+  [22, -95, 0x7c4a2d, 0, true, false],
+  [50, -95, 0x64748b, 0, false, true],
+  [-48, 95, 0x1e293b, Math.PI, true, true],
+  [-18, 95, 0x7c4a2d, Math.PI, false, false],
+  [22, 95, 0xe2e8f0, Math.PI, true, false],
+  [52, 95, 0x228b22, Math.PI, false, true],
+  [-96, -42, 0x64748b, Math.PI / 2, true, false],
+  [-96, 38, 0xe2e8f0, Math.PI / 2, false, true],
+  [96, -44, 0x1e293b, -Math.PI / 2, false, true],
+  [96, 42, 0x7c4a2d, -Math.PI / 2, true, false]
+].forEach(function(r){ createWatppHouse(r[0], r[1], r[2], r[3], r[4], r[5]); });
 
 // Tiang Truss + Papan Logo Pizza Vandal c00lkidd
 const trussPole = new THREE.Mesh(new THREE.BoxGeometry(2.2, 22, 2.2),
@@ -894,6 +978,71 @@ const mapConfigs = {
   }
 };
 
+const genCoreTex = makeTexCanvas(128, 64, function(x){
+  const cols = ["#1e293b", "#991b1b", "#1d4ed8", "#ca8a04", "#0f766e", "#7e22ce"];
+  for (let i = 0; i < 32; i++) {
+    x.fillStyle = cols[i % cols.length]; x.fillRect(i * 4, 0, 4, 64);
+  }
+});
+function createDetailedGenerator() {
+  const g = new THREE.Group();
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.7, roughness: 0.3 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.5 });
+  const redTankMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.6 });
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.9, 2.0), darkMat);
+  body.position.y = 1.45; body.castShadow = true; g.add(body);
+  const topPanel = new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.65, 2.1), panelMat);
+  topPanel.position.y = 2.15; g.add(topPanel);
+  const recess = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.32, 2.16), darkMat);
+  recess.position.set(0.25, 2.15, 0); g.add(recess);
+  const swBtn = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.28, 2.18),
+    new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+  swBtn.position.set(-1.2, 2.15, 0); g.add(swBtn);
+
+  const tank = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.42, 1.5), redTankMat);
+  tank.position.y = 2.65; g.add(tank);
+  const core = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 2.06),
+    new THREE.MeshStandardMaterial({ map: genCoreTex }));
+  core.position.y = 1.25; g.add(core);
+
+  [[-1.75, 1.55], [1.75, 1.55]].forEach(function(px){
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 2.3, 8), metalMat);
+    bar.position.set(px[0], px[1], 0.95); g.add(bar);
+    const bar2 = bar.clone(); bar2.position.z = -0.95; g.add(bar2);
+  });
+  [-0.95, 0.95].forEach(function(pz){
+    const bot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 3.6, 8), metalMat);
+    bot.rotation.z = Math.PI / 2; bot.position.set(0, 0.48, pz); g.add(bot);
+  });
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 1.8), darkMat);
+  leg.position.set(-1.35, 0.25, 0); g.add(leg);
+
+  [-1.12, 1.12].forEach(function(wz){
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.28, 12), darkMat);
+    tire.rotation.x = Math.PI / 2; tire.position.set(1.5, 0.55, wz); g.add(tire);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.31, 10), metalMat);
+    hub.rotation.x = Math.PI / 2; hub.position.set(1.5, 0.55, wz); g.add(hub);
+  });
+
+  const wireCols = [0xef4444, 0xeab308, 0xa855f7];
+  [-1.08, 1.08].forEach(function(sx){
+    wireCols.forEach(function(wc, wi){
+      const wArc = new THREE.Mesh(new THREE.TorusGeometry(0.32 + wi * 0.06, 0.04, 6, 12, Math.PI),
+        new THREE.MeshBasicMaterial({ color: wc }));
+      wArc.position.set(sx, 1.0 + wi * 0.16, 1.04); wArc.rotation.z = Math.PI;
+      const wArcB = wArc.clone(); wArcB.position.z = -1.04;
+      g.add(wArc, wArcB);
+    });
+  });
+
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.6),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+  lamp.position.y = 3.25; g.add(lamp);
+  return { group: g, lamp: lamp };
+}
+
 const genConfig = [
   { type: "CABLE_4", label: "Kabel 4 Warna" },
   { type: "GEAR_CAL", label: "Gerigi & Kalibrasi (Butuh 2 Gerigi)" },
@@ -903,6 +1052,14 @@ const genConfig = [
 ];
 const generators = [];
 genConfig.forEach(function(cfg, i){
+  const built = createDetailedGenerator();
+  const pos = mapConfigs.FOREST.gens[i];
+  built.group.position.set(pos[0], 0, pos[1]); scene.add(built.group);
+  generators.push({
+    group: built.group, lamp: built.lamp, stage: 0, done: false,
+    id: i + 1, puzzleType: cfg.type, label: cfg.label, gearsInserted: 0
+  });
+});
   const g = new THREE.Group();
   const b = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x555555 }));
   const l = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
