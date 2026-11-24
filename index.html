@@ -1226,7 +1226,7 @@ function createFace(bg, mode) {
     x.fill(); x.beginPath();
     x.arc(64, 72, 30, 0.1 * Math.PI, 0.9 * Math.PI, false);
     x.lineWidth = 7; x.stroke();
-    else if (mode === "noli") {
+ if (mode === "noli") {
   x.fillStyle = "#120320"; x.fillRect(0, 0, 128, 128);
   // Sisi kiri topeng komedi/tragedi retak bersinar putih
   x.fillStyle = "#ffffff";
