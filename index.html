@@ -369,6 +369,16 @@ function updateRoundInfoText() {
   document.getElementById("round-info").innerText = "RONDE " + roundCount + " (" + modeTxt + ")";
 }
 function togglePlayerRole() {
+  function toggleKillerType() {
+  if (gameState !== "LOBBY") return;
+  const list = ["c00lkidd", "1x1x1x1", "Noli"];
+  killerType = list[(list.indexOf(killerType) + 1) % list.length];
+  const b = document.getElementById("killer-btn");
+  b.innerText = "KILLER: " + killerType;
+  b.classList.toggle("k1x", killerType === "1x1x1x1");
+  b.style.background = (killerType === "Noli") ? "#581c87" : "";
+  b.style.color = (killerType === "Noli") ? "#e9d5ff" : "";
+}
   if (gameState !== "LOBBY") return;
   playerRole = (playerRole === "SURVIVOR") ? "KILLER" : "SURVIVOR";
   const b = document.getElementById("role-btn");
