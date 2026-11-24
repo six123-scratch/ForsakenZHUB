@@ -3531,20 +3531,20 @@ function animate() {
             }, 150);
           }
           k.abT++;
-        if (k.kType === "c00lkidd") {
-  if (k.abT === 450) triggerWalkspeedOverride(k);
-  if (k.abT === 900) triggerCorruptNature(k, ct);
-  if (k.abT === 1350) { triggerPizzaDelivery(k); k.abT = 0; }
-} else if (k.kType === "Noli") {
-  if (k.abT === 380) useNoliVoidRush(k);
-  if (k.abT === 750) useNoliNova(k);
-  if (k.abT === 1150) { useNoliObservant(k); k.abT = 0; }
-} else {
-            if (k.abT === 400) use1xMassInfection(k);
-            if (k.abT === 800) use1xEntanglement(k);
-            if (k.abT === 1100 && rejuvenateCharges > 0) { use1xRejuvenate(k); k.abT = 0; }
-            else if (k.abT >= 1200) k.abT = 0;
-          }
+       if (k.kType === "c00lkidd") {
+      if (k.abT === 450) triggerWalkspeedOverride(k);
+      if (k.abT === 900) triggerCorruptNature(k, ct);
+      if (k.abT === 1350) { triggerPizzaDelivery(k); k.abT = 0; }
+    } else if (k.kType === "Noli") {
+      if (k.abT === 380) useNoliVoidRush(k);
+      if (k.abT === 750) useNoliNova(k);
+      if (k.abT === 1150) { useNoliObservant(k); k.abT = 0; }
+    } else {
+      if (k.abT === 400) use1xMassInfection(k);
+      if (k.abT === 800) use1xEntanglement(k);
+      if (k.abT === 1100 && rejuvenateCharges > 0) { use1xRejuvenate(k); k.abT = 0; }
+      else if (k.abT >= 1200) k.abT = 0;
+    }
         }
       } else if (isPC && k.state === "DASHING") {
         k.dashT--;
