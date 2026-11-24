@@ -225,6 +225,18 @@ window.onerror = function(msg, url, line, col) {
   <source src="pizza_ambience.mp3" type="audio/mpeg">
   <source src="ambience.mp3" type="audio/mpeg">
 </audio>
+  <audio id="noli-layer1" loop preload="auto"><source src="noli_layer1.mp3" type="audio/mpeg"><source src="layer1.mp3" type="audio/mpeg"></audio>
+<audio id="noli-layer2" loop preload="auto"><source src="noli_layer2.mp3" type="audio/mpeg"><source src="layer2.mp3" type="audio/mpeg"></audio>
+<audio id="noli-layer3" loop preload="auto"><source src="noli_layer3.mp3" type="audio/mpeg"><source src="layer3.mp3" type="audio/mpeg"></audio>
+<audio id="noli-layer4" loop preload="auto"><source src="noli_layer4.mp3" type="audio/mpeg"><source src="noli_chase.mp3" type="audio/mpeg"><source src="chase.mp3" type="audio/mpeg"></audio>
+<audio id="audio-intro-noli" preload="auto"><source src="noli_intro.mp3" type="audio/mpeg"></audio>
+<audio id="audio-outro-noli" preload="auto"><source src="noli_outro.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-stab" preload="auto"><source src="sfx_noli_stab.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush" preload="auto"><source src="sfx_noli_rush.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-slam" preload="auto"><source src="sfx_noli_slam.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-nova" preload="auto"><source src="sfx_noli_nova.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-teleport" preload="auto"><source src="sfx_noli_teleport.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-laugh" preload="auto"><source src="sfx_noli_laugh.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-cola" preload="auto"><source src="cola.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-slate" preload="auto"><source src="slate.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-burger" preload="auto"><source src="burger.mp3" type="audio/mpeg"></audio>
@@ -240,6 +252,22 @@ window.onerror = function(msg, url, line, col) {
 <audio id="sfx-corrupt" preload="auto"><source src="corrupt.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-pizza" preload="auto"><source src="pizza.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-minion-spawn" preload="auto"><source src="minion_spawn.mp3" type="audio/mpeg"></audio>
+  <audio id="sfx-noli-intro" preload="auto"><source src="noli_intro.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-outro" preload="auto"><source src="noli_outro.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-stab-swing" preload="auto"><source src="noli_stab_swing.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-stab-hit" preload="auto"><source src="noli_stab_hit.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush-windup" preload="auto"><source src="noli_rush_windup.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush-hit" preload="auto"><source src="noli_rush_hit.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush-slam" preload="auto"><source src="noli_rush_slam.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush-fail" preload="auto"><source src="noli_rush_fail.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-rush-crash" preload="auto"><source src="noli_rush_crash.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-nova-throw" preload="auto"><source src="noli_nova_throw.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-nova-boom" preload="auto"><source src="noli_nova_boom.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-obs-start" preload="auto"><source src="noli_obs_start.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-obs-tp" preload="auto"><source src="noli_obs_tp.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-halluc-end" preload="auto"><source src="noli_halluc_end.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-exec" preload="auto"><source src="noli_exec.mp3" type="audio/mpeg"></audio>
+<audio id="sfx-noli-stun" preload="auto"><source src="noli_stun.mp3" type="audio/mpeg"></audio>
 
 <div id="player-bars">
   <div id="hp-title" class="bar-title">HEALTH</div>
@@ -264,7 +292,12 @@ window.onerror = function(msg, url, line, col) {
   </div>
 </div>
 <div id="spectate-panel"><button id="spectate-btn" onclick="cycleSpectate()">SPECTATE</button><div id="spectate-info">Spectating: AI</div><div id="ai-hp-list"></div></div>
-<div id="lms-banner">LAST MAN STANDING!</div>
+<div id="noli-jumpscare" style="position:absolute;inset:0;pointer-events:none;display:none;z-index:45;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(88,28,135,0.45) 0%,rgba(0,0,0,0.85) 100%);">
+  <div id="noli-laugh-sprite" style="font-size:75px;font-family:Georgia,serif;font-weight:900;color:#c084fc;text-shadow:0 0 25px #a855f7,0 0 50px #581c87;text-align:center;">
+    HAHAHAHAHA<br><span style="font-size:28px;color:#fff;">[NOLI'S HALLUCINATION]</span>
+  </div>
+</div>
+  <div id="lms-banner">LAST MAN STANDING!</div>
 <div id="start-hint">KLIK LAYAR UNTUK MULAI & SUARA | WASD Jalan • SHIFT Lari • SPASI Lompat • [F] Bicara NPC</div>
 <div id="skills-container">
   <div id="btn-s1" class="brush-circle" onclick="useSkill1()"><div id="cd-q" class="cd-dark"></div><div id="icon-s1" style="font-size:17px;font-weight:bold;">Q</div><div id="label-s1" class="skill-name">Ghostburger [Q]</div></div>
@@ -338,10 +371,13 @@ function toggleSurvivorChar() {
 }
 function toggleKillerType() {
   if (gameState !== "LOBBY") return;
-  killerType = (killerType === "c00lkidd") ? "1x1x1x1" : "c00lkidd";
+  const list = ["c00lkidd", "1x1x1x1", "Noli"];
+  killerType = list[(list.indexOf(killerType) + 1) % list.length];
   const b = document.getElementById("killer-btn");
   b.innerText = "KILLER: " + killerType;
   b.classList.toggle("k1x", killerType === "1x1x1x1");
+  b.style.background = (killerType === "Noli") ? "#581c87" : "";
+  b.style.color = (killerType === "Noli") ? "#e9d5ff" : "";
 }
 function toggleDoubleTrouble() {
   if (gameState !== "LOBBY") return;
@@ -422,6 +458,22 @@ const sfx = {
   corrupt: document.getElementById("sfx-corrupt"),
   pizza: document.getElementById("sfx-pizza"),
   minion: document.getElementById("sfx-minion-spawn")
+  ,noliIntro: document.getElementById("sfx-noli-intro"),
+  noliOutro: document.getElementById("sfx-noli-outro"),
+  noliStabSw: document.getElementById("sfx-noli-stab-swing"),
+  noliStabHit: document.getElementById("sfx-noli-stab-hit"),
+  noliRushWu: document.getElementById("sfx-noli-rush-windup"),
+  noliRushHit: document.getElementById("sfx-noli-rush-hit"),
+  noliRushSlam: document.getElementById("sfx-noli-rush-slam"),
+  noliRushFail: document.getElementById("sfx-noli-rush-fail"),
+  noliRushCrash: document.getElementById("sfx-noli-rush-crash"),
+  noliNovaThrow: document.getElementById("sfx-noli-nova-throw"),
+  noliNovaBoom: document.getElementById("sfx-noli-nova-boom"),
+  noliObsStart: document.getElementById("sfx-noli-obs-start"),
+  noliObsTp: document.getElementById("sfx-noli-obs-tp"),
+  noliHallucEnd: document.getElementById("sfx-noli-halluc-end"),
+  noliExec: document.getElementById("sfx-noli-exec"),
+  noliStun: document.getElementById("sfx-noli-stun")
 };
 
 function playSynthTone(freq, dur, type, gainVal) {
@@ -1148,6 +1200,20 @@ function createFace(bg, mode) {
     x.fill(); x.beginPath();
     x.arc(64, 72, 30, 0.1 * Math.PI, 0.9 * Math.PI, false);
     x.lineWidth = 7; x.stroke();
+    else if (mode === "noli") {
+  x.fillStyle = "#120320"; x.fillRect(0, 0, 128, 128);
+  // Sisi kiri topeng komedi/tragedi retak bersinar putih
+  x.fillStyle = "#ffffff";
+  x.beginPath(); x.ellipse(40, 48, 10, 16, 0.2, 0, Math.PI * 2); x.fill();
+  x.beginPath(); x.arc(64, 78, 22, 0.2 * Math.PI, 0.8 * Math.PI, false);
+  x.lineWidth = 6; x.strokeStyle = "#ffffff"; x.stroke();
+  // Sisi kanan tengkorak ungu void
+  x.fillStyle = "#581c87";
+  x.beginPath(); x.arc(88, 48, 8, 0, Math.PI * 2); x.fill();
+  // Garis retakan tengah
+  x.strokeStyle = "#c084fc"; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(64, 15); x.lineTo(60, 45); x.lineTo(68, 75); x.lineTo(64, 115); x.stroke();
+}
   } else if (mode === "shed") {
     x.fillStyle = "#000"; x.beginPath();
     x.arc(44, 45, 8, 0, Math.PI * 2);
@@ -1234,7 +1300,31 @@ function setPartOp(p, op) {
   }
 }
 
-function mkSword(col) {
+function mkVoidStar(scale) {
+  if (scale === undefined) scale = 1;
+  const star = new THREE.Group();
+  const sMat = new THREE.MeshBasicMaterial({ color: 0xf3e8ff });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.6 });
+  // 2 Inti silang lancip membentuk bintang 4-titik
+  const b1 = new THREE.Mesh(new THREE.BoxGeometry(0.35 * scale, 2.2 * scale, 0.35 * scale), sMat);
+  const b2 = new THREE.Mesh(new THREE.BoxGeometry(2.2 * scale, 0.35 * scale, 0.35 * scale), sMat);
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(1.2 * scale, 1.2 * scale, 1.2 * scale), glowMat);
+  glow.rotation.z = Math.PI / 4;
+  star.add(b1, b2, glow);
+  return star;
+}
+
+const noliBinaryTex = makeTexCanvas(128, 128, function(x){
+  x.fillStyle = "#1e0b36"; x.fillRect(0, 0, 128, 128);
+  x.fillStyle = "#c084fc"; x.font = "bold 13px monospace";
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const char = (r + c) % 2 === 0 ? "1" : "0";
+      x.fillText(char, c * 16 + 4, r * 16 + 13);
+    }
+  }
+});
+  function mkSword(col) {
   const sw = new THREE.Group();
   const em = (col === 0x00ff33) ? 0x004400 : 0x000000;
   const bl = new THREE.Mesh(
@@ -1252,7 +1342,7 @@ function mkSword(col) {
 
 function createR6(charType) {
   const g = new THREE.Group();
-  const isRed = charType === "c00lkidd", is1x = charType === "1x";
+ const isRed = charType === "c00lkidd", is1x = charType === "1x", isNoli = charType === "noli";
   const is007 = charType === "007", isShed = charType === "shed";
   const isZom = charType === "zombie", isScared = charType === "scaredNoob";
   const isShop = charType === "shopkeeper";
@@ -1281,6 +1371,10 @@ function createR6(charType) {
   const mb = new THREE.MeshStandardMaterial({
     color: bc, transparent: is1x, opacity: is1x ? 0.6 : 1
   });
+  if (isNoli) {
+  mb.map = noliBinaryTex; mb.color.setHex(0x2e1065);
+  ml.color.setHex(0x18052e); mg.color.setHex(0x0f031d);
+}
   const ml = new THREE.MeshStandardMaterial({ color: lc });
   const mg = new THREE.MeshStandardMaterial({ color: lg });
   let tm = mb, lm = ml, rm = ml;
@@ -1308,7 +1402,7 @@ function createR6(charType) {
       rb.position.y = r; torso.add(rb);
     }
   }
-  const fMode = isRed ? "red" : (is1x ? "1x" : (isShed ? "shed" : (isScared ? "scared" : "norm")));
+ const fMode = isNoli ? "noli" : (isRed ? "red" : (is1x ? "1x" : (isShed ? "shed" : (isScared ? "scared" : "norm"))));
   let fBg = "#f5cd30";
   if (isRed) fBg = "#d40000";
   else if (is1x) fBg = "#111111";
@@ -1350,6 +1444,27 @@ function createR6(charType) {
     });
     crown.position.y = 0.72; head.add(crown);
   }
+  let noliStar = null;
+if (isNoli) {
+  const noliCrown = new THREE.Group();
+  const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.12, 6, 16),
+    new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 }));
+  crownRing.rotation.x = Math.PI / 2; noliCrown.add(crownRing);
+  // Topeng kecil di mahkota
+  for (let m = 0; m < 3; m++) {
+    const tMask = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.55, 0.15),
+      new THREE.MeshBasicMaterial({ color: 0xd8b4fe }));
+    const ang = (m / 3) * Math.PI - Math.PI / 2;
+    tMask.position.set(Math.cos(ang) * 0.9, 0.35, Math.sin(ang) * 0.9);
+    noliCrown.add(tMask);
+  }
+  noliCrown.position.y = 0.9; head.add(noliCrown);
+
+  // Bintang Void bersinar di tangan kanan Noli
+  noliStar = mkVoidStar(0.7);
+  noliStar.position.set(0, -1.2, -0.6);
+  rArm.add(noliStar);
+}
 
   const shedHair = new THREE.Group();
   const hMat = new THREE.MeshStandardMaterial({ color: 0x4a3219 });
@@ -1416,6 +1531,7 @@ function createR6(charType) {
 
   g.add(torso, head, lArm, rArm, lLeg, rLeg, gui, hl, fireMesh);
   g.parts = {
+    noliStar: noliStar,
     torso: torso, head: head, lArm: lArm, rArm: rArm, lLeg: lLeg, rLeg: rLeg,
     heldItem: held, highlightMesh: hl, burgerHat: hat, c00lguiTab: gui,
     shedHair: shedHair, shedSword: shedSword, eyeFlare: eyeFlare, fireMesh: fireMesh
@@ -1697,15 +1813,17 @@ function buildRoundRoster() {
     ai.assignedGen = pickRandomIncompleteGen();
     scene.add(ai); aiSurvivors.push(ai);
   }
-  function addK(kt, pz, ab) {
-    const k = createR6(kt === "1x1x1x1" ? "1x" : "c00lkidd");
+function addK(kt, pz, ab) {
+    const r6Type = (kt === "1x1x1x1") ? "1x" : (kt === "Noli" ? "noli" : "c00lkidd");
+    const k = createR6(r6Type);
     k.kType = kt; k.name = kt; k.state = "IDLE"; k.atkCD = 0; k.abT = ab; k.dashT = 0; k.speedMult = 1;
     k.position.set(0, 0, pz);
-    k.add(new THREE.PointLight(kt === "1x1x1x1" ? 0x00ff33 : 0xff0000, 2.5, 18));
+    const kLightCol = (kt === "1x1x1x1") ? 0x00ff33 : (kt === "Noli" ? 0x9333ea : 0xff0000);
+    k.add(new THREE.PointLight(kLightCol, 2.8, 22));
     scene.add(k); activeKillers.push(k);
   }
   addK(killerType, -82, 0);
-  if (isDoubleTrouble) addK(killerType === "1x1x1x1" ? "c00lkidd" : "1x1x1x1", 82, 200);
+  if (isDoubleTrouble) addK(killerType === "1x1x1x1" ? "c00lkidd" : (killerType === "Noli" ? "c00lkidd" : "1x1x1x1"), 82, 200);
 }
 
 const csStage = new THREE.Group();
@@ -1745,6 +1863,49 @@ function playKillerIntroCutscene(onDone) {
   const amb = new THREE.AmbientLight(0xffffff, 0.75); csStage.add(amb); csObjects.push(amb);
   const spot = new THREE.SpotLight(killerType === "1x1x1x1" ? 0x22ff55 : 0xff3333, 3, 60);
   spot.position.set(4, 14, 12); csStage.add(spot); csObjects.push(spot);
+  if (killerType === "Noli") {
+      playCutsceneMP3(sfx.noliIntro, function(){ playSynthTone(140, 0.8, "sawtooth", 0.2); });
+      const flr = new THREE.Mesh(new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshStandardMaterial({ color: 0x120320, roughness: 0.95 }));
+      flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
+      [-8, 8].forEach(function(lx){
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.8, 8, 0.8),
+          new THREE.MeshStandardMaterial({ color: 0x1f1f2e }));
+        post.position.set(lx, 4, -8);
+        const pBulb = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9),
+          new THREE.MeshBasicMaterial({ color: 0xc084fc }));
+        pBulb.position.set(lx, 8.2, -8);
+        const pLt = new THREE.PointLight(0xa855f7, 2.5, 20);
+        pLt.position.set(lx, 8.5, -8);
+        csStage.add(post, pBulb, pLt); csObjects.push(post, pBulb, pLt);
+      });
+      const noliR6 = createR6("noli"); noliR6.position.set(0, 0, 0); noliR6.rotation.y = Math.PI;
+      csStage.add(noliR6); csObjects.push(noliR6);
+      let f = 0;
+      csTick = setInterval(function(){
+        f++;
+        if (f < 40) {
+          csCamPos.set(0, -195.8, 8.5 - f * 0.03);
+        } else if (f < 80) {
+          noliR6.rotation.y = Math.PI + (f - 40) * 0.078;
+          noliR6.parts.rArm.rotation.x = (f - 40) * 0.04;
+          noliR6.parts.lArm.rotation.x = (f - 40) * 0.04;
+          if (noliR6.parts.noliStar) {
+            noliR6.parts.noliStar.rotation.z += 0.15;
+            noliR6.parts.noliStar.scale.set(1.4, 1.4, 1.4);
+          }
+          csCamPos.set(0, -195.6, 6.8);
+        } else {
+          noliR6.rotation.y = 0;
+          noliR6.parts.head.rotation.z = Math.sin(f * 0.1) * 0.15;
+          if (noliR6.parts.noliStar) noliR6.parts.noliStar.rotation.z += 0.2;
+        }
+        csCamLook.set(0, -196.2, 0);
+        if (f === 115) fl.style.opacity = "1";
+        if (f >= 130) { clearCutsceneStage(); onDone(); }
+      }, 32);
+      return;
+    }
 
   if (killerType === "1x1x1x1") {
     playCutsceneMP3(mp3Intro1x, function(){ playSynthTone(110, 1.2, "sawtooth", 0.18); });
@@ -1824,6 +1985,47 @@ function playKillerOutroCutscene(onDone) {
   os.innerText = isDoubleTrouble ? "c00lkidd & 1x1x1x1" : killerType;
 
   const amb = new THREE.AmbientLight(0xffffff, 0.7); csStage.add(amb); csObjects.push(amb);
+ if (killerType === "Noli") {
+      playCutsceneMP3(sfx.noliOutro, function(){ playSynthTone(90, 1.2, "square", 0.22); });
+      const flr = new THREE.Mesh(new THREE.PlaneGeometry(80, 80),
+        new THREE.MeshStandardMaterial({ color: 0x11131c, roughness: 0.9 }));
+      flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
+      [-12, -4, 4, 12].forEach(function(px){
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 0.8),
+          new THREE.MeshStandardMaterial({ color: 0x333544 }));
+        rail.position.set(px, 2.25, -6);
+        const pLt = new THREE.PointLight(0xf59e0b, 1.2, 12);
+        pLt.position.set(px, 4.6, -6);
+        csStage.add(rail, pLt); csObjects.push(rail, pLt);
+      });
+      const noliR6 = createR6("noli"); noliR6.position.set(0, 0, -3); csStage.add(noliR6); csObjects.push(noliR6);
+      const bigNova = mkVoidStar(3.2); bigNova.position.set(0, 3.2, 1); bigNova.visible = false;
+      csStage.add(bigNova); csObjects.push(bigNova);
+      let f = 0;
+      csTick = setInterval(function(){
+        f++;
+        if (f < 50) {
+          noliR6.position.z = -3 + f * 0.08;
+          animateWalkingLimbs(noliR6, 0.22);
+          csCamPos.set(0.6, -195.8, 8.5);
+        } else if (f < 90) {
+          noliR6.parts.lLeg.rotation.x = 0; noliR6.parts.rLeg.rotation.x = 0;
+          noliR6.parts.rArm.rotation.x = 2.4; noliR6.parts.lArm.rotation.x = 1.8;
+          bigNova.visible = true;
+          bigNova.position.z = 1 + (f - 50) * 0.18;
+          bigNova.rotation.z += 0.28;
+          bigNova.scale.addScalar(0.06);
+          csCamPos.set(0, -195.6, 7.5);
+        } else {
+          bigNova.scale.addScalar(0.25);
+          csCamPos.set(0, -195.4, 6.8);
+        }
+        csCamLook.set(0, -196.2, bigNova.visible ? bigNova.position.z - 2 : 0);
+        if (f === 140) fl.style.opacity = "1";
+        if (f >= 165) { clearCutsceneStage(); onDone(); }
+      }, 32);
+      return;
+    }
   if (killerType === "1x1x1x1") {
     playCutsceneMP3(mp3Outro1x, null);
     const lava = new THREE.Mesh(new THREE.RingGeometry(10, 32, 32),
@@ -2424,6 +2626,13 @@ function updateSkillButtonsForRole() {
     ht.style.display = "none"; hc.style.display = "none";
     s1.innerText = "Mass Inf [Q]"; s2.innerText = "Entangle [E]"; s3.innerText = "Unstable [R]";
     is.innerText = "M1 / F"; ls.innerText = "SLASH (20)";
+ else if (playerRole === "KILLER" && killerType === "Noli") {
+  ht.style.display = "none"; hc.style.display = "none";
+  s1.innerText = "Void Rush [Q]";
+  s2.innerText = "Nova [E]";
+  s3.innerText = "Observant [R]";
+  is.innerText = "M1 / F"; ls.innerText = "STAB (25)";
+}
   } else if (playerRole === "KILLER") {
     ht.style.display = "none"; hc.style.display = "none";
     s1.innerText = "Override [Q]"; s2.innerText = "Corrupt [E]"; s3.innerText = "Pizza [R]";
@@ -3296,11 +3505,15 @@ function animate() {
             }, 150);
           }
           k.abT++;
-          if (k.kType === "c00lkidd") {
-            if (k.abT === 450) triggerWalkspeedOverride(k);
-            if (k.abT === 900) triggerCorruptNature(k, ct);
-            if (k.abT === 1350) { triggerPizzaDelivery(k); k.abT = 0; }
-          } else {
+        if (k.kType === "c00lkidd") {
+  if (k.abT === 450) triggerWalkspeedOverride(k);
+  if (k.abT === 900) triggerCorruptNature(k, ct);
+  if (k.abT === 1350) { triggerPizzaDelivery(k); k.abT = 0; }
+} else if (k.kType === "Noli") {
+  if (k.abT === 380) useNoliVoidRush(k);
+  if (k.abT === 750) useNoliNova(k);
+  if (k.abT === 1150) { useNoliObservant(k); k.abT = 0; }
+} else {
             if (k.abT === 400) use1xMassInfection(k);
             if (k.abT === 800) use1xEntanglement(k);
             if (k.abT === 1100 && rejuvenateCharges > 0) { use1xRejuvenate(k); k.abT = 0; }
@@ -3322,6 +3535,40 @@ function animate() {
         if (k.dashT <= 0 && k.state === "DASHING") { k.state = "IDLE"; k.parts.torso.rotation.x = 0; }
       }
       if (k.atkCD > 0) k.atkCD--;
+      else if (k.state === "VOID_RUSHING") {
+        k.rushTimer--;
+        const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
+        const prevX = k.position.x, prevZ = k.position.z;
+        moveWithCollision(k, fwd.x * 1.35, fwd.z * 1.35);
+        if (Math.abs(k.position.x - prevX) < 0.05 && Math.abs(k.position.z - prevZ) < 0.05) {
+          k.state = "IDLE";
+          playCutsceneMP3(sfx.noliRushCrash, null);
+          showToast("owwwww ;(", "#f44");
+        }
+        [playerNoob].concat(aiSurvivors, clones).forEach(function(s){
+          if (s.alive && checkHitbox(k, s, 6.2) && !s.isInvulnerable) {
+            k.rushHits++;
+            if (s.hallucinationLvl && s.hallucinationLvl >= 2) {
+              playCutsceneMP3(sfx.noliRushSlam, function(){ playSynthTone(90, 0.7, "sawtooth", 0.25); });
+              const slamDmg = 40 + (k.rushHits * 3.5);
+              showToast("hell yeah >:) [SLAM!]", "#c084fc");
+              if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(slamDmg, k);
+              else { s.hp -= slamDmg; if (s.hp <= 0) playKillAnimation(k, s); }
+              k.state = "IDLE";
+            } else {
+              playCutsceneMP3(sfx.noliRushHit, null);
+              applyHallucination(s, 2);
+              showToast("Hit Survivor! Siap Slam!", "#c084fc");
+              if (s === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(10, k);
+              else { s.hp -= 10; if (s.hp <= 0) playKillAnimation(k, s); }
+            }
+          }
+        });
+        if (k.rushTimer <= 0 && k.state === "VOID_RUSHING") {
+          k.state = "IDLE";
+          playCutsceneMP3(sfx.noliRushFail, null);
+        }
+      }
     });
 
     for (let i = minions.length - 1; i >= 0; i--) {
