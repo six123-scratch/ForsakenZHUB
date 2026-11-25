@@ -180,7 +180,6 @@ window.onerror = function(msg, url, line, col) {
   }
   .inv-slot.has-item{border-color:#fc0;background:rgba(40,35,10,.9)}
 
-  /* FORSAKEN STYLE HUD: DAFTAR SURVIVOR + KOTAK HP/STAMINA */
   #survivor-hud-list{
     position:absolute;bottom:108px;left:22px;display:none;
     grid-template-columns:repeat(2,150px);gap:6px 10px;z-index:10;pointer-events:none
@@ -338,6 +337,10 @@ window.onerror = function(msg, url, line, col) {
 <audio id="audio-intro-1x" preload="auto"><source src="1x_intro.mp3" type="audio/mpeg"><source src="intro_1x.mp3" type="audio/mpeg"><source src="1x1x1x1_intro.mp3" type="audio/mpeg"></audio>
 <audio id="audio-outro-c00l" preload="auto"><source src="c00lkidd_outro.mp3" type="audio/mpeg"><source src="outro_c00lkidd.mp3" type="audio/mpeg"></audio>
 <audio id="audio-outro-1x" preload="auto"><source src="1x_outro.mp3" type="audio/mpeg"><source src="outro_1x.mp3" type="audio/mpeg"><source src="1x1x1x1_outro.mp3" type="audio/mpeg"></audio>
+
+<audio id="audio-intro-dt-1x-c00l" preload="auto"><source src="dt_1x_c00lkidd_intro.mp3" type="audio/mpeg"><source src="1x_intro.mp3" type="audio/mpeg"></audio>
+<audio id="audio-intro-dt-1x-noli" preload="auto"><source src="dt_1x_noli_intro.mp3" type="audio/mpeg"><source src="1x_intro.mp3" type="audio/mpeg"></audio>
+<audio id="audio-intro-dt-noli-c00l" preload="auto"><source src="dt_noli_c00lkidd_intro.mp3" type="audio/mpeg"><source src="noli_intro.mp3" type="audio/mpeg"></audio>
 
 <audio id="noli-layer1" loop preload="auto"><source src="noli_layer1.mp3" type="audio/mpeg"><source src="layer1.mp3" type="audio/mpeg"></audio>
 <audio id="noli-layer2" loop preload="auto"><source src="noli_layer2.mp3" type="audio/mpeg"><source src="layer2.mp3" type="audio/mpeg"></audio>
@@ -565,12 +568,16 @@ function removeStatusEffect(k) {
 }
 function clearAllEffects() { Object.keys(activeEffects).forEach(removeStatusEffect); }
 
-let isAudioInit = false, activeLayerIndex = 0, webAudioCtx = null;
+let isAudioInit = false, activeLayerIndex = 0, activeChaseKiller = "", webAudioCtx = null;
 const bgmLobby = document.getElementById("audio-lobby");
 const mp3IntroC00l = document.getElementById("audio-intro-c00l");
 const mp3Intro1x = document.getElementById("audio-intro-1x");
 const mp3OutroC00l = document.getElementById("audio-outro-c00l");
 const mp3Outro1x = document.getElementById("audio-outro-1x");
+const mp3IntroDT1xC00l = document.getElementById("audio-intro-dt-1x-c00l");
+const mp3IntroDT1xNoli = document.getElementById("audio-intro-dt-1x-noli");
+const mp3IntroDTNoliC00l = document.getElementById("audio-intro-dt-noli-c00l");
+
 const cLayers = [null, document.getElementById("chase-layer1"), document.getElementById("chase-layer2"), document.getElementById("chase-layer3"), document.getElementById("chase-layer4")];
 const xLayers = [null, document.getElementById("1x-layer1"), document.getElementById("1x-layer2"), document.getElementById("1x-layer3"), document.getElementById("1x-layer4")];
 const nLayers = [null, document.getElementById("noli-layer1"), document.getElementById("noli-layer2"), document.getElementById("noli-layer3"), document.getElementById("noli-layer4")];
@@ -606,7 +613,8 @@ function playSynthTone(freq, dur, type, gainVal) {
 }
 function unlockAllAudio() {
   if (isAudioInit) return; isAudioInit = true;
-  const all = [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x].concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb], Object.values(sfx));
+  const all = [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x, mp3IntroDT1xC00l, mp3IntroDT1xNoli, mp3IntroDTNoliC00l]
+    .concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb], Object.values(sfx));
   all.forEach(function(a){ if (a) { a.load(); a.volume = 0; const p = a.play(); if (p) p.then(function(){ a.pause(); a.currentTime = 0; }).catch(function(){}); } });
   setTimeout(function(){ if (gameState === "LOBBY") startLobbyAudio(); else if (gameState === "INGAME") startRoundAudio(); }, 120);
 }
@@ -621,49 +629,55 @@ function playCutsceneMP3(el, fallbackFn) {
   else if (fallbackFn) fallbackFn();
 }
 function stopAndResetAllAudio() {
-  [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x].concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb, sfx.gui, sfx.noliAmb]).forEach(function(a){ if (a) { a.pause(); a.currentTime = 0; } });
-  activeLayerIndex = 0; document.getElementById("vignette").style.boxShadow = "none";
+  [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x, mp3IntroDT1xC00l, mp3IntroDT1xNoli, mp3IntroDTNoliC00l]
+    .concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb, sfx.gui, sfx.noliAmb])
+    .forEach(function(a){ if (a) { a.pause(); a.currentTime = 0; } });
+  activeLayerIndex = 0; activeChaseKiller = ""; document.getElementById("vignette").style.boxShadow = "none";
 }
 function startLobbyAudio() { if (!isAudioInit) return; stopAndResetAllAudio(); if (bgmLobby) { bgmLobby.volume = 0.5; bgmLobby.currentTime = 0; bgmLobby.play().catch(function(){}); } }
 function startRoundAudio() {
   if (!isAudioInit) return; stopAndResetAllAudio();
   const amb = (currentMap === "PIZZA") ? bgmPizzaAmb : bgmAmb;
   if (amb) { amb.volume = 0.45; amb.play().catch(function(){}); }
-  if (killerType === "Noli" && sfx.noliAmb) { sfx.noliAmb.volume = 0.25; sfx.noliAmb.play().catch(function(){}); }
+  if (activeKillers.some(function(k){ return k.kType === "Noli"; }) && sfx.noliAmb) { sfx.noliAmb.volume = 0.25; sfx.noliAmb.play().catch(function(){}); }
 }
-function switchSingleLayer(t) {
-  const set = (killerType === "1x1x1x1") ? xLayers : (killerType === "Noli" ? nLayers : cLayers);
+// Sekarang menerima kType agar di Double Trouble chase theme berganti sesuai Killer terdekat!
+function switchSingleLayer(t, kType) {
+  const kt = kType || killerType;
+  const set = (kt === "1x1x1x1") ? xLayers : (kt === "Noli" ? nLayers : cLayers);
   const c = set[t];
-  if (activeLayerIndex !== t) {
+  if (activeLayerIndex !== t || activeChaseKiller !== kt) {
     cLayers.concat(xLayers, nLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
-    activeLayerIndex = t;
+    activeLayerIndex = t; activeChaseKiller = kt;
     if (c) { c.currentTime = 0; c.volume = 1; c.play().catch(function(){}); }
   } else if (c && c.paused) { c.volume = 1; c.play().catch(function(){}); }
 }
-function update4LayerChase(d) {
+function update4LayerChase(d, nearestKType) {
   if (!isAudioInit || gameState !== "INGAME") return;
   const v = document.getElementById("vignette"), curAmb = (currentMap === "PIZZA") ? bgmPizzaAmb : bgmAmb;
+  const kt = nearestKType || killerType;
   if (lmsTriggered) {
     cLayers.concat(xLayers, nLayers).forEach(function(l){ if (l && !l.paused) { l.pause(); l.currentTime = 0; } });
-    activeLayerIndex = 0; if (curAmb && !curAmb.paused) curAmb.volume = 0.05;
+    activeLayerIndex = 0; activeChaseKiller = ""; if (curAmb && !curAmb.paused) curAmb.volume = 0.05;
     let tr = bgmLMS; if (lmsMode === "PLEAD") tr = bgmPlead; else if (lmsMode === "HATRED") tr = bgmHatred; else if (lmsMode === "2V3") tr = bgm2v3;
     if (tr && tr.paused) { tr.currentTime = 0; tr.volume = 1; tr.play().catch(function(){}); }
     v.style.boxShadow = lmsMode === "PLEAD" ? "inset 0 0 130px rgba(255,255,255,0.4)" : (lmsMode === "HATRED" ? "inset 0 0 130px rgba(0,255,50,0.6)" : "inset 0 0 120px rgba(255,0,0,0.75)");
     return;
   }
   [bgmLMS, bgmPlead, bgmHatred, bgm2v3].forEach(function(t){ if (t && !t.paused) t.pause(); });
-  const gc = (killerType === "1x1x1x1") ? "0,255,50" : (killerType === "Noli" ? "168,85,247" : "255,0,0");
+  const gc = (kt === "1x1x1x1") ? "0,255,50" : (kt === "Noli" ? "168,85,247" : "255,0,0");
   if (playerRole === "KILLER") {
-    if (d <= 28) { switchSingleLayer(4); if (curAmb) curAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.45)"; }
-    else { switchSingleLayer(0); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none"; }
+    const myK = (activeKillers[0] && activeKillers[0].kType) || killerType;
+    if (d <= 28) { switchSingleLayer(4, myK); if (curAmb) curAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.45)"; }
+    else { switchSingleLayer(0, myK); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none"; }
     return;
   }
-  if (playerNoob.hallucinationLvl && playerNoob.hallucinationLvl >= 1 && d > 80) { switchSingleLayer(1); if (curAmb) curAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 65px rgba(168,85,247,0.3)"; return; }
-  if (d > 80) { switchSingleLayer(0); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none"; }
-  else if (d > 55) { switchSingleLayer(1); if (curAmb) curAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 50px rgba(" + gc + ",0.15)"; }
-  else if (d > 36) { switchSingleLayer(2); if (curAmb) curAmb.volume = 0.2; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.35)"; }
-  else if (d > 22) { switchSingleLayer(3); if (curAmb) curAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 110px rgba(" + gc + ",0.55)"; }
-  else { switchSingleLayer(4); if (curAmb) curAmb.volume = 0.05; v.style.boxShadow = "inset 0 0 140px rgba(" + gc + ",0.85)"; }
+  if (playerNoob.hallucinationLvl && playerNoob.hallucinationLvl >= 1 && d > 80) { switchSingleLayer(1, "Noli"); if (curAmb) curAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 65px rgba(168,85,247,0.3)"; return; }
+  if (d > 80) { switchSingleLayer(0, kt); if (curAmb) curAmb.volume = 0.45; v.style.boxShadow = "none"; }
+  else if (d > 55) { switchSingleLayer(1, kt); if (curAmb) curAmb.volume = 0.3; v.style.boxShadow = "inset 0 0 50px rgba(" + gc + ",0.15)"; }
+  else if (d > 36) { switchSingleLayer(2, kt); if (curAmb) curAmb.volume = 0.2; v.style.boxShadow = "inset 0 0 80px rgba(" + gc + ",0.35)"; }
+  else if (d > 22) { switchSingleLayer(3, kt); if (curAmb) curAmb.volume = 0.1; v.style.boxShadow = "inset 0 0 110px rgba(" + gc + ",0.55)"; }
+  else { switchSingleLayer(4, kt); if (curAmb) curAmb.volume = 0.05; v.style.boxShadow = "inset 0 0 140px rgba(" + gc + ",0.85)"; }
 }
 
 let currentMap = "FOREST";
@@ -814,41 +828,28 @@ const mapConfigs = {
 function createNoliLaughCanvas() {
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const x = c.getContext("2d");
-  // Kiri: Topeng Komedi Putih
   x.fillStyle = "#ece3f0";
   x.beginPath(); x.arc(128, 152, 74, Math.PI * 0.5, Math.PI * 1.5); x.closePath(); x.fill();
-  // Kanan: Tengkorak Ungu Gelap
   x.fillStyle = "#4c1d95";
   x.beginPath(); x.arc(128, 152, 74, -Math.PI * 0.5, Math.PI * 0.5); x.closePath(); x.fill();
-  // Garis tepi wajah
   x.strokeStyle = "#090212"; x.lineWidth = 6;
   x.beginPath(); x.arc(128, 152, 74, 0, Math.PI * 2); x.stroke();
   x.beginPath(); x.moveTo(128, 78); x.lineTo(128, 226); x.stroke();
-  // Mata kiri tertawa (lengkungan putih) & mulut senyum lebar kiri
   x.fillStyle = "#ffffff"; x.strokeStyle = "#18042b"; x.lineWidth = 5;
   x.beginPath(); x.ellipse(94, 128, 18, 12, -0.15, Math.PI, 0); x.fill(); x.stroke();
   x.beginPath(); x.moveTo(70, 158); x.lineTo(125, 158); x.arc(125, 158, 55, 0.5 * Math.PI, Math.PI); x.closePath(); x.fill(); x.stroke();
-  // Mata kanan rongga tengkorak hitam & mulut bergigi kanan
   x.fillStyle = "#05010a";
   x.beginPath(); x.ellipse(164, 130, 22, 18, 0.15, 0, Math.PI * 2); x.fill();
   x.fillRect(130, 160, 62, 46);
   x.fillStyle = "#e9d5ff";
-  for (let t = 0; t < 4; t++) {
-    x.fillRect(133 + t * 14, 160, 9, 13);
-    x.fillRect(133 + t * 14, 193, 9, 13);
-  }
-  // Mahkota Void di atas kepala (duri kiri kanan + 2 topeng + bintang)
+  for (let t = 0; t < 4; t++) { x.fillRect(133 + t * 14, 160, 9, 13); x.fillRect(133 + t * 14, 193, 9, 13); }
   x.fillStyle = "#1e1b2e"; x.strokeStyle = "#05010a"; x.lineWidth = 4;
   x.beginPath(); x.moveTo(46, 86); x.lineTo(28, 44); x.lineTo(54, 62); x.lineTo(60, 34); x.lineTo(80, 66);
-  x.lineTo(176, 66); x.lineTo(196, 34); x.lineTo(202, 62); x.lineTo(228, 44); x.lineTo(210, 86); x.closePath();
-  x.fill(); x.stroke();
-  // Bintang di puncak mahkota
+  x.lineTo(176, 66); x.lineTo(196, 34); x.lineTo(202, 62); x.lineTo(228, 44); x.lineTo(210, 86); x.closePath(); x.fill(); x.stroke();
   x.fillStyle = "#2e1065";
   x.beginPath(); x.moveTo(128, 8); x.lineTo(136, 34); x.lineTo(160, 42); x.lineTo(136, 50); x.lineTo(128, 72); x.lineTo(120, 50); x.lineTo(96, 42); x.lineTo(120, 34); x.closePath(); x.fill(); x.stroke();
-  // 2 Topeng kecil pada mahkota
   x.fillStyle = "#f3e8ff";
-  x.fillRect(92, 52, 26, 28); x.strokeRect(92, 52, 26, 28);
-  x.fillRect(138, 52, 26, 28); x.strokeRect(138, 52, 26, 28);
+  x.fillRect(92, 52, 26, 28); x.strokeRect(92, 52, 26, 28); x.fillRect(138, 52, 26, 28); x.strokeRect(138, 52, 26, 28);
   x.fillStyle = "#090212";
   x.fillRect(98, 60, 4, 4); x.fillRect(108, 60, 4, 4); x.fillRect(98, 70, 14, 4);
   x.fillRect(144, 60, 4, 4); x.fillRect(154, 60, 4, 4); x.fillRect(144, 72, 14, 4);
@@ -856,10 +857,7 @@ function createNoliLaughCanvas() {
 }
 const noliLaughCanvas = createNoliLaughCanvas();
 const noliLaughTex = new THREE.CanvasTexture(noliLaughCanvas);
-(function(){
-  const img = document.getElementById("noli-laugh-img");
-  if (img) img.src = noliLaughCanvas.toDataURL();
-})();
+(function(){ const img = document.getElementById("noli-laugh-img"); if (img) img.src = noliLaughCanvas.toDataURL(); })();
 
 const genCoreTex = makeTexCanvas(128, 64, function(x){
   const cols = ["#1e293b", "#991b1b", "#1d4ed8", "#ca8a04", "#0f766e", "#7e22ce"];
@@ -1279,7 +1277,7 @@ function applyPlayerAppearance() {
   setPartCol(playerNoob.parts.torso, tc); setPartCol(playerNoob.parts.head, lc); setPartCol(playerNoob.parts.lArm, isS ? 0xffffff : lc); setPartCol(playerNoob.parts.rArm, isS ? 0xffffff : lc); setPartCol(playerNoob.parts.lLeg, lg); setPartCol(playerNoob.parts.rLeg, lg);
 }
 
-let aiSurvivors = [], activeKillers = [];
+let aiSurvivors = [], activeKillers = [], dtKillerPair = ["1x1x1x1", "c00lkidd"];
 function buildRoundRoster() {
   aiSurvivors.forEach(function(a){ scene.remove(a); }); aiSurvivors = [];
   activeKillers.forEach(function(k){ scene.remove(k); }); activeKillers = [];
@@ -1297,8 +1295,34 @@ function buildRoundRoster() {
     k.add(new THREE.PointLight(kt === "1x1x1x1" ? 0x00ff33 : (kt === "Noli" ? 0x9333ea : 0xff0000), 2.8, 22));
     scene.add(k); activeKillers.push(k);
   }
-  addK(killerType, -82, 0);
-  if (isDoubleTrouble) addK(killerType === "1x1x1x1" ? "c00lkidd" : "1x1x1x1", 82, 200);
+
+  if (isDoubleTrouble) {
+    const allPairs = [["1x1x1x1", "c00lkidd"], ["1x1x1x1", "Noli"], ["Noli", "c00lkidd"]];
+    if (playerRole === "SURVIVOR") {
+      // Acak pasangan Killer Double Trouble saat player jadi Survivor!
+      dtKillerPair = allPairs[Math.floor(Math.random() * allPairs.length)].slice();
+    } else {
+      const others = ["c00lkidd", "1x1x1x1", "Noli"].filter(function(x){ return x !== killerType; });
+      dtKillerPair = [killerType, others[Math.floor(Math.random() * others.length)]];
+    }
+    addK(dtKillerPair[0], -82, 0);
+    addK(dtKillerPair[1], 82, 200);
+  } else {
+    dtKillerPair = [killerType];
+    addK(killerType, -82, 0);
+  }
+}
+
+function getDTCombo() {
+  if (!isDoubleTrouble || activeKillers.length < 2) return null;
+  const a = activeKillers[0].kType, b = activeKillers[1].kType;
+  const has1x = (a === "1x1x1x1" || b === "1x1x1x1");
+  const hasC00l = (a === "c00lkidd" || b === "c00lkidd");
+  const hasNoli = (a === "Noli" || b === "Noli");
+  if (has1x && hasC00l) return "1X_C00L";
+  if (has1x && hasNoli) return "1X_NOLI";
+  if (hasNoli && hasC00l) return "NOLI_C00L";
+  return null;
 }
 
 // CUTSCENE
@@ -1319,12 +1343,133 @@ function makePosterTex(text, bg, fg) {
 function playKillerIntroCutscene(onDone) {
   clearCutsceneStage(); closeNPCModal(); gameState = "INTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio(); csStage.visible = true; scene.fog = null;
   const ov = document.getElementById("cutscene-overlay"), bn = document.getElementById("intro-banner"), nm = document.getElementById("intro-name"), fl = document.getElementById("cutscene-flash"), rs = document.getElementById("red-slash-fx");
-  ov.style.display = "block"; bn.style.display = "block"; nm.innerText = isDoubleTrouble ? (killerType + " & Partner") : killerType;
-  nm.style.color = (killerType === "Noli") ? "#c084fc" : ((killerType === "1x1x1x1") ? "#22c55e" : "#e11d48");
+  ov.style.display = "block"; bn.style.display = "block";
   const amb = new THREE.AmbientLight(0xffffff, 0.75); csStage.add(amb); csObjects.push(amb);
-  const spot = new THREE.SpotLight(killerType === "1x1x1x1" ? 0x22ff55 : (killerType === "Noli" ? 0xa855f7 : 0xff3333), 3, 60); spot.position.set(4, 14, 12); csStage.add(spot); csObjects.push(spot);
 
-  if (killerType === "Noli") {
+  // --- CUSTOM INTRO CUTSCENE UNTUK DOUBLE TROUBLE ---
+  const dtCombo = getDTCombo();
+  if (dtCombo === "1X_C00L") {
+    nm.innerText = "1x1x1x1 and c00lkidd"; nm.style.color = "#ef4444";
+    playCutsceneMP3(mp3IntroDT1xC00l, function(){ playSynthTone(110, 1.3, "sawtooth", 0.2); });
+    const flr = new THREE.Mesh(new THREE.PlaneGeometry(75, 75), new THREE.MeshStandardMaterial({ color: 0x1e2c14, roughness: 0.9 }));
+    flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
+    // Salib / altar kayu tengah + karakter terbakar + Shedletsky pingsan di depan
+    const postV = new THREE.Mesh(new THREE.BoxGeometry(0.9, 10, 0.9), new THREE.MeshStandardMaterial({ color: 0x3b2314 })); postV.position.set(0, 5, -2);
+    const postH = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x3b2314 })); postH.position.set(0, 7.2, -2);
+    const victim007 = createR6("007"); victim007.position.set(0, 3.2, -1.3);
+    const shedDown = createR6("shed"); shedDown.position.set(-1.3, 0.6, 0.4); shedDown.rotation.x = -1.2; shedDown.rotation.z = 0.4;
+    csStage.add(postV, postH, victim007, shedDown); csObjects.push(postV, postH, victim007, shedDown);
+    const fireRing = [];
+    for (let i = 0; i < 10; i++) {
+      const flm = new THREE.Mesh(new THREE.ConeGeometry(0.8, 3.2, 5), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff5500 : 0xfacc15, transparent: true, opacity: 0.9 }));
+      flm.position.set((Math.random() - 0.5) * 3.2, 2.2 + (i % 3) * 1.4, -1.6 + (Math.random() - 0.5) * 1.5);
+      csStage.add(flm); csObjects.push(flm); fireRing.push(flm);
+    }
+    const fLt = new THREE.PointLight(0xff6600, 4.5, 40); fLt.position.set(0, 5, 0); csStage.add(fLt); csObjects.push(fLt);
+    const gLt = new THREE.PointLight(0x00ff33, 2.8, 25); gLt.position.set(-5, 3, 2); csStage.add(gLt); csObjects.push(gLt);
+    const rLt = new THREE.PointLight(0xff1111, 3.2, 25); rLt.position.set(5, 3, 2); csStage.add(rLt); csObjects.push(rLt);
+
+    const k1x = createR6("1x"); k1x.position.set(-4.5, 0, 1.5); k1x.rotation.y = -0.5; csStage.add(k1x); csObjects.push(k1x);
+    const kc = createR6("c00lkidd"); kc.position.set(4.5, 0, 1.5); kc.rotation.y = 0.5; csStage.add(kc); csObjects.push(kc);
+
+    let f = 0; csTick = setInterval(function(){
+      f++;
+      fireRing.forEach(function(fm, i){ fm.scale.y = 0.7 + Math.sin(f * 0.4 + i) * 0.45; fm.rotation.y += 0.1; });
+      if (k1x.parts.eyeFlare) { const s = 1.4 + Math.sin(f * 0.4) * 0.5; k1x.parts.eyeFlare.scale.set(s, s, 1); }
+      if (f < 48) {
+        csCamPos.set(-3.2, -196.2, 7.5 - f * 0.04); csCamLook.set(-1.2, -196.5, 0);
+      } else if (f < 92) {
+        k1x.rotation.y = -0.15; kc.parts.rArm.rotation.x = 2.1; kc.parts.lArm.rotation.x = 1.6;
+        csCamPos.set(3.2, -196.2, 7.2); csCamLook.set(0.8, -196.5, 0);
+      } else {
+        csCamPos.set(0, -195.8, 10.5); csCamLook.set(0, -196.5, -0.5);
+      }
+      if (f === 125) fl.style.opacity = "1";
+      if (f >= 145) { clearCutsceneStage(); onDone(); }
+    }, 32);
+    return;
+  }
+
+  if (dtCombo === "1X_NOLI") {
+    nm.innerText = "1x1x1x1 and Noli"; nm.style.color = "#a855f7";
+    playCutsceneMP3(mp3IntroDT1xNoli, function(){ playSynthTone(120, 1.2, "sawtooth", 0.2); });
+    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x102812, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
+    const grRing = new THREE.Mesh(new THREE.RingGeometry(4.5, 6.2, 32), new THREE.MeshBasicMaterial({ color: 0x00ff33, side: THREE.DoubleSide }));
+    grRing.rotation.x = -Math.PI / 2; grRing.position.y = 0.05; csStage.add(grRing); csObjects.push(grRing);
+    const gLt = new THREE.PointLight(0x00ff44, 3.2, 35); gLt.position.set(0, 6, 4); csStage.add(gLt); csObjects.push(gLt);
+    const pLt = new THREE.PointLight(0xa855f7, 3.0, 28); pLt.position.set(-2, 6, -1); csStage.add(pLt); csObjects.push(pLt);
+
+    const k1x = createR6("1x"); k1x.position.set(0.8, 0, 0.5); k1x.rotation.y = 0.2; csStage.add(k1x); csObjects.push(k1x);
+    const nb = createR6("scaredNoob"); nb.position.set(2.2, 1.5, 1.6); nb.rotation.y = -0.6; csStage.add(nb); csObjects.push(nb);
+    const kn = createR6("noli"); kn.position.set(-3.5, 0, -5); kn.rotation.y = 0.25; csStage.add(kn); csObjects.push(kn);
+
+    let f = 0; csTick = setInterval(function(){
+      f++;
+      nb.parts.lLeg.rotation.x = Math.sin(f * 0.6) * 0.5; nb.parts.rLeg.rotation.x = -Math.sin(f * 0.6) * 0.5;
+      if (k1x.parts.eyeFlare) { const s = 1.5 + Math.sin(f * 0.4) * 0.5; k1x.parts.eyeFlare.scale.set(s, s, 1); }
+      if (f === 32) { rs.style.transition = "all 0.15s ease-out"; rs.style.opacity = "1"; rs.style.height = "42px"; setTimeout(function(){ rs.style.height = "4px"; rs.style.opacity = "0.7"; }, 220); }
+      if (f < 55) {
+        k1x.parts.lArm.rotation.x = 1.8; csCamPos.set(0.6, -195.8, 8.2); csCamLook.set(0.4, -196.2, 0.5);
+      } else if (f < 95) {
+        nb.visible = false;
+        kn.position.x = -3.5 + ((f - 55) / 40) * 2.0;
+        kn.position.z = -5 + ((f - 55) / 40) * 5.3;
+        animateWalkingLimbs(kn, 0.24);
+        csCamPos.set(0, -195.8, 8.5); csCamLook.set(-0.2, -196.2, 0);
+      } else {
+        kn.parts.lLeg.rotation.x = 0; kn.parts.rLeg.rotation.x = 0; kn.parts.lArm.rotation.x = 0;
+        kn.parts.rArm.rotation.z = -1.2; kn.parts.rArm.rotation.x = 0.4; // Noli merangkul bahu 1x1x1x1!
+        if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.2;
+        csCamPos.set(0, -195.7, 7.6); csCamLook.set(-0.2, -196.2, 0.2);
+      }
+      if (f === 130) fl.style.opacity = "1";
+      if (f >= 145) { clearCutsceneStage(); onDone(); }
+    }, 32);
+    return;
+  }
+
+  if (dtCombo === "NOLI_C00L") {
+    nm.innerText = "Noli and c00lkidd"; nm.style.color = "#e879f9";
+    playCutsceneMP3(mp3IntroDTNoliC00l, function(){ playSynthTone(180, 1.0, "triangle", 0.18); });
+    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x100824, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
+    const pPool = new THREE.Mesh(new THREE.CircleGeometry(3.8, 24), new THREE.MeshBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.6 }));
+    pPool.rotation.x = -Math.PI / 2; pPool.position.set(-2.2, 0.05, 0); csStage.add(pPool); csObjects.push(pPool);
+    const pLt = new THREE.PointLight(0xa855f7, 3.6, 35); pLt.position.set(-2, 7, 3); csStage.add(pLt); csObjects.push(pLt);
+    const rLt = new THREE.PointLight(0xff2222, 3.0, 28); rLt.position.set(3, 6, 3); csStage.add(rLt); csObjects.push(rLt);
+
+    const kn = createR6("noli"); kn.position.set(-2.2, 0, 0); kn.rotation.y = 0.15; csStage.add(kn); csObjects.push(kn);
+    const kc = createR6("c00lkidd"); kc.position.set(2.4, 14, 0.4); kc.rotation.y = -0.15; csStage.add(kc); csObjects.push(kc);
+
+    let f = 0; csTick = setInterval(function(){
+      f++;
+      if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.2;
+      if (f < 48) {
+        kn.parts.head.rotation.z = Math.sin(f * 0.18) * 0.15;
+        csCamPos.set(-1.5, -195.8, 8.8 - f * 0.03); csCamLook.set(-1.5, -196.2, 0);
+      } else if (f < 78) {
+        const t = (f - 48) / 30;
+        kc.position.y = Math.max(0, 14 * (1 - t * t));
+        kc.parts.rArm.rotation.x = 2.6; kc.parts.lArm.rotation.x = 2.6;
+        csCamPos.set(0.2, -195.6, 8.5); csCamLook.set(0.2, -196.2, 0);
+      } else {
+        kc.position.y = 0;
+        kc.parts.rArm.rotation.x = 2.4 + Math.sin(f * 0.25) * 0.25; kc.parts.lArm.rotation.x = 2.4 - Math.sin(f * 0.25) * 0.25;
+        kn.parts.rArm.rotation.x = 1.1;
+        csCamPos.set(0.1, -195.7, 7.8); csCamLook.set(0.1, -196.2, 0);
+      }
+      if (f === 128) fl.style.opacity = "1";
+      if (f >= 145) { clearCutsceneStage(); onDone(); }
+    }, 32);
+    return;
+  }
+
+  // --- INTRO SINGLE KILLER ---
+  const singleK = (activeKillers[0] && activeKillers[0].kType) || killerType;
+  nm.innerText = singleK;
+  nm.style.color = (singleK === "Noli") ? "#c084fc" : ((singleK === "1x1x1x1") ? "#22c55e" : "#e11d48");
+  const spot = new THREE.SpotLight(singleK === "1x1x1x1" ? 0x22ff55 : (singleK === "Noli" ? 0xa855f7 : 0xff3333), 3, 60); spot.position.set(4, 14, 12); csStage.add(spot); csObjects.push(spot);
+
+  if (singleK === "Noli") {
     playCutsceneMP3(sfx.noliIntro, function(){ playSynthTone(135, 0.9, "sawtooth", 0.2); });
     const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x0f041c, roughness: 0.95 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
     [-6, 0, 6].forEach(function(lx, li){
@@ -1340,7 +1485,7 @@ function playKillerIntroCutscene(onDone) {
       else { kn.rotation.y = 0; kn.parts.head.rotation.z = Math.sin(f * 0.15) * 0.18; if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.25; }
       csCamLook.set(0, -196.2, 0); if (f === 115) fl.style.opacity = "1"; if (f >= 130) { clearCutsceneStage(); onDone(); }
     }, 32);
-  } else if (killerType === "1x1x1x1") {
+  } else if (singleK === "1x1x1x1") {
     playCutsceneMP3(mp3Intro1x, function(){ playSynthTone(110, 1.2, "sawtooth", 0.18); });
     const flr = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x1b2410, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
     const k1x = createR6("1x"); k1x.position.set(-1.5, 0, 0); k1x.rotation.y = 0.35; csStage.add(k1x); csObjects.push(k1x);
@@ -1371,10 +1516,12 @@ function playKillerIntroCutscene(onDone) {
 function playKillerOutroCutscene(onDone) {
   clearCutsceneStage(); closeNPCModal(); gameState = "OUTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio(); csStage.visible = true; scene.fog = null;
   const ov = document.getElementById("cutscene-overlay"), ob = document.getElementById("outro-text-box"), os = document.getElementById("outro-sub"), fl = document.getElementById("cutscene-flash"), nStars = document.getElementById("noli-outro-stars");
-  ov.style.display = "block"; ob.style.display = "block"; os.innerText = isDoubleTrouble ? (killerType + " & Partner") : killerType;
+  ov.style.display = "block"; ob.style.display = "block";
+  const mainK = (activeKillers[0] && activeKillers[0].kType) || killerType;
+  os.innerText = isDoubleTrouble && activeKillers.length >= 2 ? (activeKillers[0].kType + " & " + activeKillers[1].kType) : mainK;
   const amb = new THREE.AmbientLight(0xffffff, 0.7); csStage.add(amb); csObjects.push(amb);
 
-  if (killerType === "Noli") {
+  if (mainK === "Noli") {
     playCutsceneMP3(sfx.noliOutro, function(){ playSynthTone(95, 1.2, "sawtooth", 0.2); });
     const bridge = new THREE.Mesh(new THREE.BoxGeometry(22, 0.8, 70), new THREE.MeshStandardMaterial({ color: 0x1e2030, roughness: 0.9 })); bridge.position.y = -0.4; csStage.add(bridge); csObjects.push(bridge);
     [[-12, -10], [12, -10], [-12, 4], [12, 4]].forEach(function(p){ const pil = new THREE.Mesh(new THREE.BoxGeometry(2.2, 16, 2.2), new THREE.MeshStandardMaterial({ map: noliBinaryTex })); pil.position.set(p[0], 8, p[1]); csStage.add(pil); csObjects.push(pil); });
@@ -1389,7 +1536,7 @@ function playKillerOutroCutscene(onDone) {
       else { nStars.style.display = "flex"; bigNova.scale.addScalar(0.35); csCamPos.set(0, -195.5, 7.0); }
       if (f === 140) fl.style.opacity = "1"; if (f >= 165) { clearCutsceneStage(); onDone(); }
     }, 32);
-  } else if (killerType === "1x1x1x1") {
+  } else if (mainK === "1x1x1x1") {
     playCutsceneMP3(mp3Outro1x, null);
     const lava = new THREE.Mesh(new THREE.RingGeometry(10, 32, 32), new THREE.MeshBasicMaterial({ color: 0xff4500, side: THREE.DoubleSide })); lava.rotation.x = -Math.PI / 2; lava.position.y = -0.05; csStage.add(lava); csObjects.push(lava);
     const plat = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 0.6, 24), new THREE.MeshStandardMaterial({ color: 0x27272a })); plat.position.y = -0.3; csStage.add(plat); csObjects.push(plat);
@@ -1640,7 +1787,7 @@ function useNoliVoidRush(k) {
   }
   if (k.reRushWindow && k.state === "IDLE") {
     k.reRushWindow = false; k.state = "RUSH_WINDUP"; k.parts.torso.rotation.x = 0.35;
-    k.rushHitTargets = new Set(); // Reset hit targets agar bisa mengenai Survivor yang sama lagi untuk SLAM!
+    k.rushHitTargets = new Set(); // Reset target hit agar bisa mengenai survivor yang sama untuk SLAM!
     playSFXWithFallback(sfx.noliRushWu, function(){ playSynthTone(220, 0.5, "sawtooth", 0.16); });
     showToast("RE-RUSH CHARGING! Arahkan Kamera!", "#e879f9");
     safeTimeout(function(){ if (k.state !== "RUSH_WINDUP") return; k.state = "VOID_RUSHING"; k.rushTimer = 180; k.rushElapsed = 0; playSFX(sfx.noliRushAmb); }, 650);
@@ -1715,7 +1862,7 @@ function executeObservantTeleport(k, targetGen) {
   if (!k || !targetGen || k.state !== "OBSERVANT") return;
   if (k.position.distanceTo(targetGen.group.position) < 14) {
     if (k === activeKillers[0] && playerRole === "KILLER") showToast("Terlalu dekat dengan Gen #" + targetGen.id + "!", "#f44");
-    else exitObservantStance(k, false); // AI tidak pernah nyangkut jika terlalu dekat
+    else exitObservantStance(k, false);
     return;
   }
   k.state = "OBSERVANT_WINDUP"; k.obsWindElapsed = 0;
@@ -2350,10 +2497,22 @@ function animate() {
   camera.lookAt(cf.position.x, cf.position.y + 3, cf.position.z);
 
   if (gameState === "INGAME") {
-    let ad = 9999;
-    if (playerRole === "SURVIVOR") activeKillers.forEach(function(k){ ad = Math.min(ad, (!isPlayerDead ? playerNoob : cf).position.distanceTo(k.position)); });
-    else aiSurvivors.forEach(function(s){ if (s.alive && activeKillers[0]) ad = Math.min(ad, s.position.distanceTo(activeKillers[0].position)); });
-    update4LayerChase(ad);
+    let ad = 9999, nearestKType = killerType;
+    if (playerRole === "SURVIVOR") {
+      activeKillers.forEach(function(k){
+        const dist = (!isPlayerDead ? playerNoob : cf).position.distanceTo(k.position);
+        if (dist < ad) { ad = dist; nearestKType = k.kType; }
+      });
+    } else {
+      aiSurvivors.forEach(function(s){
+        if (s.alive && activeKillers[0]) {
+          const dist = s.position.distanceTo(activeKillers[0].position);
+          if (dist < ad) { ad = dist; nearestKType = activeKillers[0].kType; }
+        }
+      });
+    }
+    // Update Chase Theme sesuai Killer yang paling dekat!
+    update4LayerChase(ad, nearestKType);
 
     if (fakeNoliChaser && !isPlayerDead && playerRole === "SURVIVOR") {
       const fx = playerNoob.position.x - fakeNoliChaser.position.x, fz = playerNoob.position.z - fakeNoliChaser.position.z, fd = Math.sqrt(fx * fx + fz * fz);
@@ -2502,7 +2661,7 @@ function animate() {
         const tg = ai.assignedGen;
         if (tg) {
           const mg = ai.position.distanceTo(tg.group.position);
-          if (mg > 4.5) { moveAISmart(ai, (tg.group.position.x - ai.position.x) / mg, (tg.group.position.z - ai.position.z) / mg, as); ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
+          if (mg > 4.5) { moveAISmart(ai, ((tg.group.position.x - ai.position.x) / mg), ((tg.group.position.z - ai.position.z) / mg), as); ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
           else { ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; ai.parts.rArm.rotation.x = 1.6 + Math.sin(Date.now() * 0.015) * 0.2; ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2; ai.genWorkTimer++; if (ai.genWorkTimer >= 260) { ai.genWorkTimer = 0; if (!tg.done) { tg.stage++; if (tg.stage >= 5) completeGenerator(tg, ai.name); } } }
         } else {
           if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
