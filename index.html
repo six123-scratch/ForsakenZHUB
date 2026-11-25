@@ -38,7 +38,7 @@ window.onerror = function(msg, url, line, col) {
   .lobby-btn.start{background:#10b981}
   .lobby-btn.dt-on{background:#e11d48;border-color:#fde047;color:#fff}
   #status-effects{
-    position:absolute;top:28%;left:20px;display:flex;flex-direction:column;
+    position:absolute;top:24%;left:20px;display:flex;flex-direction:column;
     gap:7px;z-index:15;pointer-events:none
   }
   .effect-badge{
@@ -179,15 +179,44 @@ window.onerror = function(msg, url, line, col) {
     cursor:pointer;text-align:center
   }
   .inv-slot.has-item{border-color:#fc0;background:rgba(40,35,10,.9)}
-  #player-bars{
-    position:absolute;bottom:25px;left:25px;background:rgba(0,0,0,.75);
-    padding:10px 14px;border-radius:8px;border:2px solid #444;width:165px;
-    z-index:10;color:#fff;display:none
+
+  /* FORSAKEN STYLE HUD: DAFTAR SURVIVOR + KOTAK HP/STAMINA */
+  #survivor-hud-list{
+    position:absolute;bottom:108px;left:22px;display:none;
+    grid-template-columns:repeat(2,150px);gap:6px 10px;z-index:10;pointer-events:none
   }
-  .bar-container{background:#222;height:11px;border-radius:4px;overflow:hidden;margin-top:3px}
-  #hp-bar{width:100%;height:100%;background:#00e64d;transition:width .2s}
-  #stamina-bar{width:100%;height:100%;background:#fa0;transition:width .1s}
-  .bar-title{font-size:10px;font-weight:bold;margin-top:3px}
+  .surv-badge{
+    display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.68);
+    padding:3px 8px;border-radius:18px;border:1px solid rgba(255,255,255,0.22)
+  }
+  .surv-badge.dead{opacity:0.45;border-color:#7f1d1d}
+  .surv-ico{
+    width:26px;height:26px;border-radius:50%;border:2px solid #fff;
+    display:flex;align-items:center;justify-content:center;font-size:10px;
+    font-weight:900;color:#fff;flex-shrink:0
+  }
+  .surv-meta{display:flex;flex-direction:column;line-height:1.15;overflow:hidden}
+  .surv-name{font-size:11px;font-weight:bold;color:#fff;font-family:Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .surv-hp-txt{font-size:10px;font-weight:bold;color:#4ade80}
+  #player-bars{
+    position:absolute;bottom:20px;left:22px;background:rgba(5,5,8,.88);
+    padding:10px 14px;border-radius:10px;border:2px solid rgba(255,255,255,.35);
+    box-shadow:0 0 18px rgba(0,0,0,.9);display:none;align-items:center;gap:12px;
+    z-index:10;color:#fff;min-width:295px
+  }
+  #hud-portrait{
+    width:54px;height:54px;border-radius:50%;border:3px solid #cbd5e1;
+    background:#1e293b;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:11px;text-align:center;flex-shrink:0;box-shadow:0 0 10px rgba(0,0,0,.8)
+  }
+  #hud-bars-col{display:flex;flex-direction:column;gap:8px;flex:1}
+  .hud-row{display:flex;align-items:center;gap:7px}
+  .hud-ico{font-size:14px;width:16px;text-align:center}
+  .bar-container{flex:1;background:#1f2937;height:12px;border-radius:4px;overflow:hidden;border:1px solid #374151}
+  #hp-bar{width:100%;height:100%;background:linear-gradient(90deg,#ef4444,#f87171);transition:width .18s}
+  #stamina-bar{width:100%;height:100%;background:#f8fafc;transition:width .08s}
+  .hud-num{font-size:12px;font-weight:900;font-family:Georgia,serif;min-width:52px;text-align:right;color:#f8fafc}
+
   #spectate-panel{
     position:absolute;top:48%;left:20px;transform:translateY(-50%);
     display:none;flex-direction:column;gap:8px;z-index:25
@@ -234,7 +263,7 @@ window.onerror = function(msg, url, line, col) {
     pointer-events:none;display:none;z-index:15
   }
   #start-hint{
-    position:absolute;bottom:95px;left:50%;transform:translateX(-50%);
+    position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
     color:#fff;font-size:13px;z-index:10;background:rgba(180,0,0,.85);
     padding:6px 14px;border-radius:20px;font-weight:bold;cursor:pointer;text-align:center
   }
@@ -367,11 +396,21 @@ window.onerror = function(msg, url, line, col) {
 <audio id="sfx-pizza" preload="auto"><source src="pizza.mp3" type="audio/mpeg"></audio>
 <audio id="sfx-minion-spawn" preload="auto"><source src="minion_spawn.mp3" type="audio/mpeg"></audio>
 
+<div id="survivor-hud-list"></div>
 <div id="player-bars">
-  <div id="hp-title" class="bar-title">HEALTH</div>
-  <div id="hp-container" class="bar-container"><div id="hp-bar"></div></div>
-  <div class="bar-title">STAMINA</div>
-  <div class="bar-container"><div id="stamina-bar"></div></div>
+  <div id="hud-portrait">NOOB</div>
+  <div id="hud-bars-col">
+    <div id="hp-row" class="hud-row">
+      <span class="hud-ico" style="color:#ff4d4d;">❤</span>
+      <div id="hp-container" class="bar-container"><div id="hp-bar"></div></div>
+      <span id="hp-text" class="hud-num">100/100</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-ico" style="color:#fff;">⚡</span>
+      <div class="bar-container"><div id="stamina-bar"></div></div>
+      <span id="stamina-text" class="hud-num">100/100</span>
+    </div>
+  </div>
 </div>
 
 <div id="inventory-bar">
@@ -475,6 +514,7 @@ function togglePlayerRole() {
   b.innerText = "PERAN: " + playerRole;
   b.classList.toggle("killer", playerRole === "KILLER");
   document.getElementById("char-btn").style.display = (playerRole === "SURVIVOR") ? "block" : "none";
+  updateUIState();
 }
 function toggleSurvivorChar() {
   if (gameState !== "LOBBY") return;
@@ -483,7 +523,7 @@ function toggleSurvivorChar() {
   const b = document.getElementById("char-btn");
   b.innerText = "SURVIVOR: " + survivorChar;
   b.className = "lobby-btn" + (survivorChar === "007n7" ? " char007" : (survivorChar === "SHEDLETSKY" ? " charshed" : ""));
-  applyPlayerAppearance();
+  applyPlayerAppearance(); updateUIState();
 }
 function toggleKillerType() {
   if (gameState !== "LOBBY") return;
@@ -493,6 +533,7 @@ function toggleKillerType() {
   b.innerText = "KILLER: " + killerType;
   b.classList.toggle("k1x", killerType === "1x1x1x1");
   b.classList.toggle("knoli", killerType === "Noli");
+  updateUIState();
 }
 function toggleDoubleTrouble() {
   if (gameState !== "LOBBY") return;
@@ -864,14 +905,9 @@ function createDetailedGenerator(isFake) {
   const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 36, 8), new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.45, wireframe: true }));
   beacon.position.y = 18; beacon.visible = false; g.add(beacon);
 
-  // Sprite wajah Noli tertawa melayang di atas generator saat Observant
   const obsSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: noliLaughTex, transparent: true }));
-  obsSprite.position.set(0, 5.4, 0);
-  obsSprite.scale.set(4.5, 4.5, 1);
-  obsSprite.visible = false;
-  g.add(obsSprite);
+  obsSprite.position.set(0, 5.4, 0); obsSprite.scale.set(4.5, 4.5, 1); obsSprite.visible = false; g.add(obsSprite);
 
-  // Aura ungu generator saat Observant
   const obsGlow = new THREE.Mesh(
     new THREE.BoxGeometry(3.8, 3.0, 2.5),
     new THREE.MeshBasicMaterial({ color: 0xa855f7, wireframe: true, transparent: true, opacity: 0.75 })
@@ -1035,7 +1071,6 @@ function createR6(charType) {
     torso.add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.6, 0.45), new THREE.MeshStandardMaterial({ color: 0x111111 })));
     for (let r = -0.5; r <= 0.5; r += 0.5) { const rb = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 0.6), new THREE.MeshStandardMaterial({ color: 0x111111 })); rb.position.y = r; torso.add(rb); }
   } else if (isNoli) {
-    // Armor void 3D di bahu kanan & dada + fragmen glitch melayang
     const voidPad = new THREE.Mesh(new THREE.BoxGeometry(1.06, 2.08, 1.12), new THREE.MeshStandardMaterial({ color: 0x090212, roughness: 0.35, metalness: 0.6 }));
     voidPad.position.set(0.52, 0, 0); torso.add(voidPad);
     const chestStar = mkVoidStar(0.32); chestStar.position.set(0, 0.25, -0.58); torso.add(chestStar);
@@ -1064,12 +1099,10 @@ function createR6(charType) {
     [[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5],[0.5,0.5],[0,-0.55],[0,0.55]].forEach(function(p){ const pr = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.55, 0.28), new THREE.MeshStandardMaterial({ color: 0x111111 })); pr.position.set(p[0], 0.35, p[1]); crown.add(pr); });
     crown.position.y = 0.72; head.add(crown);
   } else if (isNoli) {
-    // Lapisan 3D Topeng Putih (kiri) & Tengkorak Ungu 3D (kanan)
     const maskHalf = new THREE.Mesh(new THREE.BoxGeometry(0.64, 1.28, 0.18), new THREE.MeshStandardMaterial({ color: 0xeee6f3, roughness: 0.4 }));
     maskHalf.position.set(-0.32, 0, -0.64); head.add(maskHalf);
     const skullHalf = new THREE.Mesh(new THREE.BoxGeometry(0.64, 1.28, 0.14), new THREE.MeshStandardMaterial({ color: 0x3b0764, roughness: 0.7 }));
     skullHalf.position.set(0.32, 0, -0.62); head.add(skullHalf);
-    // Detail wajah 3D di atas topeng & tengkorak
     const maskEye = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.08, 0.06), new THREE.MeshBasicMaterial({ color: 0x090212 }));
     maskEye.position.set(-0.32, 0.18, -0.73); maskEye.rotation.z = 0.15;
     const maskSmile = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.24, 0.06), new THREE.MeshBasicMaterial({ color: 0xffffff }));
@@ -1084,22 +1117,19 @@ function createR6(charType) {
     for (let tx = 0; tx < 3; tx++) {
       const th = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.1), new THREE.MeshBasicMaterial({ color: 0xe9d5ff }));
       th.position.set(0.18 + tx * 0.13, -0.15, -0.71);
-      const thB = th.clone(); thB.position.y = -0.33;
-      head.add(th, thB);
+      const thB = th.clone(); thB.position.y = -0.33; head.add(th, thB);
     }
 
-    // Mahkota Void 3D dengan duri melengkung, 2 topeng, dan puncak bintang
     const noliCrown = new THREE.Group();
     const crownBand = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.11, 8, 20), new THREE.MeshStandardMaterial({ color: 0x0f031d, metalness: 0.75, emissive: 0x3b0764 }));
     crownBand.rotation.x = Math.PI / 2; noliCrown.add(crownBand);
     const spikeMat = new THREE.MeshStandardMaterial({ color: 0x1e1b2e, metalness: 0.6, emissive: 0x2e1065 });
     for (let s = 0; s < 8; s++) {
       const ang = (s / 8) * Math.PI * 2;
-      if (Math.abs(Math.sin(ang) + 1) < 0.35) continue; // Sisakan ruang depan untuk 2 topeng
+      if (Math.abs(Math.sin(ang) + 1) < 0.35) continue;
       const spk = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.75, 5), spikeMat);
       spk.position.set(Math.cos(ang) * 0.88, 0.36, Math.sin(ang) * 0.88);
-      spk.rotation.z = -Math.cos(ang) * 0.35; spk.rotation.x = Math.sin(ang) * 0.35;
-      noliCrown.add(spk);
+      spk.rotation.z = -Math.cos(ang) * 0.35; spk.rotation.x = Math.sin(ang) * 0.35; noliCrown.add(spk);
     }
     [-0.28, 0.28].forEach(function(mx, mi){
       const miniM = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.14), new THREE.MeshStandardMaterial({ color: 0xf3e8ff, emissive: 0x4c1d95, emissiveIntensity: 0.35 }));
@@ -1263,7 +1293,7 @@ function buildRoundRoster() {
   function addK(kt, pz, ab) {
     const k = createR6(kt === "1x1x1x1" ? "1x" : (kt === "Noli" ? "noli" : "c00lkidd"));
     k.kType = kt; k.name = kt; k.state = "IDLE"; k.atkCD = 0; k.abT = ab; k.dashT = 0; k.speedMult = 1;
-    k.rushTimer = 0; k.rushElapsed = 0; k.rushHits = 0; k.reRushWindow = false; k.position.set(0, 0, pz);
+    k.rushTimer = 0; k.rushElapsed = 0; k.rushHits = 0; k.reRushWindow = false; k.obsWindElapsed = 0; k.position.set(0, 0, pz);
     k.add(new THREE.PointLight(kt === "1x1x1x1" ? 0x00ff33 : (kt === "Noli" ? 0x9333ea : 0xff0000), 2.8, 22));
     scene.add(k); activeKillers.push(k);
   }
@@ -1423,6 +1453,35 @@ function playShedSlashAnim(char) {
   }, 550);
 }
 
+// --- HUD ANGKA HP, STAMINA, PORTRAIT & DAFTAR SURVIVOR ---
+function updatePlayerBarsUI() {
+  const hpVal = Math.max(0, Math.ceil(playerNoob.hp || 0));
+  document.getElementById("hp-bar").style.width = hpVal + "%";
+  document.getElementById("hp-text").innerText = hpVal + "/100";
+  const stVal = Math.max(0, Math.round(stamina));
+  document.getElementById("stamina-bar").style.width = stVal + "%";
+  document.getElementById("stamina-text").innerText = stVal + "/100";
+}
+function updateSurvivorHUDList() {
+  const el = document.getElementById("survivor-hud-list");
+  if (!el || gameState !== "INGAME") { if (el) el.style.display = "none"; return; }
+  el.style.display = "grid";
+  const list = [];
+  if (playerRole === "SURVIVOR") {
+    list.push({ name: "Kamu (" + survivorChar + ")", hp: isPlayerDead ? 0 : playerNoob.hp, alive: !isPlayerDead, is007: survivorChar === "007n7", isShed: survivorChar === "SHEDLETSKY" });
+  }
+  aiSurvivors.forEach(function(a){ list.push(a); });
+  let html = "";
+  list.forEach(function(s){
+    const bg = s.is007 ? "#0f766e" : (s.isShed ? "#ca8a04" : "#1d4ed8");
+    const init = s.is007 ? "007" : (s.isShed ? "SH" : "NB");
+    const hpC = Math.max(0, Math.ceil(s.hp));
+    const col = !s.alive ? "#ef4444" : (hpC > 60 ? "#4ade80" : (hpC > 30 ? "#facc15" : "#f87171"));
+    html += '<div class="surv-badge' + (s.alive ? '' : ' dead') + '"><div class="surv-ico" style="background:' + bg + '">' + init + '</div><div class="surv-meta"><span class="surv-name">' + s.name + '</span><span class="surv-hp-txt" style="color:' + col + '">' + (s.alive ? hpC + "/100" : "MATI") + '</span></div></div>';
+  });
+  el.innerHTML = html;
+}
+
 function playKillAnimation(k, v) {
   if (k.state === "KILLING") return;
   k.state = "KILLING";
@@ -1436,8 +1495,10 @@ function playKillAnimation(k, v) {
   v.parts.c00lguiTab.visible = false; v.parts.fireMesh.visible = false;
   if (v === playerNoob && playerRole === "SURVIVOR") {
     closePuzzle(); cancelMedkit(); cancelC00lgui(); clearHallucination(playerNoob, false);
-    camFocusOverride = cp; isPlayerDead = true; playerNoob.hp = 0; playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); clearAllEffects();
+    camFocusOverride = cp; isPlayerDead = true; playerNoob.hp = 0; updatePlayerBarsUI();
+    playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); clearAllEffects();
   }
+  updateSurvivorHUDList();
   if (k.kType === "Noli") {
     k.parts.rArm.rotation.x = 2.3; k.parts.head.rotation.z = 0.25;
     const nBoom = mkVoidStar(2.0); nBoom.position.copy(cp.position); nBoom.position.y = 3; scene.add(nBoom); tempObjects.push(nBoom);
@@ -1492,13 +1553,13 @@ function applyDamageToPlayer(rawDmg, attacker) {
   if (playerNoob.isInvulnerable || isPlayerDead) return;
   const dmg = hasResistance ? rawDmg * 0.6 : rawDmg; playerNoob.hp = Math.max(0, playerNoob.hp - dmg);
   if (chickenHoTTimer) { chickenDmgAccum += dmg; if (chickenDmgAccum >= 5) { clearInterval(chickenHoTTimer); chickenHoTTimer = null; removeStatusEffect("chicken"); showToast("Fried Chicken Terputus!", "#f44"); } }
-  document.getElementById("hp-bar").style.width = playerNoob.hp + "%";
+  updatePlayerBarsUI();
   if (playerNoob.hp <= 0 && attacker) playKillAnimation(attacker, playerNoob);
 }
 function applyPoison(target, lvl, durSec) {
   if (target.isInvulnerable || !target.alive) return;
   if (target === playerNoob && playerRole === "SURVIVOR") addStatusEffect("poison", "POISONED " + lvl, "#22cc44", durSec);
-  let t = 0; const iv = safeInterval(function(){ t++; if (t > durSec || !target.alive || target.isInvulnerable || gameState !== "INGAME") { clearInterval(iv); return; } target.hp = Math.max(1, target.hp - (lvl * 0.8)); if (target === playerNoob && playerRole === "SURVIVOR") document.getElementById("hp-bar").style.width = target.hp + "%"; }, 1000);
+  let t = 0; const iv = safeInterval(function(){ t++; if (t > durSec || !target.alive || target.isInvulnerable || gameState !== "INGAME") { clearInterval(iv); return; } target.hp = Math.max(1, target.hp - (lvl * 0.8)); if (target === playerNoob && playerRole === "SURVIVOR") updatePlayerBarsUI(); }, 1000);
 }
 function applyGlitched(target, durSec) {
   target.isGlitched = true; if (target === playerNoob && playerRole === "SURVIVOR") { isGlitched = true; addStatusEffect("glitch", "GLITCHED", "#ff00aa", durSec); }
@@ -1527,7 +1588,7 @@ function clearHallucination(target, withJumpscare) {
   }
 }
 function applyHallucination(target, lvl, forceExact) {
-  if (!target || !target.alive || target.isInvulnerable) return;
+  if (!target || !target.alive) return;
   target.hallucinationLvl = Math.min(3, forceExact ? lvl : Math.max(target.hallucinationLvl || 0, lvl));
   applyHighlight(target, 20);
   if (target === playerNoob && playerRole === "SURVIVOR") {
@@ -1572,15 +1633,16 @@ function useNoliVoidRush(k) {
     return;
   }
   if (k.state === "VOID_RUSHING" && k === activeKillers[0] && playerRole === "KILLER") {
-    k.state = "IDLE"; k.parts.torso.rotation.x = 0;
+    k.state = "IDLE"; k.parts.torso.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
     playSFXWithFallback(sfx.noliRushCancel, function(){ playSynthTone(200, 0.2, "sine", 0.1); });
     showToast("Void Rush Dihentikan", "#c084fc");
     return;
   }
   if (k.reRushWindow && k.state === "IDLE") {
     k.reRushWindow = false; k.state = "RUSH_WINDUP"; k.parts.torso.rotation.x = 0.35;
+    k.rushHitTargets = new Set(); // Reset hit targets agar bisa mengenai Survivor yang sama lagi untuk SLAM!
     playSFXWithFallback(sfx.noliRushWu, function(){ playSynthTone(220, 0.5, "sawtooth", 0.16); });
-    showToast("RE-RUSH CHARGING! Gerakkan Kamera!", "#e879f9");
+    showToast("RE-RUSH CHARGING! Arahkan Kamera!", "#e879f9");
     safeTimeout(function(){ if (k.state !== "RUSH_WINDUP") return; k.state = "VOID_RUSHING"; k.rushTimer = 180; k.rushElapsed = 0; playSFX(sfx.noliRushAmb); }, 650);
     return;
   }
@@ -1638,7 +1700,10 @@ function clearObservantVisuals() {
   });
 }
 function exitObservantStance(k, cancelled) {
-  if (!k || k.state !== "OBSERVANT") return; k.state = "IDLE"; k.speedMult = 1;
+  if (!k || (k.state !== "OBSERVANT" && k.state !== "OBSERVANT_WINDUP")) return;
+  k.state = "IDLE"; k.speedMult = 1;
+  k.parts.rArm.rotation.set(0, 0, 0); k.parts.lArm.rotation.set(0, 0, 0);
+  if (k.parts.noliStar) k.parts.noliStar.scale.set(1, 1, 1);
   clearObservantVisuals();
   document.getElementById("observant-hud").style.display = "none";
   if (cancelled) {
@@ -1648,12 +1713,19 @@ function exitObservantStance(k, cancelled) {
 }
 function executeObservantTeleport(k, targetGen) {
   if (!k || !targetGen || k.state !== "OBSERVANT") return;
-  if (k.position.distanceTo(targetGen.group.position) < 14) { showToast("Terlalu dekat dengan Gen #" + targetGen.id + "!", "#f44"); return; }
-  k.state = "OBSERVANT_WINDUP"; document.getElementById("observant-hud").style.display = "none";
+  if (k.position.distanceTo(targetGen.group.position) < 14) {
+    if (k === activeKillers[0] && playerRole === "KILLER") showToast("Terlalu dekat dengan Gen #" + targetGen.id + "!", "#f44");
+    else exitObservantStance(k, false); // AI tidak pernah nyangkut jika terlalu dekat
+    return;
+  }
+  k.state = "OBSERVANT_WINDUP"; k.obsWindElapsed = 0;
+  document.getElementById("observant-hud").style.display = "none";
   targetGen.lamp.material.color.setHex(0xf5d0fe);
   showToast("⚠ OBSERVANT: Teleport ke Gen #" + targetGen.id + "...", "#c084fc");
   safeTimeout(function(){
     clearObservantVisuals();
+    k.parts.rArm.rotation.set(0, 0, 0); k.parts.lArm.rotation.set(0, 0, 0);
+    if (k.parts.noliStar) k.parts.noliStar.scale.set(1, 1, 1);
     if (k.state !== "OBSERVANT_WINDUP") return;
     playSFXWithFallback(sfx.noliObsTp, function(){ playSynthTone(640, 0.55, "sine", 0.2); });
     k.position.set(targetGen.group.position.x + 3.6, 0, targetGen.group.position.z); k.speedMult = 1; k.state = "IDLE";
@@ -1669,7 +1741,6 @@ function useNoliObservant(k) {
   if (gameState !== "INGAME") return;
   if (k.state === "OBSERVANT") { exitObservantStance(k, true); return; }
   if ((k === activeKillers[0] && playerRole === "KILLER" && cdR) || k.state !== "IDLE") return;
-  // Aktifkan noli_obs_start DAN noli_obs_warn langsung saat tombol Observant ditekan!
   playSFXWithFallback(sfx.noliObsStart, function(){ playSynthTone(300, 0.45, "triangle", 0.16); });
   playSFXWithFallback(sfx.noliObsWarn, function(){ playSynthTone(460, 0.35, "square", 0.12); });
   k.state = "OBSERVANT"; k.speedMult = 0.25;
@@ -1681,12 +1752,17 @@ function useNoliObservant(k) {
     g.lamp.material.color.setHex(0xa855f7);
   });
   if (k === activeKillers[0] && playerRole === "KILLER") {
-    document.exitPointerLock(); // Bebaskan kursor agar langsung bisa klik Generator / Wajah Noli di 3D
+    document.exitPointerLock();
     const hud = document.getElementById("observant-hud"), btns = document.getElementById("observant-btns"); btns.innerHTML = "";
     generators.forEach(function(g){ const b = document.createElement("button"); b.className = "obs-tp-btn"; b.innerText = "[" + g.id + "] Gen #" + g.id + (g.done ? " (Done)" : ""); b.onclick = function(){ executeObservantTeleport(k, g); }; btns.appendChild(b); });
     hud.style.display = "flex";
   } else {
-    safeTimeout(function(){ if (k.state !== "OBSERVANT") return; const cand = generators.filter(function(g){ return k.position.distanceTo(g.group.position) >= 14; }); executeObservantTeleport(k, cand.length > 0 ? cand[Math.floor(Math.random() * cand.length)] : generators[0]); }, 600);
+    safeTimeout(function(){
+      if (k.state !== "OBSERVANT") return;
+      const cand = generators.filter(function(g){ return k.position.distanceTo(g.group.position) >= 14; });
+      if (cand.length > 0) executeObservantTeleport(k, cand[Math.floor(Math.random() * cand.length)]);
+      else exitObservantStance(k, false);
+    }, 600);
   }
 }
 
@@ -1708,7 +1784,7 @@ function usePickedMedkit() {
   if (invMedkit <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME" || playerRole !== "SURVIVOR") return;
   invMedkit--; updateInventoryUI(); isUsingMedkit = true; playerNoob.parts.heldItem.material.color.setHex(0xffffff); playerNoob.parts.heldItem.visible = true;
   playerNoob.parts.rArm.rotation.x = 1.6; playerNoob.parts.lArm.rotation.x = 1.6; addStatusEffect("medkit", "HEALING MEDKIT", "#0f8", 8);
-  safeTimeout(function(){ if (!isUsingMedkit) return; isUsingMedkit = false; playerNoob.parts.heldItem.visible = false; playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0; playerNoob.hp = Math.min(100, playerNoob.hp + 80); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; showToast("MEDKIT SELESAI (+80 HP)", "#0e4"); }, 8000);
+  safeTimeout(function(){ if (!isUsingMedkit) return; isUsingMedkit = false; playerNoob.parts.heldItem.visible = false; playerNoob.parts.rArm.rotation.x = 0; playerNoob.parts.lArm.rotation.x = 0; playerNoob.hp = Math.min(100, playerNoob.hp + 80); updatePlayerBarsUI(); showToast("MEDKIT SELESAI (+80 HP)", "#0e4"); }, 8000);
 }
 
 // PUZZLE
@@ -1850,25 +1926,39 @@ window.addEventListener("mousemove", function(e){
 });
 
 function updateSkillButtonsForRole() {
-  const s1 = document.getElementById("label-s1"), s2 = document.getElementById("label-s2"), s3 = document.getElementById("label-s3"), s4 = document.getElementById("btn-s4"), b3 = document.getElementById("btn-s3"), is = document.getElementById("icon-sprint"), ls = document.getElementById("label-sprint"), ht = document.getElementById("hp-title"), hc = document.getElementById("hp-container");
+  const s1 = document.getElementById("label-s1"), s2 = document.getElementById("label-s2"), s3 = document.getElementById("label-s3"), s4 = document.getElementById("btn-s4"), b3 = document.getElementById("btn-s3"), is = document.getElementById("icon-sprint"), ls = document.getElementById("label-sprint"), hpRow = document.getElementById("hp-row"), port = document.getElementById("hud-portrait");
   s4.style.display = (playerRole === "KILLER" && killerType === "1x1x1x1") ? "flex" : "none"; b3.style.display = "flex";
-  if (playerRole === "KILLER" && killerType === "Noli") { ht.style.display = "none"; hc.style.display = "none"; s1.innerText = "Void Rush [Q]"; s2.innerText = "Nova [E]"; s3.innerText = "Observant [R]"; is.innerText = "M1 / F"; ls.innerText = "STAB (25)"; }
-  else if (playerRole === "KILLER" && killerType === "1x1x1x1") { ht.style.display = "none"; hc.style.display = "none"; s1.innerText = "Mass Inf [Q]"; s2.innerText = "Entangle [E]"; s3.innerText = "Unstable [R]"; is.innerText = "M1 / F"; ls.innerText = "SLASH (20)"; }
-  else if (playerRole === "KILLER") { ht.style.display = "none"; hc.style.display = "none"; s1.innerText = "Override [Q]"; s2.innerText = "Corrupt [E]"; s3.innerText = "Pizza [R]"; is.innerText = "M1 / F"; ls.innerText = "TAG (26.5)"; }
-  else if (survivorChar === "007n7") { ht.style.display = "block"; hc.style.display = "block"; s1.innerText = "Clone [Q]"; s2.innerText = "c00lgui [E]"; s3.innerText = "Inject: " + injectModes[injectIdx]; is.innerText = "SHIFT"; ls.innerText = "SPRINT"; }
-  else if (survivorChar === "SHEDLETSKY") { ht.style.display = "block"; hc.style.display = "block"; s1.innerText = "Slash [Q]"; s2.innerText = "Chicken [E] (" + chickenUses + ")"; b3.style.display = "none"; is.innerText = "SHIFT"; ls.innerText = "SPRINT"; }
-  else { ht.style.display = "block"; hc.style.display = "block"; s1.innerText = "Ghostburger [Q]"; s2.innerText = "Slateskin [E]"; s3.innerText = "Bloxy Cola [R]"; is.innerText = "SHIFT"; ls.innerText = "SPRINT"; }
+  if (playerRole === "KILLER" && killerType === "Noli") {
+    hpRow.style.display = "none"; port.innerText = "NOLI"; port.style.background = "#3b0764"; port.style.borderColor = "#c084fc";
+    s1.innerText = "Void Rush [Q]"; s2.innerText = "Nova [E]"; s3.innerText = "Observant [R]"; is.innerText = "M1 / F"; ls.innerText = "STAB (25)";
+  } else if (playerRole === "KILLER" && killerType === "1x1x1x1") {
+    hpRow.style.display = "none"; port.innerText = "1x1x1x1"; port.style.background = "#064e3b"; port.style.borderColor = "#22c55e";
+    s1.innerText = "Mass Inf [Q]"; s2.innerText = "Entangle [E]"; s3.innerText = "Unstable [R]"; is.innerText = "M1 / F"; ls.innerText = "SLASH (20)";
+  } else if (playerRole === "KILLER") {
+    hpRow.style.display = "none"; port.innerText = "c00lkidd"; port.style.background = "#7f1d1d"; port.style.borderColor = "#ef4444";
+    s1.innerText = "Override [Q]"; s2.innerText = "Corrupt [E]"; s3.innerText = "Pizza [R]"; is.innerText = "M1 / F"; ls.innerText = "TAG (26.5)";
+  } else if (survivorChar === "007n7") {
+    hpRow.style.display = "flex"; port.innerText = "007n7"; port.style.background = "#0f766e"; port.style.borderColor = "#5eead4";
+    s1.innerText = "Clone [Q]"; s2.innerText = "c00lgui [E]"; s3.innerText = "Inject: " + injectModes[injectIdx]; is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  } else if (survivorChar === "SHEDLETSKY") {
+    hpRow.style.display = "flex"; port.innerText = "SHED"; port.style.background = "#ca8a04"; port.style.borderColor = "#fde047";
+    s1.innerText = "Slash [Q]"; s2.innerText = "Chicken [E] (" + chickenUses + ")"; b3.style.display = "none"; is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  } else {
+    hpRow.style.display = "flex"; port.innerText = "NOOB"; port.style.background = "#1d4ed8"; port.style.borderColor = "#facc15";
+    s1.innerText = "Ghostburger [Q]"; s2.innerText = "Slateskin [E]"; s3.innerText = "Bloxy Cola [R]"; is.innerText = "SHIFT"; ls.innerText = "SPRINT";
+  }
 }
 function updateUIState() {
   const isCut = (gameState === "INTRO" || gameState === "OUTRO");
   document.getElementById("top-hud").style.display = isCut ? "none" : "flex";
   document.getElementById("lobby-controls").style.display = gameState === "LOBBY" ? "flex" : "none";
   document.getElementById("gen-status").style.display = gameState === "INGAME" ? "block" : "none";
-  document.getElementById("player-bars").style.display = ((gameState === "LOBBY") || (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"))) ? "block" : "none";
+  document.getElementById("player-bars").style.display = ((gameState === "LOBBY") || (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER"))) ? "flex" : "none";
   document.getElementById("skills-container").style.display = (gameState === "INGAME" && (!isPlayerDead || playerRole === "KILLER")) ? "block" : "none";
   document.getElementById("inventory-bar").style.display = (gameState === "INGAME" && !isPlayerDead && playerRole === "SURVIVOR") ? "flex" : "none";
   dexMarker.visible = gameState === "INGAME" && playerRole === "SURVIVOR" && survivorChar === "007n7" && !isPlayerDead; updateSkillButtonsForRole();
-  if (gameState === "LOBBY") { document.getElementById("hp-title").style.display = "none"; document.getElementById("hp-container").style.display = "none"; }
+  if (gameState === "LOBBY") document.getElementById("hp-row").style.display = "none";
+  updateSurvivorHUDList();
   document.getElementById("spectate-panel").style.display = (gameState === "INGAME" && isPlayerDead && playerRole === "SURVIVOR" && !camFocusOverride) ? "flex" : "none";
 }
 function updateSpectateHPList() { if (gameState !== "INGAME" || !isPlayerDead || playerRole !== "SURVIVOR") return; let h = "<b>DARAH SURVIVOR:</b>"; aiSurvivors.forEach(function(a){ h += "<div>" + a.name + ": " + (a.alive ? Math.ceil(a.hp) + "% HP" : '<span style="color:#f44">MATI</span>') + "</div>"; }); document.getElementById("ai-hp-list").innerHTML = h; }
@@ -1885,7 +1975,7 @@ function startNewRound() {
   invCola = 0; invMedkit = 0; invGears = 0; updateInventoryUI(); spawnAllMapItems();
   generators.forEach(function(g){ g.stage = 0; g.gearsInserted = 0; g.done = false; g.lamp.material.color.setHex(0xff0000); });
   document.getElementById("gen-status").innerText = "Generator Selesai: 0 / 5";
-  if (playerRole === "SURVIVOR") { playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true; playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false; playerNoob.hallucinationLvl = 0; playerNoob.parts.fireMesh.visible = false; document.getElementById("hp-bar").style.width = "100%"; playerNoob.position.set(0, 0, 0); applyPlayerAppearance(); }
+  if (playerRole === "SURVIVOR") { playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true; playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false; playerNoob.hallucinationLvl = 0; playerNoob.parts.fireMesh.visible = false; updatePlayerBarsUI(); playerNoob.position.set(0, 0, 0); applyPlayerAppearance(); }
   else { playerNoob.alive = false; playerNoob.visible = false; playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); }
   buildRoundRoster(); spawnNoliFakeGenerators();
   playKillerIntroCutscene(function(){
@@ -1914,7 +2004,8 @@ setInterval(function(){
   if (gameState === "LOBBY") { timerSeconds--; document.getElementById("round-timer").innerText = "LOBBY: " + timerSeconds + "s"; if (timerSeconds <= 0) startNewRound(); }
   else if (gameState === "INGAME") {
     timerSeconds--; if (!playerNoob.hallucinationLvl) { const m = Math.floor(timerSeconds / 60), s = timerSeconds % 60; document.getElementById("round-timer").innerText = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
-    const al = []; if (playerRole === "SURVIVOR" && !isPlayerDead) al.push(playerNoob); aiSurvivors.forEach(function(a){ if (a.alive) al.push(a); }); updateSpectateHPList();
+    const al = []; if (playerRole === "SURVIVOR" && !isPlayerDead) al.push(playerNoob); aiSurvivors.forEach(function(a){ if (a.alive) al.push(a); });
+    updateSpectateHPList(); updateSurvivorHUDList();
     if (isDoubleTrouble && al.length <= 3 && !lmsTriggered && al.length > 0) { lmsTriggered = true; lmsMode = "2V3"; timerSeconds = 85; const b = document.getElementById("lms-banner"); b.innerText = "2V3: LAST STAND!"; b.style.color = "#ffcc00"; b.style.display = "block"; safeTimeout(function(){ b.style.display = "none"; }, 5500); }
     else if (!isDoubleTrouble && al.length === 1 && !lmsTriggered) {
       lmsTriggered = true; const ls = al[0], b = document.getElementById("lms-banner");
@@ -1962,7 +2053,8 @@ function useShedSlash() {
     hasResistance = false;
     activeKillers.forEach(function(k){
       if (playerNoob.position.distanceTo(k.position) < 7) {
-        if (k.kType === "Noli") { playSFXWithFallback(sfx.noliStun, function(){ playSFX(sfx.shedHit); }); clearObservantVisuals(); } else playSFX(sfx.shedHit);
+        if (k.kType === "Noli") { playSFXWithFallback(sfx.noliStun, function(){ playSFX(sfx.shedHit); }); clearObservantVisuals(); k.parts.rArm.rotation.set(0,0,0); k.parts.lArm.rotation.set(0,0,0); if (k.parts.noliStar) k.parts.noliStar.scale.set(1,1,1); }
+        else playSFX(sfx.shedHit);
         k.state = "STUNNED"; k.parts.head.rotation.x = 0.5; if (k.kType === "Noli") document.getElementById("observant-hud").style.display = "none";
         showToast("KILLER DI-STUN (3 DETIK)!", "#fc0"); addStatusEffect("stun", "BLEEDING (STUNNED)", "#f00", 3);
         safeTimeout(function(){ if (k.state === "STUNNED") { k.state = "IDLE"; k.parts.head.rotation.x = 0; } }, 3000);
@@ -1974,7 +2066,7 @@ function useShedChicken() {
   if (cdE || chickenUses <= 0 || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return;
   if (playerNoob.hp >= 100) { showToast("Darah sudah penuh!", "#f44"); return; }
   cdE = true; chickenUses--; document.getElementById("label-s2").innerText = "Chicken [E] (" + chickenUses + ")"; animateCD("cd-e", 70, function(){ cdE = false; }); playSFX(sfx.shedEat);
-  playConsumeAnimation(0x8b4513, function(){ playerNoob.hp = Math.min(100, playerNoob.hp + 5); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; chickenDmgAccum = 0; addStatusEffect("chicken", "FRIED CHICKEN", "#fa0", 10); let t = 0; chickenHoTTimer = safeInterval(function(){ t++; if (t > 10 || isPlayerDead || gameState !== "INGAME") { clearInterval(chickenHoTTimer); chickenHoTTimer = null; return; } playerNoob.hp = Math.min(100, playerNoob.hp + 2.5); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; }, 1000); });
+  playConsumeAnimation(0x8b4513, function(){ playerNoob.hp = Math.min(100, playerNoob.hp + 5); updatePlayerBarsUI(); chickenDmgAccum = 0; addStatusEffect("chicken", "FRIED CHICKEN", "#fa0", 10); let t = 0; chickenHoTTimer = safeInterval(function(){ t++; if (t > 10 || isPlayerDead || gameState !== "INGAME") { clearInterval(chickenHoTTimer); chickenHoTTimer = null; return; } playerNoob.hp = Math.min(100, playerNoob.hp + 2.5); updatePlayerBarsUI(); }, 1000); });
 }
 function use007Clone() {
   if (cdQ || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 27, function(){ cdQ = false; });
@@ -1987,7 +2079,7 @@ function use007Clone() {
 function cancelC00lgui() { if (!isCastingC00lgui) return; isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false; removeStatusEffect("c00lgui"); if (sfx.gui && !sfx.gui.paused) sfx.gui.pause(); }
 function use007C00lgui() {
   if (cdE || isCastingC00lgui || isPlayerDead || gameState !== "INGAME") return; cdE = true; animateCD("cd-e", 50, function(){ cdE = false; }); playSFX(sfx.gui); isCastingC00lgui = true; playerNoob.parts.c00lguiTab.visible = true; addStatusEffect("c00lgui", "c00lgui TELEPORT", "#f33", 6);
-  safeTimeout(function(){ if (!isCastingC00lgui) return; isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false; const fs = getFarthestSpawn(playerNoob.position); playerNoob.position.set(fs.x, 0, fs.z); }, 5500);
+  safeTimeout(function(){ if (!isCastingC00lgui) return; isCastingC00lgui = false; playerNoob.parts.c00lguiTab.visible = false; removeStatusEffect("c00lgui"); const fs = getFarthestSpawn(playerNoob.position); playerNoob.position.set(fs.x, 0, fs.z); showToast("TELEPORT BERHASIL!", "#0fc"); }, 5500);
 }
 function use007Inject() { if (isPlayerDead || gameState !== "INGAME") return; injectIdx = (injectIdx + 1) % injectModes.length; document.getElementById("label-s3").innerText = "Inject: " + injectModes[injectIdx]; }
 function playConsumeAnimation(col, cb) {
@@ -1997,7 +2089,7 @@ function playConsumeAnimation(col, cb) {
 }
 function useBurger() {
   if (cdQ || isDrinkingOrEating || isUsingMedkit || isPlayerDead || gameState !== "INGAME") return; cdQ = true; animateCD("cd-q", 40, function(){ cdQ = false; }); playSFX(sfx.burger);
-  playConsumeAnimation(0xd4a373, function(){ playerNoob.hp = Math.min(100, playerNoob.hp + Math.max(6, (100 - playerNoob.hp) * 0.25)); document.getElementById("hp-bar").style.width = playerNoob.hp + "%"; addStatusEffect("invis", "INVISIBLE", "#0cf", 7); const pParts = [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg]; pParts.forEach(function(p){ setPartOp(p, 0.15); }); safeTimeout(function(){ pParts.forEach(function(p){ setPartOp(p, 1); }); }, 7000); });
+  playConsumeAnimation(0xd4a373, function(){ playerNoob.hp = Math.min(100, playerNoob.hp + Math.max(6, (100 - playerNoob.hp) * 0.25)); updatePlayerBarsUI(); addStatusEffect("invis", "INVISIBLE", "#0cf", 7); const pParts = [playerNoob.parts.torso, playerNoob.parts.head, playerNoob.parts.lArm, playerNoob.parts.rArm, playerNoob.parts.lLeg, playerNoob.parts.rLeg]; pParts.forEach(function(p){ setPartOp(p, 0.15); }); safeTimeout(function(){ pParts.forEach(function(p){ setPartOp(p, 1); }); }, 7000); });
 }
 function revertSlateAppearance() { applyPlayerAppearance(); document.getElementById("label-s2").innerText = "Slateskin [E]"; }
 function useSlate() {
@@ -2095,13 +2187,27 @@ function triggerPizzaDelivery(k) {
 function checkHitbox(k, t, len) { if (len === undefined) len = 5.5; const r = t.position.clone().sub(k.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), -k.rotation.y); return Math.abs(r.x) <= 2.3 && r.y >= -1 && r.y <= 5.5 && r.z <= 0.5 && r.z >= -len; }
 function animateWalkingLimbs(g, s) { g.walkCycle += s; g.parts.lArm.rotation.x = Math.sin(g.walkCycle) * 0.7; g.parts.rArm.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.lLeg.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.rLeg.rotation.x = Math.sin(g.walkCycle) * 0.7; }
 
-function handleNoliVoidRushTick(k, tgts, isPC) {
+// Gerak AI dengan belok otomatis jika terhalang tembok/pohon (anti macet saat 007n7 teleport!)
+function moveAISmart(e, dx, dz, spd) {
+  const ox = e.position.x, oz = e.position.z;
+  moveWithCollision(e, dx * spd, dz * spd);
+  const moved = Math.hypot(e.position.x - ox, e.position.z - oz);
+  if (moved < spd * 0.25) {
+    const baseAng = Math.atan2(dz, dx), offsets = [0.7, -0.7, 1.35, -1.35, 2.1, -2.1];
+    for (let i = 0; i < offsets.length; i++) {
+      const a = baseAng + offsets[i];
+      const tx = e.position.x + Math.cos(a) * spd, tz = e.position.z + Math.sin(a) * spd;
+      if (canMoveTo(tx, tz)) { moveWithCollision(e, Math.cos(a) * spd, Math.sin(a) * spd); break; }
+    }
+  }
+}
+
+function handleNoliVoidRushTick(k, allSurvs, isPC) {
   k.rushTimer--;
   k.rushElapsed = (k.rushElapsed || 0) + 1;
-  // Belok mengikuti kamera saat Player Noli menjalankan Void Rush!
   if (isPC) {
     let diff = ((camYaw - k.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    const turnRate = (k.rushElapsed < 90) ? 0.16 : 0.045; // 1.5 detik pertama belok sangat lincah!
+    const turnRate = (k.rushElapsed < 90) ? 0.16 : 0.045;
     k.rotation.y += Math.max(-turnRate, Math.min(turnRate, diff));
   }
   k.parts.torso.rotation.x = 0.45;
@@ -2115,19 +2221,27 @@ function handleNoliVoidRushTick(k, tgts, isPC) {
     k.state = "IDLE"; k.parts.torso.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
     playSFXWithFallback(sfx.noliRushCol, function(){ playSynthTone(95, 0.35, "sawtooth", 0.2); }); showToast("Void Rush Menabrak!", "#f44"); return;
   }
-  for (let i = 0; i < tgts.length; i++) {
-    const s = tgts[i]; if (!s.alive || s.isInvulnerable || !checkHitbox(k, s, 6.2)) continue;
+  // Cek tabrakan ke SEMUA survivor hidup (termasuk 007n7 invisible & Noob Ghostburger/Slateskin!)
+  for (let i = 0; i < allSurvs.length; i++) {
+    const s = allSurvs[i]; if (!s.alive || !checkHitbox(k, s, 6.2)) continue;
     if (k.rushHitTargets && k.rushHitTargets.has(s)) continue;
     if (k.rushHitTargets) k.rushHitTargets.add(s); k.rushHits++;
     if (s.hallucinationLvl && s.hallucinationLvl >= 2) {
       playSFXWithFallback(sfx.noliRushSlam, function(){ playSynthTone(85, 0.6, "sawtooth", 0.24); });
-      const slamDmg = 40 + (k.rushHits * 3.5); showToast("VOID RUSH: SLAM! (" + Math.round(slamDmg) + " DMG)", "#c084fc");
-      if (s === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(slamDmg, k); } else { s.hp -= slamDmg; if (s.hp <= 0) playKillAnimation(k, s); }
+      const slamDmg = s.isInvulnerable ? 0 : (40 + (k.rushHits * 3.5));
+      showToast(s.isInvulnerable ? "SLAM DITAHAN SLATESKIN!" : "VOID RUSH: SLAM! (" + Math.round(slamDmg) + " DMG)", "#c084fc");
+      if (slamDmg > 0) {
+        if (s === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(slamDmg, k); }
+        else { s.hp -= slamDmg; if (s.hp <= 0) playKillAnimation(k, s); }
+      }
       k.state = "IDLE"; k.parts.torso.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0; k.reRushWindow = false; return;
     } else {
       playSFXWithFallback(sfx.noliRushHit, function(){ playSynthTone(240, 0.2, "square", 0.16); });
       applyHallucination(s, 2);
-      if (s === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(10, k); } else { s.hp -= 10; if (s.hp <= 0) playKillAnimation(k, s); }
+      if (!s.isInvulnerable) {
+        if (s === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(10, k); }
+        else { s.hp -= 10; if (s.hp <= 0) playKillAnimation(k, s); }
+      } else showToast("Void Rush Menabrak Slateskin!", "#c084fc");
       k.state = "IDLE"; k.parts.torso.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
       if (isPC) { k.reRushWindow = true; showToast("Hit! Tekan [Q] untuk Re-Rush!", "#e879f9"); safeTimeout(function(){ k.reRushWindow = false; }, 2850); }
       return;
@@ -2150,12 +2264,26 @@ function animate() {
   }
   lobbyFireLight.intensity = 2.8 + Math.sin(Date.now() * 0.012) * 0.7; lobbyFireFlame.scale.y = 0.8 + Math.sin(Date.now() * 0.015) * 0.25; dispGear.rotation.z += 0.03;
   lobbyNPCs.forEach(function(n, idx){ n.parts.head.rotation.y = Math.sin(Date.now() * 0.0015 + idx) * 0.2; }); torchLights.forEach(function(tl){ tl.intensity = 1.8 + Math.random() * 0.6; });
+
   activeKillers.forEach(function(k){
     if (k.parts.eyeFlare) { const s = 1 + Math.sin(Date.now() * 0.015) * 0.4; k.parts.eyeFlare.scale.set(s, s, 1); k.parts.eyeFlare.rotation.z += 0.05; }
-    if (k.parts.noliStar) k.parts.noliStar.rotation.z += 0.06;
+    if (k.parts.noliStar && k.state !== "OBSERVANT_WINDUP") k.parts.noliStar.rotation.z += 0.06;
     if (k.parts.noliShadowRing) k.parts.noliShadowRing.rotation.z -= 0.04;
+    // ANIMASI OBSERVANT NOLI: Putar kedua tangan lalu tepuk Void Star dengan dua tangan!
+    if (k.state === "OBSERVANT_WINDUP") {
+      k.obsWindElapsed = (k.obsWindElapsed || 0) + 1;
+      if (k.obsWindElapsed < 48) {
+        k.parts.rArm.rotation.x += 0.3; k.parts.lArm.rotation.x -= 0.3;
+        k.parts.rArm.rotation.z = -0.45; k.parts.lArm.rotation.z = 0.45;
+        if (k.parts.noliStar) { k.parts.noliStar.rotation.z += 0.28; k.parts.noliStar.scale.set(1.25, 1.25, 1.25); }
+      } else {
+        k.parts.rArm.rotation.x = 1.65; k.parts.lArm.rotation.x = 1.65;
+        k.parts.rArm.rotation.z = 0.55; k.parts.lArm.rotation.z = -0.55;
+        if (k.parts.noliStar) { k.parts.noliStar.rotation.z += 0.35; k.parts.noliStar.scale.set(1.75, 1.75, 1.75); }
+      }
+    }
   });
-  // Animasi Wajah Noli Tertawa di atas Generator saat Observant!
+
   generators.forEach(function(g, gi){
     if (g.obsSprite && g.obsSprite.visible) {
       const t = Date.now() * 0.025 + gi;
@@ -2166,6 +2294,7 @@ function animate() {
     }
     if (g.obsGlow && g.obsGlow.visible) g.obsGlow.rotation.y += 0.03;
   });
+
   [playerNoob].concat(aiSurvivors).forEach(function(ch){ if (ch.parts.fireMesh.visible) { ch.parts.fireMesh.rotation.y += 0.2; ch.parts.fireMesh.children.forEach(function(f, i){ f.scale.y = 0.7 + Math.sin(Date.now() * 0.02 + i) * 0.4; }); } });
   if (keys["ArrowLeft"]) camYaw += 0.05; if (keys["ArrowRight"]) camYaw -= 0.05;
   mapItems.forEach(function(it){ if (it.active) it.mesh.rotation.y += 0.04; });
@@ -2174,7 +2303,7 @@ function animate() {
 
   if (gameState === "LOBBY") {
     let sp = 0.23; if (isSprinting && stamina > 0) { sp *= 1.55; stamina = Math.max(0, stamina - 0.35); } else stamina = Math.min(100, stamina + 0.35);
-    document.getElementById("stamina-bar").style.width = stamina + "%";
+    updatePlayerBarsUI();
     let mx = 0, mz = 0; if (!activeNPC) { if (keys["KeyW"]) mz--; if (keys["KeyS"]) mz++; if (keys["KeyA"]) mx--; if (keys["KeyD"]) mx++; }
     playerNoob.rotation.y = camYaw;
     if (mx !== 0 || mz !== 0) { const a = Math.atan2(mx, mz); moveLobbyWithJump(playerNoob, Math.sin(camYaw + a) * sp, Math.cos(camYaw + a) * sp); animateWalkingLimbs(playerNoob, 0.22); }
@@ -2193,14 +2322,13 @@ function animate() {
     if (playerRole === "SURVIVOR") { if (playerNoob.isInvulnerable) sp *= 0.45; else if (isDrinkingOrEating || isUsingMedkit) sp *= 0.35; else if (hasSlowness) sp *= 0.65; else if (hasResistance) sp *= 0.25; }
     if (isSprinting && stamina > 0 && !isDrinkingOrEating && !isUsingMedkit && !playerNoob.isInvulnerable && !(playerRole === "KILLER" && cc.state === "OBSERVANT")) { sp *= 1.6; stamina = Math.max(0, stamina - 0.4); }
     else stamina = Math.min(100, stamina + 0.25);
-    document.getElementById("stamina-bar").style.width = stamina + "%";
+    updatePlayerBarsUI();
     let mx = 0, mz = 0; if (keys["KeyW"]) mz--; if (keys["KeyS"]) mz++; if (keys["KeyA"]) mx--; if (keys["KeyD"]) mx++;
     cc.rotation.y = camYaw;
     if (mx !== 0 || mz !== 0) { const a = Math.atan2(mx, mz); moveWithCollision(cc, Math.sin(camYaw + a) * sp, Math.cos(camYaw + a) * sp); animateWalkingLimbs(cc, 0.22); }
     else if (!isDrinkingOrEating && !isUsingMedkit) { cc.parts.lArm.rotation.x = 0; cc.parts.rArm.rotation.x = 0; cc.parts.lLeg.rotation.x = 0; cc.parts.rLeg.rotation.x = 0; }
   }
 
-  // Efek FOV dinamis saat Void Rush
   const targetFov = (playerRole === "KILLER" && cc.state === "VOID_RUSHING") ? 86 : 75;
   if (Math.abs(camera.fov - targetFov) > 0.2) { camera.fov += (targetFov - camera.fov) * 0.15; camera.updateProjectionMatrix(); }
 
@@ -2230,46 +2358,56 @@ function animate() {
     if (fakeNoliChaser && !isPlayerDead && playerRole === "SURVIVOR") {
       const fx = playerNoob.position.x - fakeNoliChaser.position.x, fz = playerNoob.position.z - fakeNoliChaser.position.z, fd = Math.sqrt(fx * fx + fz * fz);
       fakeNoliChaser.lookAt(playerNoob.position.x, 0, playerNoob.position.z); fakeNoliChaser.rotation.y += Math.PI;
-      if (fd > 3.5) { moveWithCollision(fakeNoliChaser, (fx / fd) * 0.23, (fz / fd) * 0.23); animateWalkingLimbs(fakeNoliChaser, 0.24); }
+      if (fd > 3.5) { moveAISmart(fakeNoliChaser, fx / fd, fz / fd, 0.23); animateWalkingLimbs(fakeNoliChaser, 0.24); }
       else fakeNoliChaser.parts.rArm.rotation.x = Math.sin(Date.now() * 0.02) * 1.5;
     }
 
-    const tgts = []; if (playerRole === "SURVIVOR" && !isPlayerDead && !playerNoob.isUndetectable) tgts.push(playerNoob);
-    aiSurvivors.forEach(function(a){ if (a.alive && !a.isUndetectable) tgts.push(a); }); clones.forEach(function(c){ if (c.alive) tgts.push(c); });
+    // Pisahkan allSurvivors (bisa kena hitbox walau invisible!) dan detectTargets (untuk AI mencari target)
+    const allSurvivors = [];
+    if (playerRole === "SURVIVOR" && !isPlayerDead) allSurvivors.push(playerNoob);
+    aiSurvivors.forEach(function(a){ if (a.alive) allSurvivors.push(a); });
+    clones.forEach(function(c){ if (c.alive) allSurvivors.push(c); });
+    const detectTargets = allSurvivors.filter(function(t){ return !t.isUndetectable; });
 
     activeKillers.forEach(function(k, kIdx){
-      let ct = tgts.find(function(t){ return t.isHighlighted; }) || null;
-      if (!ct) { let md = 9999; tgts.forEach(function(t){ const d = t.position.distanceTo(k.position); if (d < md) { md = d; ct = t; } }); }
+      let ct = detectTargets.find(function(t){ return t.isHighlighted; }) || null;
+      if (!ct) { let md = 9999; detectTargets.forEach(function(t){ const d = t.position.distanceTo(k.position); if (d < md) { md = d; ct = t; } }); }
+      if (!ct && allSurvivors.length > 0) ct = allSurvivors[0];
       const isPlayerControlling = (playerRole === "KILLER" && kIdx === 0);
 
       if (!isPlayerControlling && ct && k.state !== "KILLING" && k.state !== "STUNNED") {
         if (k.state !== "SUMMONING" && k.state !== "CASTING" && k.state !== "OBSERVANT" && k.state !== "OBSERVANT_WINDUP") { k.lookAt(ct.position.x, 0, ct.position.z); k.rotation.y += Math.PI; }
         if (k.state === "DASHING") {
           k.dashT--; const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y); moveWithCollision(k, f.x * 1.15, f.z * 1.15);
-          if (checkHitbox(k, ct) && !ct.isInvulnerable) {
-            if (ct === playerNoob) { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToTarget(ct, 8, k); applyDamageToPlayer(32, k); }
-            else { applyBurningToTarget(ct, 8, k); ct.hp -= 32; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; } if (ct.hp <= 0) playKillAnimation(k, ct); }
-            if (k.state !== "KILLING") k.state = "IDLE"; k.parts.torso.rotation.x = 0;
-          }
+          allSurvivors.forEach(function(t){
+            if (t.alive && checkHitbox(k, t) && !t.isInvulnerable) {
+              if (t === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyBurningToTarget(t, 8, k); applyDamageToPlayer(32, k); }
+              else { applyBurningToTarget(t, 8, k); t.hp -= 32; if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; } if (t.hp <= 0) playKillAnimation(k, t); }
+              if (k.state !== "KILLING") k.state = "IDLE"; k.parts.torso.rotation.x = 0;
+            }
+          });
           if (k.dashT <= 0 && k.state === "DASHING") { k.state = "IDLE"; k.parts.torso.rotation.x = 0; }
         } else if (k.state === "VOID_RUSHING") {
-          handleNoliVoidRushTick(k, tgts, false);
+          handleNoliVoidRushTick(k, allSurvivors, false);
         } else if (k.state === "IDLE") {
           const kx = ct.position.x - k.position.x, kz = ct.position.z - k.position.z, kd = Math.sqrt(kx * kx + kz * kz);
-          if (kd > 3.5) { moveWithCollision(k, (kx / kd) * 0.25 * k.speedMult, (kz / kd) * 0.25 * k.speedMult); animateWalkingLimbs(k, 0.22); }
+          if (kd > 3.5) { moveAISmart(k, kx / kd, kz / kd, 0.25 * k.speedMult); animateWalkingLimbs(k, 0.22); }
           const hitLen = k.kType === "1x1x1x1" ? 7.5 : (k.kType === "Noli" ? 8 : 5.5);
-          if (k.atkCD <= 0 && checkHitbox(k, ct, hitLen)) {
+          const hitTarget = allSurvivors.find(function(s){ return s.alive && checkHitbox(k, s, hitLen); });
+          if (k.atkCD <= 0 && hitTarget) {
             k.atkCD = k.kType === "1x1x1x1" ? 105 : (k.kType === "Noli" ? 95 : 110);
             if (k.kType === "Noli") useNoliStab(k);
             else {
               playKillerSlashAnim(k);
               safeTimeout(function(){
-                if (ct.alive && checkHitbox(k, ct, hitLen) && !ct.isInvulnerable) {
-                  const dmg = k.kType === "1x1x1x1" ? 20 : 26.5;
-                  if (k.kType === "1x1x1x1") { applyGlitched(ct, 5); applyPoison(ct, 1, 5); }
-                  if (ct === playerNoob) { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(dmg, k); }
-                  else { ct.hp -= dmg; if (ct.isCastingGui) { ct.isCastingGui = false; ct.parts.c00lguiTab.visible = false; } if (ct.hp <= 0) playKillAnimation(k, ct); }
-                }
+                allSurvivors.forEach(function(s){
+                  if (s.alive && checkHitbox(k, s, hitLen) && !s.isInvulnerable) {
+                    const dmg = k.kType === "1x1x1x1" ? 20 : 26.5;
+                    if (k.kType === "1x1x1x1") { applyGlitched(s, 5); applyPoison(s, 1, 5); }
+                    if (s === playerNoob && playerRole === "SURVIVOR") { closePuzzle(); cancelMedkit(); cancelC00lgui(); applyDamageToPlayer(dmg, k); }
+                    else { s.hp -= dmg; if (s.isCastingGui) { s.isCastingGui = false; s.parts.c00lguiTab.visible = false; } if (s.hp <= 0) playKillAnimation(k, s); }
+                  }
+                });
               }, 150);
             }
           }
@@ -2284,19 +2422,19 @@ function animate() {
         }
       } else if (isPlayerControlling && k.state === "DASHING") {
         k.dashT--; const f = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y); moveWithCollision(k, f.x * 1.15, f.z * 1.15);
-        tgts.forEach(function(t){ if (t.alive && checkHitbox(k, t) && !t.isInvulnerable) { applyBurningToTarget(t, 8, k); t.hp -= 32; if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; } if (t.hp <= 0) playKillAnimation(k, t); else k.state = "IDLE"; k.parts.torso.rotation.x = 0; } });
+        allSurvivors.forEach(function(t){ if (t.alive && checkHitbox(k, t) && !t.isInvulnerable) { applyBurningToTarget(t, 8, k); t.hp -= 32; if (t.isCastingGui) { t.isCastingGui = false; t.parts.c00lguiTab.visible = false; } if (t.hp <= 0) playKillAnimation(k, t); else k.state = "IDLE"; k.parts.torso.rotation.x = 0; } });
         if (k.dashT <= 0 && k.state === "DASHING") { k.state = "IDLE"; k.parts.torso.rotation.x = 0; }
       } else if (isPlayerControlling && k.state === "VOID_RUSHING") {
-        handleNoliVoidRushTick(k, tgts, true);
+        handleNoliVoidRushTick(k, allSurvivors, true);
       }
       if (k.atkCD > 0) k.atkCD--;
     });
 
     for (let i = minions.length - 1; i >= 0; i--) {
       const m = minions[i]; if (m.isRising || m.fading) continue;
-      let ct = tgts[0], md = 9999; tgts.forEach(function(t){ const d = t.position.distanceTo(m.position); if (d < md) { md = d; ct = t; } }); if (!ct) continue;
+      let ct = detectTargets[0] || allSurvivors[0], md = 9999; detectTargets.forEach(function(t){ const d = t.position.distanceTo(m.position); if (d < md) { md = d; ct = t; } }); if (!ct) continue;
       m.lookAt(ct.position.x, 0, ct.position.z); m.rotation.y += Math.PI; const mx = ct.position.x - m.position.x, mz = ct.position.z - m.position.z;
-      if (md > 2.5) { moveWithCollision(m, (mx / md) * 0.14, (mz / md) * 0.14); animateWalkingLimbs(m, 0.24); }
+      if (md > 2.5) { moveAISmart(m, mx / md, mz / md, 0.14); animateWalkingLimbs(m, 0.24); }
       else {
         fadeAndRemoveMinion(m); applyHighlight(ct);
         if (!ct.isInvulnerable) {
@@ -2308,15 +2446,15 @@ function animate() {
     }
 
     zombies.forEach(function(z){
-      if (!z.alive) return; let zTgt = null, minD = 9999; tgts.forEach(function(t){ const d = z.position.distanceTo(t.position); if (d < minD) { minD = d; zTgt = t; } });
+      if (!z.alive) return; let zTgt = null, minD = 9999; detectTargets.forEach(function(t){ const d = z.position.distanceTo(t.position); if (d < minD) { minD = d; zTgt = t; } });
       if (zTgt && minD <= 20) z.target = zTgt; else if (z.target && z.position.distanceTo(z.target.position) > 30) z.target = null;
       if (z.target && z.target.alive) {
         const zx = z.target.position.x - z.position.x, zz = z.target.position.z - z.position.z, zd = Math.sqrt(zx * zx + zz * zz);
-        if (zd > 2.5) { moveWithCollision(z, (zx / zd) * 0.16, (zz / zd) * 0.16); z.lookAt(z.target.position.x, 0, z.target.position.z); z.rotation.y += Math.PI; animateWalkingLimbs(z, 0.22); }
+        if (zd > 2.5) { moveAISmart(z, zx / zd, zz / zd, 0.16); z.lookAt(z.target.position.x, 0, z.target.position.z); z.rotation.y += Math.PI; animateWalkingLimbs(z, 0.22); }
         else if (!z.cdHit) { z.cdHit = true; safeTimeout(function(){ z.cdHit = false; }, 1500); applyPoison(z.target, 1, 8); applyGlitched(z.target, 8); applyHighlight(z.target, 8); if (z.target.isGlitched) { const kRef = activeKillers[0]; if (z.target === playerNoob && playerRole === "SURVIVOR") applyDamageToPlayer(12, kRef); else { z.target.hp -= 12; if (z.target.hp <= 0) playKillAnimation(kRef, z.target); } } }
       } else {
         const px = z.patrolTarget.x - z.position.x, pz = z.patrolTarget.z - z.position.z, pd = Math.sqrt(px * px + pz * pz);
-        if (pd > 2) { moveWithCollision(z, (px / pd) * 0.1, (pz / pd) * 0.1); z.lookAt(z.patrolTarget.x, 0, z.patrolTarget.z); z.rotation.y += Math.PI; animateWalkingLimbs(z, 0.14); }
+        if (pd > 2) { moveAISmart(z, px / pd, pz / pd, 0.1); z.lookAt(z.patrolTarget.x, 0, z.patrolTarget.z); z.rotation.y += Math.PI; animateWalkingLimbs(z, 0.14); }
         else z.patrolTarget.set((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140);
       }
     });
@@ -2325,7 +2463,7 @@ function animate() {
       if (!c.alive) return; let dst = c.patrolTarget;
       if (c.mode === "Pathfind") dst = getFarthestSpawn(c.position); else if (c.mode === "Cursor") { const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw); dst = playerNoob.position.clone().addScaledVector(fwd, 40); }
       const cx = dst.x - c.position.x, cz = dst.z - c.position.z, cd = Math.sqrt(cx * cx + cz * cz);
-      if (cd > 2) { moveWithCollision(c, (cx / cd) * 0.2, (cz / cd) * 0.2); c.lookAt(dst.x, 0, dst.z); c.rotation.y += Math.PI; animateWalkingLimbs(c, 0.22); }
+      if (cd > 2) { moveAISmart(c, cx / cd, cz / cd, 0.2); c.lookAt(dst.x, 0, dst.z); c.rotation.y += Math.PI; animateWalkingLimbs(c, 0.22); }
       else if (c.mode === "Wander") c.patrolTarget.set((Math.random() - 0.5) * 150, 0, (Math.random() - 0.5) * 150);
     });
 
@@ -2345,7 +2483,7 @@ function animate() {
       } else if (ai.isShed) {
         if (dk < 6.5 && !ai.cdQ && nearK && nearK.state === "IDLE") {
           ai.cdQ = true; playShedSlashAnim(ai);
-          safeTimeout(function(){ if (ai.alive && nearK && ai.position.distanceTo(nearK.position) < 7) { if (nearK.kType === "Noli") { playSFXWithFallback(sfx.noliStun, function(){ playSFX(sfx.shedHit); }); clearObservantVisuals(); } else playSFX(sfx.shedHit); nearK.state = "STUNNED"; nearK.parts.head.rotation.x = 0.5; showToast("SHEDLETSKY AI STUN KILLER (3s)!", "#fc0"); safeTimeout(function(){ if (nearK.state === "STUNNED") { nearK.state = "IDLE"; nearK.parts.head.rotation.x = 0; } }, 3000); } }, 550);
+          safeTimeout(function(){ if (ai.alive && nearK && ai.position.distanceTo(nearK.position) < 7) { if (nearK.kType === "Noli") { playSFXWithFallback(sfx.noliStun, function(){ playSFX(sfx.shedHit); }); clearObservantVisuals(); nearK.parts.rArm.rotation.set(0,0,0); nearK.parts.lArm.rotation.set(0,0,0); if (nearK.parts.noliStar) nearK.parts.noliStar.scale.set(1,1,1); } else playSFX(sfx.shedHit); nearK.state = "STUNNED"; nearK.parts.head.rotation.x = 0.5; showToast("SHEDLETSKY AI STUN KILLER (3s)!", "#fc0"); safeTimeout(function(){ if (nearK.state === "STUNNED") { nearK.state = "IDLE"; nearK.parts.head.rotation.x = 0; } }, 3000); } }, 550);
           safeTimeout(function(){ ai.cdQ = false; }, 40000);
         }
         if (ai.hp < 70 && !ai.cdE) { ai.cdE = true; ai.hp = Math.min(100, ai.hp + 30); safeTimeout(function(){ ai.cdE = false; }, 70000); }
@@ -2358,18 +2496,18 @@ function animate() {
       if (ai.isInvulnerable) as = 0.1;
       if ((dk < 35 || ai.isHighlighted) && nearK) {
         const ax = ai.position.x - nearK.position.x, az = ai.position.z - nearK.position.z, d = Math.sqrt(ax * ax + az * az);
-        moveWithCollision(ai, (ax / d) * as, (az / d) * as); ai.lookAt(ai.position.x + ax, 0, ai.position.z + az); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.24);
+        moveAISmart(ai, ax / d, az / d, as); ai.lookAt(ai.position.x + ax, 0, ai.position.z + az); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.24);
       } else {
         if (!ai.assignedGen || ai.assignedGen.done) ai.assignedGen = pickRandomIncompleteGen();
         const tg = ai.assignedGen;
         if (tg) {
           const mg = ai.position.distanceTo(tg.group.position);
-          if (mg > 4.5) { moveWithCollision(ai, ((tg.group.position.x - ai.position.x) / mg) * as, ((tg.group.position.z - ai.position.z) / mg) * as); ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
+          if (mg > 4.5) { moveAISmart(ai, (tg.group.position.x - ai.position.x) / mg, (tg.group.position.z - ai.position.z) / mg, as); ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); }
           else { ai.lookAt(tg.group.position.x, 0, tg.group.position.z); ai.rotation.y += Math.PI; ai.parts.rArm.rotation.x = 1.6 + Math.sin(Date.now() * 0.015) * 0.2; ai.parts.lArm.rotation.x = 1.6 - Math.sin(Date.now() * 0.015) * 0.2; ai.genWorkTimer++; if (ai.genWorkTimer >= 260) { ai.genWorkTimer = 0; if (!tg.done) { tg.stage++; if (tg.stage >= 5) completeGenerator(tg, ai.name); } } }
         } else {
           if (!ai.patrolTarget) ai.patrolTarget = new THREE.Vector3();
           const px = ai.patrolTarget.x - ai.position.x, pz = ai.patrolTarget.z - ai.position.z, pd = Math.sqrt(px * px + pz * pz);
-          if (pd > 2) { moveWithCollision(ai, (px / pd) * as, (pz / pd) * as); ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); } else pickNewPatrol(ai);
+          if (pd > 2) { moveAISmart(ai, px / pd, pz / pd, as); ai.lookAt(ai.patrolTarget.x, 0, ai.patrolTarget.z); ai.rotation.y += Math.PI; animateWalkingLimbs(ai, 0.16); } else pickNewPatrol(ai);
         }
       }
     });
