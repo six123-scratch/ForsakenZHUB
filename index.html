@@ -17,6 +17,65 @@ window.onerror = function(msg, url, line, col) {
   body{margin:0;overflow:hidden;background:#000;font-family:Arial,sans-serif;user-select:none}
   #vignette{position:absolute;inset:0;pointer-events:none;z-index:5;transition:box-shadow .3s}
   #blind-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.78);pointer-events:none;z-index:4;display:none}
+
+  /* LOADING SCREEN SKETSA HITAM PUTIH (0% - 100%) */
+  #loading-screen{
+    position:fixed;inset:0;background:#000;z-index:100;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:30px 45px;box-sizing:border-box;color:#fff
+  }
+  #loading-top{display:flex;justify-content:flex-end;font-size:16px;font-family:monospace;letter-spacing:1px;color:#aaa}
+  #loading-center{
+    position:relative;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden
+  }
+  #sketch-canvas{max-width:100%;max-height:100%;object-fit:contain;filter:contrast(150%) brightness(120%)}
+  #loading-bottom{display:flex;justify-content:space-between;align-items:flex-end;font-family:Georgia,serif}
+  #loading-status{font-size:17px;font-style:italic;color:#bbb;letter-spacing:1px}
+  #loading-percent{font-size:46px;font-weight:900;color:#fff;letter-spacing:2px}
+
+  /* TITLE SCREEN FORSAKEN Z */
+  #title-screen{
+    position:fixed;inset:0;z-index:90;display:none;
+    flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(circle,rgba(60,6,6,0.3) 0%,rgba(0,0,0,0.85) 85%);
+    cursor:pointer
+  }
+  #title-logo-box{display:flex;flex-direction:column;align-items:center;animation:titlePulse 3s ease-in-out infinite}
+  @keyframes titlePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  #title-logo{
+    font-family:Georgia,serif;font-size:74px;font-weight:900;letter-spacing:12px;
+    color:#fff;text-shadow:0 0 25px #ff0033,0 0 50px #880000;
+    border-bottom:4px solid #ff0033;padding-bottom:6px
+  }
+  #title-sub{
+    font-family:Georgia,serif;font-size:24px;font-weight:bold;letter-spacing:18px;
+    color:#ff2244;margin-top:10px;text-shadow:0 0 14px #ff0000
+  }
+  #title-prompt{
+    position:absolute;bottom:75px;font-family:Georgia,serif;font-size:19px;
+    color:#cbd5e1;font-style:italic;letter-spacing:2px;animation:blinkPrompt 1.6s infinite
+  }
+  @keyframes blinkPrompt{0%,100%{opacity:.9}50%{opacity:.2}}
+
+  /* MULTIPLAYER / MODE SELECT MODAL */
+  #mode-modal{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(15,23,42,.96);border:3px solid #ff2244;border-radius:14px;
+    padding:24px 30px;z-index:95;color:#fff;display:none;flex-direction:column;
+    align-items:center;gap:16px;min-width:340px;box-shadow:0 0 40px rgba(255,0,0,.45)
+  }
+  #mode-title{font-size:20px;font-weight:900;color:#ff2244;letter-spacing:2px}
+  .mode-btn{
+    width:100%;background:#1e293b;color:#fff;border:2px solid #64748b;
+    padding:10px 16px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;
+    transition:all .15s
+  }
+  .mode-btn:hover{background:#334155;border-color:#ff2244;color:#ff2244}
+  #room-code-input{
+    width:90%;background:#090d16;border:2px solid #475569;border-radius:6px;
+    padding:8px 12px;color:#fff;font-size:16px;font-weight:bold;letter-spacing:3px;text-align:center
+  }
+
   #top-hud{
     position:absolute;top:15px;left:50%;transform:translateX(-50%);
     display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -294,6 +353,44 @@ window.onerror = function(msg, url, line, col) {
 <div id="status-effects"></div>
 <div id="interact-prompt">Tekan [F] Berinteraksi</div>
 
+<!-- 1. LOADING SCREEN SKETSA 0% - 100% -->
+<div id="loading-screen">
+  <div id="loading-top">Money: 11719</div>
+  <div id="loading-center">
+    <canvas id="sketch-canvas" width="600" height="340"></canvas>
+  </div>
+  <div id="loading-bottom">
+    <div id="loading-status">Beginning to download all assets...</div>
+    <div id="loading-percent">0%</div>
+  </div>
+</div>
+
+<!-- 2. TITLE SCREEN FORSAKEN Z -->
+<div id="title-screen" onclick="onTitleScreenClick()">
+  <div id="title-logo-box">
+    <div id="title-logo">FORSAKEN</div>
+    <div id="title-sub">Z</div>
+  </div>
+  <div id="title-prompt">[ Click anywhere to continue ]</div>
+</div>
+
+<!-- 3. MODE SELECT & ROOM CODE (MULTIPLAYER) MODAL -->
+<div id="mode-modal">
+  <div id="mode-title">PILIH MODE PERMAINAN</div>
+  <button class="mode-btn" onclick="selectPlayMode('AI')">🤖 MAIN DENGAN AI (OFFLINE)</button>
+  <button class="mode-btn" onclick="showHostRoomUI()">👑 BUAT ROOM (MAKE ROOM)</button>
+  <button class="mode-btn" onclick="showJoinRoomUI()">🔑 MASUK ROOM (ENTER CODE)</button>
+  <div id="host-room-box" style="display:none;width:100%;flex-direction:column;align-items:center;gap:8px;">
+    <div style="font-size:12px;color:#cbd5e1;">Kode Room Kamu (Bagi ke teman):</div>
+    <div id="my-room-code" style="font-size:24px;font-weight:900;color:#fde047;letter-spacing:4px;">GENERATING...</div>
+    <button class="mode-btn" style="background:#059669;" onclick="startHostRoom()">MASUK LOBBY SEBAGAI HOST</button>
+  </div>
+  <div id="join-room-box" style="display:none;width:100%;flex-direction:column;align-items:center;gap:8px;">
+    <input id="room-code-input" placeholder="FSK-XXXX" maxlength="10">
+    <button class="mode-btn" style="background:#2563eb;" onclick="submitJoinRoom()">GABUNG KE ROOM</button>
+  </div>
+</div>
+
 <div id="observant-hud">
   <div>👁 OBSERVANT STANCE — Klik Generator / Wajah Noli di layar 3D (atau tombol di bawah) untuk Teleport!</div>
   <div id="observant-btns"></div>
@@ -332,6 +429,7 @@ window.onerror = function(msg, url, line, col) {
   <button onclick="closePuzzle()" style="background:#a22;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:bold;">Batal [ESC]</button>
 </div>
 
+<!-- SEMUA AUDIO ASLI + DOUBLE TROUBLE INTRO CUSTOM -->
 <audio id="audio-lobby" loop preload="auto"><source src="lobby_ambience.mp3" type="audio/mpeg"></audio>
 <audio id="audio-intro-c00l" preload="auto"><source src="c00lkidd_intro.mp3" type="audio/mpeg"><source src="intro_c00lkidd.mp3" type="audio/mpeg"></audio>
 <audio id="audio-intro-1x" preload="auto"><source src="1x_intro.mp3" type="audio/mpeg"><source src="intro_1x.mp3" type="audio/mpeg"><source src="1x1x1x1_intro.mp3" type="audio/mpeg"></audio>
@@ -459,11 +557,13 @@ window.onerror = function(msg, url, line, col) {
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
-const LOBBY_FLOOR_Y = 71;
+  const LOBBY_FLOOR_Y = 71;
 let roundCount = 1, doubleTroubleEnabled = false, isDoubleTrouble = false;
 let playerRole = "SURVIVOR", survivorChar = "NOOB", killerType = "c00lkidd";
-let gameState = "LOBBY", timerSeconds = 40;
+let gameState = "LOADING", timerSeconds = 40;
+let playMode = "AI", isHost = false, myPeer = null, peerConn = null;
 let lmsTriggered = false, lmsMode = "NORMAL", isPlayerDead = false;
 let spectateList = [], spectateIdx = 0, isSpectating = false, camFocusOverride = null;
 let activeGen = null, activeNPC = null, invCola = 0, invMedkit = 0, invGears = 0, isUsingMedkit = false;
@@ -503,7 +603,8 @@ function clearRoundTimers() {
 function showToast(m, c) {
   if (!c) c = "#0fc";
   const t = document.getElementById("event-toast");
-  t.innerText = m; t.style.color = c; t.style.borderColor = c; t.style.display = "block";
+  t.innerText = m; t.style.color = c; t.style.borderColor = c;
+  t.style.display = "block";
   setTimeout(function(){ t.style.display = "none"; }, 3000);
 }
 function updateRoundInfoText() {
@@ -616,7 +717,7 @@ function unlockAllAudio() {
   const all = [bgmLobby, mp3IntroC00l, mp3Intro1x, mp3OutroC00l, mp3Outro1x, mp3IntroDT1xC00l, mp3IntroDT1xNoli, mp3IntroDTNoliC00l]
     .concat(cLayers, xLayers, nLayers, [bgmLMS, bgmPlead, bgmHatred, bgm2v3, bgmAmb, bgmPizzaAmb], Object.values(sfx));
   all.forEach(function(a){ if (a) { a.load(); a.volume = 0; const p = a.play(); if (p) p.then(function(){ a.pause(); a.currentTime = 0; }).catch(function(){}); } });
-  setTimeout(function(){ if (gameState === "LOBBY") startLobbyAudio(); else if (gameState === "INGAME") startRoundAudio(); }, 120);
+  setTimeout(function(){ if (gameState === "LOBBY" || gameState === "TITLE") startLobbyAudio(); else if (gameState === "INGAME") startRoundAudio(); }, 120);
 }
 function playSFX(el) { if (el) { el.volume = 1; el.currentTime = 0; el.play().catch(function(){}); } }
 function playSFXWithFallback(el, fallbackFn) {
@@ -641,7 +742,6 @@ function startRoundAudio() {
   if (amb) { amb.volume = 0.45; amb.play().catch(function(){}); }
   if (activeKillers.some(function(k){ return k.kType === "Noli"; }) && sfx.noliAmb) { sfx.noliAmb.volume = 0.25; sfx.noliAmb.play().catch(function(){}); }
 }
-// Sekarang menerima kType agar di Double Trouble chase theme berganti sesuai Killer terdekat!
 function switchSingleLayer(t, kType) {
   const kt = kType || killerType;
   const set = (kt === "1x1x1x1") ? xLayers : (kt === "Noli" ? nLayers : cLayers);
@@ -824,32 +924,31 @@ const mapConfigs = {
     items: [{type:"COLA",x:-22,z:6},{type:"COLA",x:22,z:-6},{type:"COLA",x:-78,z:22},{type:"COLA",x:78,z:-22},{type:"MEDKIT",x:0,z:-28},{type:"MEDKIT",x:18,z:66},{type:"GEAR",x:-26,z:-65},{type:"GEAR",x:26,z:-65},{type:"GEAR",x:-66,z:12},{type:"GEAR",x:66,z:-15},{type:"GEAR",x:-24,z:72},{type:"GEAR",x:24,z:72}]
   }
 };
-  // --- TEXTURE SPRITE NOLI TERTAWA (UNTUK OBSERVANT & JUMPSCARE) ---
+
+// --- TEXTURE SPRITE NOLI TERTAWA ---
 function createNoliLaughCanvas() {
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const x = c.getContext("2d");
-  x.fillStyle = "#ece3f0";
-  x.beginPath(); x.arc(128, 152, 74, Math.PI * 0.5, Math.PI * 1.5); x.closePath(); x.fill();
-  x.fillStyle = "#4c1d95";
-  x.beginPath(); x.arc(128, 152, 74, -Math.PI * 0.5, Math.PI * 0.5); x.closePath(); x.fill();
-  x.strokeStyle = "#090212"; x.lineWidth = 6;
-  x.beginPath(); x.arc(128, 152, 74, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = "#ece3f0"; x.beginPath(); x.arc(128, 152, 74, Math.PI * 0.5, Math.PI * 1.5); x.closePath(); x.fill();
+  x.fillStyle = "#4c1d95"; x.beginPath(); x.arc(128, 152, 74, -Math.PI * 0.5, Math.PI * 0.5); x.closePath(); x.fill();
+  x.strokeStyle = "#090212"; x.lineWidth = 6; x.beginPath(); x.arc(128, 152, 74, 0, Math.PI * 2); x.stroke();
   x.beginPath(); x.moveTo(128, 78); x.lineTo(128, 226); x.stroke();
   x.fillStyle = "#ffffff"; x.strokeStyle = "#18042b"; x.lineWidth = 5;
   x.beginPath(); x.ellipse(94, 128, 18, 12, -0.15, Math.PI, 0); x.fill(); x.stroke();
   x.beginPath(); x.moveTo(70, 158); x.lineTo(125, 158); x.arc(125, 158, 55, 0.5 * Math.PI, Math.PI); x.closePath(); x.fill(); x.stroke();
-  x.fillStyle = "#05010a";
-  x.beginPath(); x.ellipse(164, 130, 22, 18, 0.15, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#05010a"; x.beginPath(); x.ellipse(164, 130, 22, 18, 0.15, 0, Math.PI * 2); x.fill();
   x.fillRect(130, 160, 62, 46);
   x.fillStyle = "#e9d5ff";
   for (let t = 0; t < 4; t++) { x.fillRect(133 + t * 14, 160, 9, 13); x.fillRect(133 + t * 14, 193, 9, 13); }
   x.fillStyle = "#1e1b2e"; x.strokeStyle = "#05010a"; x.lineWidth = 4;
   x.beginPath(); x.moveTo(46, 86); x.lineTo(28, 44); x.lineTo(54, 62); x.lineTo(60, 34); x.lineTo(80, 66);
-  x.lineTo(176, 66); x.lineTo(196, 34); x.lineTo(202, 62); x.lineTo(228, 44); x.lineTo(210, 86); x.closePath(); x.fill(); x.stroke();
+  x.lineTo(176, 66); x.lineTo(196, 34); x.lineTo(202, 62); x.lineTo(228, 44); x.lineTo(210, 86); x.closePath();
+  x.fill(); x.stroke();
   x.fillStyle = "#2e1065";
   x.beginPath(); x.moveTo(128, 8); x.lineTo(136, 34); x.lineTo(160, 42); x.lineTo(136, 50); x.lineTo(128, 72); x.lineTo(120, 50); x.lineTo(96, 42); x.lineTo(120, 34); x.closePath(); x.fill(); x.stroke();
   x.fillStyle = "#f3e8ff";
-  x.fillRect(92, 52, 26, 28); x.strokeRect(92, 52, 26, 28); x.fillRect(138, 52, 26, 28); x.strokeRect(138, 52, 26, 28);
+  x.fillRect(92, 52, 26, 28); x.strokeRect(92, 52, 26, 28);
+  x.fillRect(138, 52, 26, 28); x.strokeRect(138, 52, 26, 28);
   x.fillStyle = "#090212";
   x.fillRect(98, 60, 4, 4); x.fillRect(108, 60, 4, 4); x.fillRect(98, 70, 14, 4);
   x.fillRect(144, 60, 4, 4); x.fillRect(154, 60, 4, 4); x.fillRect(144, 72, 14, 4);
@@ -1183,45 +1282,116 @@ function createR6(charType) {
   return g;
 }
 
-// LOBBY
+// =======================================================
+// LOBBY FORSAKEN ASLI: KABIN DUA LANTAI + BALKON + AREA LUAR
+// =======================================================
 const lobbyGroup = new THREE.Group(); lobbyGroup.position.set(0, 70, 0); scene.add(lobbyGroup);
 const lobbyBoxes = [];
 function addLobbyBox(x, z, w, d, topY) { lobbyBoxes.push({ minX: x - w / 2 - 1.1, maxX: x + w / 2 + 1.1, minZ: z - d / 2 - 1.1, maxZ: z + d / 2 + 1.1, rawMinX: x - w / 2, rawMaxX: x + w / 2, rawMinZ: z - d / 2, rawMaxZ: z + d / 2, topY: topY }); }
-const woodDark = new THREE.MeshStandardMaterial({ color: 0x4a301d, roughness: 0.9 }), woodFloorMat = new THREE.MeshStandardMaterial({ color: 0x6e4a2e, roughness: 0.85 }), stoneLobbyMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.9 });
-const lobbyDeck = new THREE.Mesh(new THREE.BoxGeometry(64, 2, 64), woodFloorMat); lobbyDeck.receiveShadow = true; lobbyGroup.add(lobbyDeck);
-const patio = new THREE.Mesh(new THREE.BoxGeometry(26, 0.2, 26), stoneLobbyMat); patio.position.set(0, 1.05, 4); patio.receiveShadow = true; lobbyGroup.add(patio);
-[[-31,0,2,64],[31,0,2,64],[0,-31,64,2],[0,31,64,2]].forEach(function(f){ const m = new THREE.Mesh(new THREE.BoxGeometry(f[2], 2.6, f[3]), woodDark); m.position.set(f[0], 2.3, f[1]); lobbyGroup.add(m); addLobbyBox(f[0], f[1], f[2], f[3], 80); });
-const lobbyWallMat = new THREE.MeshStandardMaterial({ color: 0x3b2416, roughness: 0.9 });
-[[-31,0,2,64],[31,0,2,64],[0,-31,64,2],[0,31,64,2]].forEach(function(w){ const wm = new THREE.Mesh(new THREE.BoxGeometry(w[2], 15, w[3]), lobbyWallMat); wm.position.set(w[0], 8.5, w[1]); lobbyGroup.add(wm); });
-const lobbyMainRoof = new THREE.Mesh(new THREE.BoxGeometry(66, 1.6, 66), new THREE.MeshStandardMaterial({ color: 0x24140b, roughness: 0.95 })); lobbyMainRoof.position.set(0, 16.5, 0); lobbyGroup.add(lobbyMainRoof);
-[-18, 0, 18].forEach(function(bz){ const beam = new THREE.Mesh(new THREE.BoxGeometry(62, 1.2, 1.6), woodDark); beam.position.set(0, 15.2, bz); lobbyGroup.add(beam); });
-[[-14, 12], [14, 12], [-14, -8], [14, -8]].forEach(function(lp){ const lamp = new THREE.PointLight(0xffd27d, 1.6, 48); lamp.position.set(lp[0], 14, lp[1]); lobbyGroup.add(lamp); });
-const cabinBack = new THREE.Mesh(new THREE.BoxGeometry(36, 12, 1.5), woodDark); cabinBack.position.set(0, 7, -28); lobbyGroup.add(cabinBack); addLobbyBox(0, -28, 36, 1.5, 90);
-const cabinL = new THREE.Mesh(new THREE.BoxGeometry(1.5, 12, 14), woodDark); cabinL.position.set(-18, 7, -21); lobbyGroup.add(cabinL); addLobbyBox(-18, -21, 1.5, 14, 90);
-const cabinR = new THREE.Mesh(new THREE.BoxGeometry(1.5, 12, 14), woodDark); cabinR.position.set(18, 7, -21); lobbyGroup.add(cabinR); addLobbyBox(18, -21, 1.5, 14, 90);
-const cabinRoof = new THREE.Mesh(new THREE.BoxGeometry(40, 1.5, 18), new THREE.MeshStandardMaterial({ color: 0x2e1c11 })); cabinRoof.position.set(0, 13.5, -21); lobbyGroup.add(cabinRoof);
-[-16, 16].forEach(function(px){ const pil = new THREE.Mesh(new THREE.BoxGeometry(1.6, 12, 1.6), woodDark); pil.position.set(px, 7, -14); lobbyGroup.add(pil); addLobbyBox(px, -14, 1.6, 1.6, 90); });
 
-const campfireGrp = new THREE.Group(); campfireGrp.position.set(0, 1.1, 6);
-for (let a = 0; a < 6; a++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.9), stoneLobbyMat); st.position.set(Math.cos(a * Math.PI / 3) * 1.8, 0.35, Math.sin(a * Math.PI / 3) * 1.8); campfireGrp.add(st); }
-const lobbyFireFlame = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.8, 6), new THREE.MeshBasicMaterial({ color: 0xff6600 })); lobbyFireFlame.position.y = 1.6; campfireGrp.add(lobbyFireFlame);
-const lobbyFireLight = new THREE.PointLight(0xff7722, 3.2, 45); lobbyFireLight.position.y = 3; campfireGrp.add(lobbyFireLight);
-lobbyGroup.add(campfireGrp); addLobbyBox(0, 6, 3.4, 3.4, 72.5);
-const lobbyAmbLight = new THREE.PointLight(0x93c5fd, 1.4, 65); lobbyAmbLight.position.set(0, 16, 0); lobbyGroup.add(lobbyAmbLight);
-[[-26,-26],[26,-26],[-26,26],[26,26]].forEach(function(l){ const post = new THREE.Mesh(new THREE.BoxGeometry(1, 6, 1), woodDark); post.position.set(l[0], 4, l[1]); lobbyGroup.add(post); const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), new THREE.MeshBasicMaterial({ color: 0xfde047 })); bulb.position.set(l[0], 7.2, l[1]); lobbyGroup.add(bulb); const pt = new THREE.PointLight(0xfbbf24, 1.6, 24); pt.position.set(l[0], 7.5, l[1]); lobbyGroup.add(pt); addLobbyBox(l[0], l[1], 1.2, 1.2, 77); });
-[[14,10,3,2,3],[17.2,10,3,3.8,3],[-16,12,3.2,2.2,3.2]].forEach(function(c){ const cr = new THREE.Mesh(new THREE.BoxGeometry(c[2], c[3], c[4]), new THREE.MeshStandardMaterial({ color: 0x926239 })); cr.position.set(c[0], 1 + c[3] / 2, c[1]); lobbyGroup.add(cr); addLobbyBox(c[0], c[1], c[2], c[4], LOBBY_FLOOR_Y + c[3]); });
-const counter = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 10), woodDark); counter.position.set(22, 2.25, -4); lobbyGroup.add(counter); addLobbyBox(22, -4, 3, 10, 73.5);
-const dispCola = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), new THREE.MeshStandardMaterial({ color: 0xdc2626 })); dispCola.position.set(22, 4, -6); lobbyGroup.add(dispCola);
-const dispGear = createGearMesh(); dispGear.scale.set(0.65, 0.65, 0.65); dispGear.position.set(22, 4, -2); lobbyGroup.add(dispGear);
-const desk = new THREE.Mesh(new THREE.BoxGeometry(5, 2.4, 2.6), stoneLobbyMat); desk.position.set(-10, 2.2, -19); lobbyGroup.add(desk); addLobbyBox(-10, -19, 5, 2.6, 73.4);
-const monitor = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.6, 0.3), new THREE.MeshBasicMaterial({ color: 0xff2222, wireframe: true })); monitor.position.set(-10, 4.2, -19); lobbyGroup.add(monitor);
+const woodDark = new THREE.MeshStandardMaterial({ color: 0x372314, roughness: 0.9 });
+const woodFloorMat = new THREE.MeshStandardMaterial({ color: 0x54361e, roughness: 0.85 });
+const stoneLobbyMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.95 });
+const grassLobbyMat = new THREE.MeshStandardMaterial({ color: 0x1f291e, roughness: 0.95 });
 
+// 1. Tanah Halaman Luar Lobby (Luas 150x150)
+const lobbyGround = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), grassLobbyMat);
+lobbyGround.rotation.x = -Math.PI / 2; lobbyGround.position.y = 0.05; lobbyGround.receiveShadow = true;
+lobbyGroup.add(lobbyGround);
+
+// 2. Dek Kayu Utama Teras Kabin
+const lobbyDeck = new THREE.Mesh(new THREE.BoxGeometry(68, 2.2, 68), woodFloorMat);
+lobbyDeck.position.set(0, 1.1, 0); lobbyDeck.receiveShadow = true; lobbyGroup.add(lobbyDeck);
+
+// 3. Kabin Forsaken Dua Lantai
+const cabinWallMat = new THREE.MeshStandardMaterial({ color: 0x24160d, roughness: 0.95 });
+const cabinBody1 = new THREE.Mesh(new THREE.BoxGeometry(44, 11, 28), cabinWallMat);
+cabinBody1.position.set(0, 6.5, -18); cabinBody1.castShadow = true; lobbyGroup.add(cabinBody1);
+addLobbyBox(0, -18, 44, 28, 70 + 12);
+
+// Balkon Lantai 2
+const balconyFloor = new THREE.Mesh(new THREE.BoxGeometry(46, 1.2, 10), woodFloorMat);
+balconyFloor.position.set(0, 12, -4); lobbyGroup.add(balconyFloor);
+addLobbyBox(0, -4, 46, 10, 70 + 12.6);
+const cabinBody2 = new THREE.Mesh(new THREE.BoxGeometry(40, 9, 20), cabinWallMat);
+cabinBody2.position.set(0, 16.5, -18); lobbyGroup.add(cabinBody2);
+addLobbyBox(0, -18, 40, 20, 70 + 21);
+
+// Atap Miring Besar Kabin
+const mainRoof1 = new THREE.Mesh(new THREE.BoxGeometry(50, 2, 34), woodDark);
+mainRoof1.position.set(0, 21.5, -18); mainRoof1.rotation.x = 0.18; lobbyGroup.add(mainRoof1);
+
+// Pilar-pilar Penyangga Teras
+[-19, -9, 9, 19].forEach(function(px){
+  const pil = new THREE.Mesh(new THREE.BoxGeometry(1.6, 12, 1.6), woodDark);
+  pil.position.set(px, 6.5, 0); lobbyGroup.add(pil); addLobbyBox(px, 0, 1.6, 1.6, 82);
+});
+
+// Pagar Pembatas Halaman Luar
+[[-68, 0, 2, 140], [68, 0, 2, 140], [0, 68, 140, 2], [0, -68, 140, 2]].forEach(function(f){
+  const fMesh = new THREE.Mesh(new THREE.BoxGeometry(f[2], 5, f[3]), woodDark);
+  fMesh.position.set(f[0], 2.5, f[1]); lobbyGroup.add(fMesh);
+  addLobbyBox(f[0], f[1], f[2], f[3], 77);
+});
+
+// Jalan Setapak Batu di Halaman Luar
+const pathStone = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 55), stoneLobbyMat);
+pathStone.position.set(0, 1.2, 35); lobbyGroup.add(pathStone);
+
+// Pohon-pohon Gelap di Halaman Luar Lobby
+[[-42, 30], [42, 32], [-38, 55], [38, 52], [-52, -20], [52, -22]].forEach(function(tp){
+  const tr = new THREE.Mesh(new THREE.BoxGeometry(2.4, 18, 2.4), woodDark);
+  tr.position.set(tp[0], 9, tp[1]);
+  const fol = new THREE.Mesh(new THREE.BoxGeometry(11, 8, 11), new THREE.MeshStandardMaterial({ color: 0x3b1010, roughness: 0.9 }));
+  fol.position.set(tp[0], 19, tp[1]); lobbyGroup.add(tr, fol);
+  addLobbyBox(tp[0], tp[1], 2.8, 2.8, 88);
+});
+
+// Perapian Api Unggun Halaman Luar
+const campfireGrp = new THREE.Group(); campfireGrp.position.set(0, 1.3, 16);
+for (let a = 0; a < 8; a++) {
+  const st = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.8, 1.1), stoneLobbyMat);
+  st.position.set(Math.cos(a * Math.PI / 4) * 2.5, 0.4, Math.sin(a * Math.PI / 4) * 2.5);
+  campfireGrp.add(st);
+}
+const lobbyFireFlame = new THREE.Mesh(new THREE.ConeGeometry(1.4, 3.5, 6), new THREE.MeshBasicMaterial({ color: 0xff6600 }));
+lobbyFireFlame.position.y = 1.9; campfireGrp.add(lobbyFireFlame);
+const lobbyFireLight = new THREE.PointLight(0xff7722, 3.8, 55);
+lobbyFireLight.position.y = 3.5; campfireGrp.add(lobbyFireLight);
+lobbyGroup.add(campfireGrp); addLobbyBox(0, 16, 4.2, 4.2, 73.5);
+
+// Lentera & Labu Halloween Menyala di Tangga dan Balkon
+function addLobbyPumpkin(x, y, z) {
+  const pk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, 1.2), new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.8 }));
+  pk.position.set(x, y + 0.55, z);
+  const lt = new THREE.PointLight(0xf59e0b, 1.6, 12); lt.position.set(x, y + 0.8, z);
+  lobbyGroup.add(pk, lt);
+}
+[[-14, 2.2, 1], [14, 2.2, 1], [-6, 2.2, 10], [6, 2.2, 10], [0, 12.6, 0]].forEach(function(lp){
+  addLobbyPumpkin(lp[0], lp[1], lp[2]);
+});
+
+// Peti Lompat & Dispenser
+[[14, 10, 3, 2, 3], [17.2, 10, 3, 3.8, 3], [-16, 12, 3.2, 2.2, 3.2]].forEach(function(c){
+  const cr = new THREE.Mesh(new THREE.BoxGeometry(c[2], c[3], c[4]), new THREE.MeshStandardMaterial({ color: 0x926239 }));
+  cr.position.set(c[0], 2.2 + c[3] / 2, c[1]); lobbyGroup.add(cr);
+  addLobbyBox(c[0], c[1], c[2], c[4], LOBBY_FLOOR_Y + c[3] + 1.2);
+});
+const counter = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 10), woodDark);
+counter.position.set(22, 3.45, -4); lobbyGroup.add(counter); addLobbyBox(22, -4, 3, 10, 74.8);
+const dispCola = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+dispCola.position.set(22, 5.2, -6); lobbyGroup.add(dispCola);
+const dispGear = createGearMesh(); dispGear.scale.set(0.65, 0.65, 0.65);
+dispGear.position.set(22, 5.2, -2); lobbyGroup.add(dispGear);
+
+// 5 NPC INTERAKTIF (TERMASUK NPC BARU: KAELEN - OPERATOR MULTIPLAYER)
 const lobbyNPCs = [];
 function spawnLobbyNPC(id, charType, name, x, z, rotY, dialog, buildOpts) {
-  const npc = createR6(charType); npc.position.set(x, LOBBY_FLOOR_Y, z); npc.rotation.y = rotY;
+  const npc = createR6(charType); npc.position.set(x, LOBBY_FLOOR_Y + 1.2, z); npc.rotation.y = rotY;
   npc.npcId = id; npc.npcName = name; npc.npcDialog = dialog; npc.buildOpts = buildOpts; scene.add(npc); lobbyNPCs.push(npc);
 }
-spawnLobbyNPC("host", "noob", "Spectre (Host Ronde)", 0, -21, 0, "Selamat datang di Forsaken Lobby! Atur peran, pilih Killer (c00lkidd, 1x1x1x1, atau Noli), dan mulai ronde.", function(){
+
+spawnLobbyNPC("host", "noob", "Spectre (Host Ronde)", 0, -3, 0, "Selamat datang di Forsaken Lobby! Atur peran, pilih Killer (c00lkidd, 1x1x1x1, atau Noli), dan mulai ronde.", function(){
   return [
     { label: "Ganti Peran (" + playerRole + ")", fn: function(){ togglePlayerRole(); openNPCModal(activeNPC); } },
     { label: "Pilih Killer (" + killerType + ")", fn: function(){ toggleKillerType(); openNPCModal(activeNPC); } },
@@ -1229,12 +1399,23 @@ spawnLobbyNPC("host", "noob", "Spectre (Host Ronde)", 0, -21, 0, "Selamat datang
     { label: "Mulai Ronde Sekarang!", fn: function(){ closeNPCModal(); startMatchNow(); } }
   ];
 });
-spawnLobbyNPC("shed", "shed", "Shedletsky (Pelatih)", -11, 4, 0.8, "Blame John! Pakai pedang [Q] untuk stun Killer 3 detik dan ayam goreng [E] buat pulihkan HP.", function(){
+
+spawnLobbyNPC("multiplayer_npc", "007", "Kaelen (Operator Server)", 12, 14, -0.6, "Mau mabar bareng teman? Pilih buat room untuk dapat kode, atau masukkan kode room temanmu!", function(){
+  return [
+    { label: "👑 Buat Room (Make Room)", fn: function(){ closeNPCModal(); showHostRoomUI(); } },
+    { label: "🔑 Masuk Room (Enter Code)", fn: function(){ closeNPCModal(); showJoinRoomUI(); } },
+    { label: "Main Offline vs AI", fn: function(){ selectPlayMode("AI"); closeNPCModal(); showToast("Mode: AI Offline", "#0fc"); } }
+  ];
+});
+
+spawnLobbyNPC("shed", "shed", "Shedletsky (Pelatih)", -12, 6, 0.8, "Blame John! Pakai pedang [Q] untuk stun Killer 3 detik dan ayam goreng [E] buat pulihkan HP.", function(){
   return [{ label: "Pakai Karakter SHEDLETSKY", fn: function(){ if (playerRole !== "SURVIVOR") togglePlayerRole(); survivorChar = "SHEDLETSKY"; applyPlayerAppearance(); document.getElementById("char-btn").innerText = "SURVIVOR: SHEDLETSKY"; document.getElementById("char-btn").className = "lobby-btn charshed"; showToast("Karakter: SHEDLETSKY!", "#fc0"); closeNPCModal(); } }];
 });
-spawnLobbyNPC("007", "007", "007n7 (Hacker)", -10, -15, 0.2, "Aku bisa buat klon pengecoh [Q] dan teleport ke ujung map pakai c00lgui [E].", function(){
+
+spawnLobbyNPC("007", "007", "007n7 (Hacker)", -14, -6, 0.2, "Aku bisa buat klon pengecoh [Q] dan teleport ke ujung map pakai c00lgui [E]. Sekarang AI Killer tetap bisa mengejar saat aku teleport!", function(){
   return [{ label: "Pakai Karakter 007n7", fn: function(){ if (playerRole !== "SURVIVOR") togglePlayerRole(); survivorChar = "007n7"; applyPlayerAppearance(); document.getElementById("char-btn").innerText = "SURVIVOR: 007n7"; document.getElementById("char-btn").className = "lobby-btn char007"; showToast("Karakter: 007n7!", "#0fc"); closeNPCModal(); } }];
 });
+
 spawnLobbyNPC("brandon", "shopkeeper", "Brandon (Info Map & Puzzle)", 19, -4, -Math.PI / 2, "Ada 5 Generator asli. Hati-hati jika Killer-nya Noli: ada 2 Fake Generator berkabel hitam yang memicu Hallucination!", function(){
   return [{ label: "Pakai Karakter NOOB", fn: function(){ if (playerRole !== "SURVIVOR") togglePlayerRole(); survivorChar = "NOOB"; applyPlayerAppearance(); document.getElementById("char-btn").innerText = "SURVIVOR: NOOB"; document.getElementById("char-btn").className = "lobby-btn"; showToast("Karakter: NOOB!", "#38bdf8"); closeNPCModal(); } }];
 });
@@ -1249,16 +1430,25 @@ function openNPCModal(npc) {
 }
 function closeNPCModal() { activeNPC = null; document.getElementById("npc-modal").style.display = "none"; }
 function getNearestLobbyNPC(pos) { let best = null, minD = 5.5; lobbyNPCs.forEach(function(n){ const d = pos.distanceTo(n.position); if (d < minD) { minD = d; best = n; } }); return best; }
+
 function moveLobbyWithJump(p, vx, vz) {
   const nx = p.position.x + vx, nz = p.position.z + vz;
   function getGroundY(tx, tz) {
-    let gy = LOBBY_FLOOR_Y;
-    for (let i = 0; i < lobbyBoxes.length; i++) { const b = lobbyBoxes[i]; if (tx >= b.rawMinX - 0.7 && tx <= b.rawMaxX + 0.7 && tz >= b.rawMinZ - 0.7 && tz <= b.rawMaxZ + 0.7 && p.position.y >= b.topY - 0.8) gy = Math.max(gy, b.topY); }
+    let gy = LOBBY_FLOOR_Y + 1.2;
+    for (let i = 0; i < lobbyBoxes.length; i++) {
+      const b = lobbyBoxes[i];
+      if (tx >= b.rawMinX - 0.7 && tx <= b.rawMaxX + 0.7 && tz >= b.rawMinZ - 0.7 && tz <= b.rawMaxZ + 0.7 && p.position.y >= b.topY - 0.8) gy = Math.max(gy, b.topY);
+    }
     return gy;
   }
   function blocked(tx, tz) {
-    if (tx < -29 || tx > 29 || tz < -29 || tz > 29) return true;
-    for (let i = 0; i < lobbyBoxes.length; i++) { const b = lobbyBoxes[i]; if (tx >= b.minX && tx <= b.maxX && tz >= b.minZ && tz <= b.maxZ && p.position.y < b.topY - 0.4) return true; }
+    if (tx < -66 || tx > 66 || tz < -66 || tz > 66) return true;
+    for (let i = 0; i < lobbyBoxes.length; i++) {
+      const b = lobbyBoxes[i];
+      if (tx >= b.minX && tx <= b.maxX && tz >= b.minZ && tz <= b.maxZ) {
+        if (p.position.y < b.topY - 0.4) return true;
+      }
+    }
     return false;
   }
   if (!blocked(nx, nz)) { p.position.x = nx; p.position.z = nz; }
@@ -1269,7 +1459,7 @@ function moveLobbyWithJump(p, vx, vz) {
   if (p.position.y <= gY) { p.position.y = gY; playerVY = 0; isGrounded = true; } else isGrounded = false;
 }
 
-const playerNoob = createR6("noob"); playerNoob.name = "Kamu"; playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); scene.add(playerNoob);
+const playerNoob = createR6("noob"); playerNoob.name = "Kamu"; playerNoob.position.set(0, LOBBY_FLOOR_Y + 1.2, 14); scene.add(playerNoob);
 function applyPlayerAppearance() {
   const i0 = survivorChar === "007n7", isS = survivorChar === "SHEDLETSKY";
   playerNoob.is007 = i0; playerNoob.isShed = isS; playerNoob.parts.burgerHat.visible = i0; playerNoob.parts.shedHair.visible = isS; playerNoob.parts.shedSword.visible = isS;
@@ -1299,7 +1489,6 @@ function buildRoundRoster() {
   if (isDoubleTrouble) {
     const allPairs = [["1x1x1x1", "c00lkidd"], ["1x1x1x1", "Noli"], ["Noli", "c00lkidd"]];
     if (playerRole === "SURVIVOR") {
-      // Acak pasangan Killer Double Trouble saat player jadi Survivor!
       dtKillerPair = allPairs[Math.floor(Math.random() * allPairs.length)].slice();
     } else {
       const others = ["c00lkidd", "1x1x1x1", "Noli"].filter(function(x){ return x !== killerType; });
@@ -1324,254 +1513,161 @@ function getDTCombo() {
   if (hasNoli && hasC00l) return "NOLI_C00L";
   return null;
 }
+  // ==========================================
+// LOADING SCREEN (0% - 100%) & SKETSA CANVAS
+// ==========================================
+function drawLoadingSketch() {
+  const c = document.getElementById("sketch-canvas");
+  if (!c) return;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, 600, 340);
+  ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.2; ctx.lineCap = "round";
 
-// CUTSCENE
-const csStage = new THREE.Group(); csStage.position.set(0, -200, 0); csStage.visible = false; scene.add(csStage);
-let csObjects = [], csCamPos = new THREE.Vector3(0, -195, 12), csCamLook = new THREE.Vector3(0, -196, 0), csTick = null;
-function clearCutsceneStage() {
-  if (csTick) { clearInterval(csTick); csTick = null; }
-  csObjects.forEach(function(o){ csStage.remove(o); }); csObjects = []; csStage.visible = false; scene.fog = mapFog;
-  document.getElementById("cutscene-overlay").style.display = "none"; document.getElementById("intro-banner").style.display = "none";
-  document.getElementById("outro-text-box").style.display = "none"; document.getElementById("noli-outro-stars").style.display = "none";
-  const rs = document.getElementById("red-slash-fx"); rs.style.opacity = "0"; rs.style.height = "0"; document.getElementById("cutscene-flash").style.opacity = "0";
+  // Arsir Latar Belakang Cepat (Hatching)
+  for (let i = 0; i < 45; i++) {
+    ctx.beginPath();
+    const sx = 20 + i * 13, sy = (i % 3) * 35;
+    ctx.moveTo(sx, sy); ctx.lineTo(sx + 40, sy + 110);
+    ctx.stroke();
+  }
+
+  // SURVIVOR DI BAWAH (Noob / 007n7 Mengintip dari Kiri Bawah)
+  ctx.save();
+  ctx.beginPath(); // Kepala
+  ctx.arc(140, 210, 42, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); // Mata Ketakutan & Mulut
+  ctx.ellipse(126, 204, 5, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(150, 204, 5, 8, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(140, 226, 12, 0, Math.PI); ctx.stroke();
+  // Badan & Lengan
+  ctx.strokeRect(95, 252, 90, 85);
+  ctx.beginPath(); ctx.moveTo(95, 260); ctx.lineTo(55, 320); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(185, 260); ctx.lineTo(225, 320); ctx.stroke();
+  ctx.restore();
+
+  // KILLER DI ATAS TERBALIK (c00lkidd / Noli Menghadap ke Bawah)
+  ctx.save();
+  ctx.translate(450, 110);
+  ctx.rotate(Math.PI); // Terbalik!
+  ctx.beginPath(); ctx.arc(0, 0, 48, 0, Math.PI * 2); ctx.stroke();
+  // Wajah seringai menakutkan
+  ctx.beginPath(); ctx.ellipse(-16, -6, 7, 12, 0.1, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(16, -6, 7, 12, -0.1, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 16, 28, 0.15 * Math.PI, 0.85 * Math.PI, false); ctx.stroke();
+  // Gigi tajam & mahkota duri
+  for (let t = -16; t <= 16; t += 8) {
+    ctx.beginPath(); ctx.moveTo(t, 22); ctx.lineTo(t + 4, 34); ctx.stroke();
+  }
+  ctx.strokeRect(-50, 48, 100, 80);
+  ctx.restore();
 }
-function makePosterTex(text, bg, fg) {
-  const c = document.createElement("canvas"); c.width = 256; c.height = 256; const x = c.getContext("2d"); x.fillStyle = bg || "#000"; x.fillRect(0, 0, 256, 256); x.fillStyle = fg || "#fff"; x.font = "bold 22px sans-serif"; x.textAlign = "center";
-  text.split("\n").forEach(function(ln, i){ x.fillText(ln, 128, 48 + i * 32); }); return new THREE.CanvasTexture(c);
-}
 
-function playKillerIntroCutscene(onDone) {
-  clearCutsceneStage(); closeNPCModal(); gameState = "INTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio(); csStage.visible = true; scene.fog = null;
-  const ov = document.getElementById("cutscene-overlay"), bn = document.getElementById("intro-banner"), nm = document.getElementById("intro-name"), fl = document.getElementById("cutscene-flash"), rs = document.getElementById("red-slash-fx");
-  ov.style.display = "block"; bn.style.display = "block";
-  const amb = new THREE.AmbientLight(0xffffff, 0.75); csStage.add(amb); csObjects.push(amb);
-
-  // --- CUSTOM INTRO CUTSCENE UNTUK DOUBLE TROUBLE ---
-  const dtCombo = getDTCombo();
-  if (dtCombo === "1X_C00L") {
-    nm.innerText = "1x1x1x1 and c00lkidd"; nm.style.color = "#ef4444";
-    playCutsceneMP3(mp3IntroDT1xC00l, function(){ playSynthTone(110, 1.3, "sawtooth", 0.2); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(75, 75), new THREE.MeshStandardMaterial({ color: 0x1e2c14, roughness: 0.9 }));
-    flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    // Salib / altar kayu tengah + karakter terbakar + Shedletsky pingsan di depan
-    const postV = new THREE.Mesh(new THREE.BoxGeometry(0.9, 10, 0.9), new THREE.MeshStandardMaterial({ color: 0x3b2314 })); postV.position.set(0, 5, -2);
-    const postH = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x3b2314 })); postH.position.set(0, 7.2, -2);
-    const victim007 = createR6("007"); victim007.position.set(0, 3.2, -1.3);
-    const shedDown = createR6("shed"); shedDown.position.set(-1.3, 0.6, 0.4); shedDown.rotation.x = -1.2; shedDown.rotation.z = 0.4;
-    csStage.add(postV, postH, victim007, shedDown); csObjects.push(postV, postH, victim007, shedDown);
-    const fireRing = [];
-    for (let i = 0; i < 10; i++) {
-      const flm = new THREE.Mesh(new THREE.ConeGeometry(0.8, 3.2, 5), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff5500 : 0xfacc15, transparent: true, opacity: 0.9 }));
-      flm.position.set((Math.random() - 0.5) * 3.2, 2.2 + (i % 3) * 1.4, -1.6 + (Math.random() - 0.5) * 1.5);
-      csStage.add(flm); csObjects.push(flm); fireRing.push(flm);
+function runLoadingSimulation() {
+  drawLoadingSketch();
+  let progress = 0;
+  const pEl = document.getElementById("loading-percent");
+  const sEl = document.getElementById("loading-status");
+  const loadInt = setInterval(function() {
+    progress += Math.floor(Math.random() * 4) + 1;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(loadInt);
+      pEl.innerText = "100%";
+      sEl.innerText = "All assets ready.";
+      setTimeout(function() {
+        document.getElementById("loading-screen").style.display = "none";
+        document.getElementById("title-screen").style.display = "flex";
+        gameState = "TITLE";
+        unlockAllAudio(); // Audio Lobby langsung mulai saat loading selesai dan masuk Title Screen!
+      }, 450);
+    } else {
+      pEl.innerText = progress + "%";
+      if (progress > 40 && progress < 75) sEl.innerText = "Loading map & entities...";
+      else if (progress >= 75) sEl.innerText = "Finalizing shaders & audio...";
     }
-    const fLt = new THREE.PointLight(0xff6600, 4.5, 40); fLt.position.set(0, 5, 0); csStage.add(fLt); csObjects.push(fLt);
-    const gLt = new THREE.PointLight(0x00ff33, 2.8, 25); gLt.position.set(-5, 3, 2); csStage.add(gLt); csObjects.push(gLt);
-    const rLt = new THREE.PointLight(0xff1111, 3.2, 25); rLt.position.set(5, 3, 2); csStage.add(rLt); csObjects.push(rLt);
+  }, 45);
+}
+window.addEventListener("DOMContentLoaded", runLoadingSimulation);
 
-    const k1x = createR6("1x"); k1x.position.set(-4.5, 0, 1.5); k1x.rotation.y = -0.5; csStage.add(k1x); csObjects.push(k1x);
-    const kc = createR6("c00lkidd"); kc.position.set(4.5, 0, 1.5); kc.rotation.y = 0.5; csStage.add(kc); csObjects.push(kc);
+function onTitleScreenClick() {
+  if (gameState !== "TITLE") return;
+  document.getElementById("title-screen").style.display = "none";
+  document.getElementById("mode-modal").style.display = "flex";
+}
 
-    let f = 0; csTick = setInterval(function(){
-      f++;
-      fireRing.forEach(function(fm, i){ fm.scale.y = 0.7 + Math.sin(f * 0.4 + i) * 0.45; fm.rotation.y += 0.1; });
-      if (k1x.parts.eyeFlare) { const s = 1.4 + Math.sin(f * 0.4) * 0.5; k1x.parts.eyeFlare.scale.set(s, s, 1); }
-      if (f < 48) {
-        csCamPos.set(-3.2, -196.2, 7.5 - f * 0.04); csCamLook.set(-1.2, -196.5, 0);
-      } else if (f < 92) {
-        k1x.rotation.y = -0.15; kc.parts.rArm.rotation.x = 2.1; kc.parts.lArm.rotation.x = 1.6;
-        csCamPos.set(3.2, -196.2, 7.2); csCamLook.set(0.8, -196.5, 0);
-      } else {
-        csCamPos.set(0, -195.8, 10.5); csCamLook.set(0, -196.5, -0.5);
-      }
-      if (f === 125) fl.style.opacity = "1";
-      if (f >= 145) { clearCutsceneStage(); onDone(); }
-    }, 32);
-    return;
-  }
+// ==========================================
+// MULTIPLAYER ROOM CODE & MODE SELECTION
+// ==========================================
+function selectPlayMode(mode) {
+  playMode = mode;
+  document.getElementById("mode-modal").style.display = "none";
+  document.getElementById("title-screen").style.display = "none";
+  gameState = "LOBBY";
+  timerSeconds = 40;
+  updateUIState();
+  showToast("Mode Permainan: " + (mode === "AI" ? "Offline AI" : "Multiplayer"), "#0fc");
+}
 
-  if (dtCombo === "1X_NOLI") {
-    nm.innerText = "1x1x1x1 and Noli"; nm.style.color = "#a855f7";
-    playCutsceneMP3(mp3IntroDT1xNoli, function(){ playSynthTone(120, 1.2, "sawtooth", 0.2); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x102812, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    const grRing = new THREE.Mesh(new THREE.RingGeometry(4.5, 6.2, 32), new THREE.MeshBasicMaterial({ color: 0x00ff33, side: THREE.DoubleSide }));
-    grRing.rotation.x = -Math.PI / 2; grRing.position.y = 0.05; csStage.add(grRing); csObjects.push(grRing);
-    const gLt = new THREE.PointLight(0x00ff44, 3.2, 35); gLt.position.set(0, 6, 4); csStage.add(gLt); csObjects.push(gLt);
-    const pLt = new THREE.PointLight(0xa855f7, 3.0, 28); pLt.position.set(-2, 6, -1); csStage.add(pLt); csObjects.push(pLt);
+function showHostRoomUI() {
+  document.getElementById("host-room-box").style.display = "flex";
+  document.getElementById("join-room-box").style.display = "none";
+  const genCode = "FSK-" + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById("my-room-code").innerText = genCode;
+}
 
-    const k1x = createR6("1x"); k1x.position.set(0.8, 0, 0.5); k1x.rotation.y = 0.2; csStage.add(k1x); csObjects.push(k1x);
-    const nb = createR6("scaredNoob"); nb.position.set(2.2, 1.5, 1.6); nb.rotation.y = -0.6; csStage.add(nb); csObjects.push(nb);
-    const kn = createR6("noli"); kn.position.set(-3.5, 0, -5); kn.rotation.y = 0.25; csStage.add(kn); csObjects.push(kn);
+function showJoinRoomUI() {
+  document.getElementById("join-room-box").style.display = "flex";
+  document.getElementById("host-room-box").style.display = "none";
+}
 
-    let f = 0; csTick = setInterval(function(){
-      f++;
-      nb.parts.lLeg.rotation.x = Math.sin(f * 0.6) * 0.5; nb.parts.rLeg.rotation.x = -Math.sin(f * 0.6) * 0.5;
-      if (k1x.parts.eyeFlare) { const s = 1.5 + Math.sin(f * 0.4) * 0.5; k1x.parts.eyeFlare.scale.set(s, s, 1); }
-      if (f === 32) { rs.style.transition = "all 0.15s ease-out"; rs.style.opacity = "1"; rs.style.height = "42px"; setTimeout(function(){ rs.style.height = "4px"; rs.style.opacity = "0.7"; }, 220); }
-      if (f < 55) {
-        k1x.parts.lArm.rotation.x = 1.8; csCamPos.set(0.6, -195.8, 8.2); csCamLook.set(0.4, -196.2, 0.5);
-      } else if (f < 95) {
-        nb.visible = false;
-        kn.position.x = -3.5 + ((f - 55) / 40) * 2.0;
-        kn.position.z = -5 + ((f - 55) / 40) * 5.3;
-        animateWalkingLimbs(kn, 0.24);
-        csCamPos.set(0, -195.8, 8.5); csCamLook.set(-0.2, -196.2, 0);
-      } else {
-        kn.parts.lLeg.rotation.x = 0; kn.parts.rLeg.rotation.x = 0; kn.parts.lArm.rotation.x = 0;
-        kn.parts.rArm.rotation.z = -1.2; kn.parts.rArm.rotation.x = 0.4; // Noli merangkul bahu 1x1x1x1!
-        if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.2;
-        csCamPos.set(0, -195.7, 7.6); csCamLook.set(-0.2, -196.2, 0.2);
-      }
-      if (f === 130) fl.style.opacity = "1";
-      if (f >= 145) { clearCutsceneStage(); onDone(); }
-    }, 32);
-    return;
-  }
-
-  if (dtCombo === "NOLI_C00L") {
-    nm.innerText = "Noli and c00lkidd"; nm.style.color = "#e879f9";
-    playCutsceneMP3(mp3IntroDTNoliC00l, function(){ playSynthTone(180, 1.0, "triangle", 0.18); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x100824, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    const pPool = new THREE.Mesh(new THREE.CircleGeometry(3.8, 24), new THREE.MeshBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.6 }));
-    pPool.rotation.x = -Math.PI / 2; pPool.position.set(-2.2, 0.05, 0); csStage.add(pPool); csObjects.push(pPool);
-    const pLt = new THREE.PointLight(0xa855f7, 3.6, 35); pLt.position.set(-2, 7, 3); csStage.add(pLt); csObjects.push(pLt);
-    const rLt = new THREE.PointLight(0xff2222, 3.0, 28); rLt.position.set(3, 6, 3); csStage.add(rLt); csObjects.push(rLt);
-
-    const kn = createR6("noli"); kn.position.set(-2.2, 0, 0); kn.rotation.y = 0.15; csStage.add(kn); csObjects.push(kn);
-    const kc = createR6("c00lkidd"); kc.position.set(2.4, 14, 0.4); kc.rotation.y = -0.15; csStage.add(kc); csObjects.push(kc);
-
-    let f = 0; csTick = setInterval(function(){
-      f++;
-      if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.2;
-      if (f < 48) {
-        kn.parts.head.rotation.z = Math.sin(f * 0.18) * 0.15;
-        csCamPos.set(-1.5, -195.8, 8.8 - f * 0.03); csCamLook.set(-1.5, -196.2, 0);
-      } else if (f < 78) {
-        const t = (f - 48) / 30;
-        kc.position.y = Math.max(0, 14 * (1 - t * t));
-        kc.parts.rArm.rotation.x = 2.6; kc.parts.lArm.rotation.x = 2.6;
-        csCamPos.set(0.2, -195.6, 8.5); csCamLook.set(0.2, -196.2, 0);
-      } else {
-        kc.position.y = 0;
-        kc.parts.rArm.rotation.x = 2.4 + Math.sin(f * 0.25) * 0.25; kc.parts.lArm.rotation.x = 2.4 - Math.sin(f * 0.25) * 0.25;
-        kn.parts.rArm.rotation.x = 1.1;
-        csCamPos.set(0.1, -195.7, 7.8); csCamLook.set(0.1, -196.2, 0);
-      }
-      if (f === 128) fl.style.opacity = "1";
-      if (f >= 145) { clearCutsceneStage(); onDone(); }
-    }, 32);
-    return;
-  }
-
-  // --- INTRO SINGLE KILLER ---
-  const singleK = (activeKillers[0] && activeKillers[0].kType) || killerType;
-  nm.innerText = singleK;
-  nm.style.color = (singleK === "Noli") ? "#c084fc" : ((singleK === "1x1x1x1") ? "#22c55e" : "#e11d48");
-  const spot = new THREE.SpotLight(singleK === "1x1x1x1" ? 0x22ff55 : (singleK === "Noli" ? 0xa855f7 : 0xff3333), 3, 60); spot.position.set(4, 14, 12); csStage.add(spot); csObjects.push(spot);
-
-  if (singleK === "Noli") {
-    playCutsceneMP3(sfx.noliIntro, function(){ playSynthTone(135, 0.9, "sawtooth", 0.2); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x0f041c, roughness: 0.95 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    [-6, 0, 6].forEach(function(lx, li){
-      const pl = new THREE.Mesh(new THREE.BoxGeometry(1.4, 7, 1.4), new THREE.MeshStandardMaterial({ color: 0x1e1b2e })); pl.position.set(lx, 3.5, -7 - (li === 1 ? 2 : 0));
-      const cFlame = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.4, 6), new THREE.MeshBasicMaterial({ color: 0xd8b4fe })); cFlame.position.set(lx, 7.7, -7 - (li === 1 ? 2 : 0));
-      const pLt = new THREE.PointLight(0xa855f7, 2.5, 22); pLt.position.set(lx, 8, -7); csStage.add(pl, cFlame, pLt); csObjects.push(pl, cFlame, pLt);
+function startHostRoom() {
+  const code = document.getElementById("my-room-code").innerText;
+  isHost = true;
+  playMode = "MULTIPLAYER";
+  try {
+    myPeer = new Peer(code);
+    myPeer.on("open", function(id) {
+      showToast("Room Dibuat: " + id, "#fde047");
     });
-    const kn = createR6("noli"); kn.position.set(0, 0, 0); kn.rotation.y = Math.PI; csStage.add(kn); csObjects.push(kn);
-    let f = 0; csTick = setInterval(function(){
-      f++; if (f === 42) playSFX(sfx.noliStar);
-      if (f < 42) csCamPos.set(0, -195.8, 9 - f * 0.04);
-      else if (f < 82) { kn.rotation.y = Math.PI - (f - 42) * 0.078; kn.parts.rArm.rotation.x = (f - 42) * 0.04; if (kn.parts.noliStar) { kn.parts.noliStar.rotation.z += 0.2; kn.parts.noliStar.scale.set(1.35, 1.35, 1.35); } csCamPos.set(0.3, -195.6, 6.8); }
-      else { kn.rotation.y = 0; kn.parts.head.rotation.z = Math.sin(f * 0.15) * 0.18; if (kn.parts.noliStar) kn.parts.noliStar.rotation.z += 0.25; }
-      csCamLook.set(0, -196.2, 0); if (f === 115) fl.style.opacity = "1"; if (f >= 130) { clearCutsceneStage(); onDone(); }
-    }, 32);
-  } else if (singleK === "1x1x1x1") {
-    playCutsceneMP3(mp3Intro1x, function(){ playSynthTone(110, 1.2, "sawtooth", 0.18); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x1b2410, roughness: 0.9 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    const k1x = createR6("1x"); k1x.position.set(-1.5, 0, 0); k1x.rotation.y = 0.35; csStage.add(k1x); csObjects.push(k1x);
-    const nb = createR6("scaredNoob"); nb.position.set(1.2, 1.6, 1.2); nb.rotation.y = -0.6; csStage.add(nb); csObjects.push(nb); k1x.parts.lArm.rotation.x = 1.8; k1x.parts.rArm.rotation.x = 0.6;
-    let f = 0; csTick = setInterval(function(){
-      f++; nb.parts.lLeg.rotation.x = Math.sin(f * 0.6) * 0.5; nb.parts.rLeg.rotation.x = -Math.sin(f * 0.6) * 0.5; nb.parts.lArm.rotation.z = -0.6 + Math.sin(f * 0.7) * 0.4; nb.parts.rArm.rotation.z = 0.6 - Math.sin(f * 0.7) * 0.4;
-      if (k1x.parts.eyeFlare) { const s = 1.4 + Math.sin(f * 0.4) * 0.6; k1x.parts.eyeFlare.scale.set(s, s, 1); }
-      csCamPos.set(0.5, -195.8, 8.5 - f * 0.03); csCamLook.set(-0.3, -196.2, 0.5);
-      if (f === 35) { rs.style.transition = "all 0.15s ease-out"; rs.style.opacity = "1"; rs.style.height = "42px"; setTimeout(function(){ rs.style.height = "4px"; rs.style.opacity = "0.7"; }, 240); }
-      if (f === 115) fl.style.opacity = "1"; if (f >= 130) { clearCutsceneStage(); onDone(); }
-    }, 32);
-  } else {
-    playCutsceneMP3(mp3IntroC00l, function(){ playSynthTone(240, 0.4, "triangle", 0.16); });
-    const flr = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), new THREE.MeshStandardMaterial({ color: 0x4b5563 })); flr.rotation.x = -Math.PI / 2; csStage.add(flr); csObjects.push(flr);
-    const signC = document.createElement("canvas"); signC.width = 256; signC.height = 320; const sx = signC.getContext("2d"); sx.fillStyle = "#e2e8f0"; sx.fillRect(0, 0, 256, 320); sx.strokeStyle = "#0f172a"; sx.lineWidth = 10; sx.strokeRect(8, 8, 240, 304); sx.fillStyle = "#0f172a"; sx.font = "bold 28px sans-serif"; sx.textAlign = "center"; sx.fillText("Need a lift?", 128, 50); sx.font = "18px sans-serif"; sx.fillText("Pick up a green balloon", 128, 84); sx.fillText("of your own!", 128, 108); sx.fillStyle = "#22c55e"; sx.beginPath(); sx.arc(175, 165, 36, 0, Math.PI * 2); sx.fill(); sx.fillStyle = "#facc15"; sx.fillRect(46, 240, 164, 44); sx.fillStyle = "#000"; sx.font = "bold 22px sans-serif"; sx.fillText("Just 80 R$", 128, 270);
-    const sign = new THREE.Mesh(new THREE.BoxGeometry(5.5, 7, 0.4), new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(signC) })); sign.position.set(-4.5, 4.2, -2.5); sign.rotation.y = 0.2; csStage.add(sign); csObjects.push(sign);
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(9, 0.5, 8, 24), new THREE.MeshStandardMaterial({ color: 0x94a3b8 })); wheel.position.set(8, 10, -12); csStage.add(wheel); csObjects.push(wheel);
-    const kc = createR6("c00lkidd"); kc.position.set(1.5, 0, 1.2); kc.rotation.y = 2.2; csStage.add(kc); csObjects.push(kc);
-    let f = 0; csTick = setInterval(function(){
-      f++; wheel.rotation.z += 0.012;
-      if (f < 45) { kc.rotation.y = 2.2 - f * 0.048; csCamPos.set(0.2, -195.6, 9.5); }
-      else { kc.parts.head.rotation.z = 0.22; kc.parts.rArm.rotation.x = 1.45; kc.parts.rArm.rotation.z = 0.4; csCamPos.set(0.4, -195.8, 7.2); }
-      csCamLook.set(-0.2, -196.1, 0.5); if (f === 115) fl.style.opacity = "1"; if (f >= 130) { clearCutsceneStage(); onDone(); }
-    }, 32);
+    myPeer.on("connection", function(conn) {
+      peerConn = conn;
+      showToast("Teman telah bergabung ke room!", "#0f8");
+      timerSeconds = 30; // Mulai hitung mundur setelah teman masuk
+    });
+  } catch (e) {
+    showToast("Server P2P Offline, bermain lokal.", "#f44");
   }
+  document.getElementById("mode-modal").style.display = "none";
+  gameState = "LOBBY";
+  timerSeconds = 999; // Menunggu player lain join
+  updateUIState();
 }
 
-function playKillerOutroCutscene(onDone) {
-  clearCutsceneStage(); closeNPCModal(); gameState = "OUTRO"; document.exitPointerLock(); updateUIState(); stopAndResetAllAudio(); csStage.visible = true; scene.fog = null;
-  const ov = document.getElementById("cutscene-overlay"), ob = document.getElementById("outro-text-box"), os = document.getElementById("outro-sub"), fl = document.getElementById("cutscene-flash"), nStars = document.getElementById("noli-outro-stars");
-  ov.style.display = "block"; ob.style.display = "block";
-  const mainK = (activeKillers[0] && activeKillers[0].kType) || killerType;
-  os.innerText = isDoubleTrouble && activeKillers.length >= 2 ? (activeKillers[0].kType + " & " + activeKillers[1].kType) : mainK;
-  const amb = new THREE.AmbientLight(0xffffff, 0.7); csStage.add(amb); csObjects.push(amb);
-
-  if (mainK === "Noli") {
-    playCutsceneMP3(sfx.noliOutro, function(){ playSynthTone(95, 1.2, "sawtooth", 0.2); });
-    const bridge = new THREE.Mesh(new THREE.BoxGeometry(22, 0.8, 70), new THREE.MeshStandardMaterial({ color: 0x1e2030, roughness: 0.9 })); bridge.position.y = -0.4; csStage.add(bridge); csObjects.push(bridge);
-    [[-12, -10], [12, -10], [-12, 4], [12, 4]].forEach(function(p){ const pil = new THREE.Mesh(new THREE.BoxGeometry(2.2, 16, 2.2), new THREE.MeshStandardMaterial({ map: noliBinaryTex })); pil.position.set(p[0], 8, p[1]); csStage.add(pil); csObjects.push(pil); });
-    const pLight = new THREE.PointLight(0xa855f7, 3.5, 45); pLight.position.set(0, 8, 2); csStage.add(pLight); csObjects.push(pLight);
-    const kn = createR6("noli"); kn.position.set(0, 0, -4); csStage.add(kn); csObjects.push(kn);
-    const bigNova = mkVoidStar(3.2); bigNova.position.set(0, 3.2, 0); bigNova.visible = false; csStage.add(bigNova); csObjects.push(bigNova);
-    const bits = []; for (let i = 0; i < 18; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.35), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xe879f9 : 0xa855f7 })); b.position.set((Math.random() - 0.5) * 14, Math.random() * 8, (Math.random() - 0.5) * 14); csStage.add(b); csObjects.push(b); bits.push(b); }
-    let f = 0; csTick = setInterval(function(){
-      f++; bits.forEach(function(b){ b.position.y += 0.08; if (b.position.y > 11) b.position.y = 0.5; });
-      if (f < 48) { kn.position.z = -4 + f * 0.09; animateWalkingLimbs(kn, 0.24); csCamPos.set(1.2, -195.8, 7.5); csCamLook.set(0, -196.2, kn.position.z); }
-      else if (f < 92) { kn.parts.lLeg.rotation.x = 0; kn.parts.rLeg.rotation.x = 0; kn.parts.rArm.rotation.x = 2.4; kn.parts.lArm.rotation.x = 1.9; kn.rotation.y = Math.min(Math.PI, (f - 48) * 0.14); bigNova.visible = true; bigNova.position.set(0, 3.5, kn.position.z + 1.5); bigNova.rotation.z += 0.25; bigNova.scale.addScalar(0.05); csCamPos.set(0, -195.6, 8.2); csCamLook.set(0, -196.2, 0); }
-      else { nStars.style.display = "flex"; bigNova.scale.addScalar(0.35); csCamPos.set(0, -195.5, 7.0); }
-      if (f === 140) fl.style.opacity = "1"; if (f >= 165) { clearCutsceneStage(); onDone(); }
-    }, 32);
-  } else if (mainK === "1x1x1x1") {
-    playCutsceneMP3(mp3Outro1x, null);
-    const lava = new THREE.Mesh(new THREE.RingGeometry(10, 32, 32), new THREE.MeshBasicMaterial({ color: 0xff4500, side: THREE.DoubleSide })); lava.rotation.x = -Math.PI / 2; lava.position.y = -0.05; csStage.add(lava); csObjects.push(lava);
-    const plat = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 0.6, 24), new THREE.MeshStandardMaterial({ color: 0x27272a })); plat.position.y = -0.3; csStage.add(plat); csObjects.push(plat);
-    const gLight = new THREE.PointLight(0x00ff33, 3.5, 35); gLight.position.set(0, 6, 3); csStage.add(gLight); csObjects.push(gLight);
-    const sh = createR6("shed"); sh.position.set(0.6, 0.55, 1.2); sh.rotation.x = -Math.PI / 2; sh.rotation.z = 0.35; sh.parts.shedSword.visible = false; csStage.add(sh); csObjects.push(sh);
-    const dropSw = mkSword(0xd4af37); dropSw.position.set(2.4, 0.2, 1.8); dropSw.rotation.z = Math.PI / 2; dropSw.rotation.y = 0.6; csStage.add(dropSw); csObjects.push(dropSw);
-    const k1x = createR6("1x"); k1x.position.set(-2.5, 0, -1.5); k1x.rotation.y = -0.4; csStage.add(k1x); csObjects.push(k1x);
-    const burst = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 2.8, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x00ff44, transparent: true, opacity: 0, side: THREE.DoubleSide })); burst.position.set(0.6, 4.5, 1.2); csStage.add(burst); csObjects.push(burst);
-    let f = 0; csTick = setInterval(function(){
-      f++; if (f < 45) { k1x.position.x = -2.5 + f * 0.045; k1x.position.z = -1.5 + f * 0.035; animateWalkingLimbs(k1x, 0.2); csCamPos.set(3.8, -196.2, 6.2); csCamLook.set(0.3, -198.2, 0.5); }
-      else if (f < 85) { k1x.parts.lLeg.rotation.x = 0; k1x.parts.rLeg.rotation.x = 0; k1x.parts.rArm.rotation.x = 2.3; k1x.parts.lArm.rotation.x = 2.3; if (f === 50) burst.material.opacity = 0.65; burst.rotation.y += 0.25; const sc = 1 + Math.sin(f * 0.5) * 0.25; burst.scale.set(sc, 1, sc); csCamPos.set(3.5 + Math.sin(f * 0.7) * 0.15, -195.8 + Math.cos(f * 0.9) * 0.15, 6.8); csCamLook.set(0.2, -197.5, 0.6); }
-      else { burst.material.opacity = Math.max(0, burst.material.opacity - 0.05); csCamPos.set(4.2, -195.2, 7.6); csCamLook.set(0, -197.4, 0.4); }
-      if (f === 145) fl.style.opacity = "1"; if (f >= 165) { clearCutsceneStage(); onDone(); }
-    }, 32);
-  } else {
-    playCutsceneMP3(mp3OutroC00l, null);
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x1f2937 })); road.rotation.x = -Math.PI / 2; csStage.add(road); csObjects.push(road);
-    const bldg = new THREE.Mesh(new THREE.BoxGeometry(28, 12, 6), new THREE.MeshStandardMaterial({ color: 0x7f1d1d })); bldg.position.set(0, 6, -10); csStage.add(bldg); csObjects.push(bldg);
-    const pTex = makePosterTex("team c00lkidd\njoin today!", "#991b1b", "#111");
-    [-10, 10].forEach(function(px){ const p = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 7.5), new THREE.MeshBasicMaterial({ map: pTex, transparent: true, opacity: 0.85 })); p.position.set(px, 4.5, -6.8); csStage.add(p); csObjects.push(p); });
-    const car = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 2.4), new THREE.MeshStandardMaterial({ color: 0xdc2626 })); car.position.set(-9, 6.5, -2); car.rotation.z = 0.55; car.rotation.x = 0.3; csStage.add(car); csObjects.push(car);
-    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(3.5, 0), new THREE.MeshStandardMaterial({ color: 0x6b7280, emissive: 0x7c2d12, emissiveIntensity: 0.5 })); rock.position.set(8.5, 3.2, -1.5); csStage.add(rock); csObjects.push(rock);
-    const fires = []; for (let i = 0; i < 14; i++) { const flm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.6, 1.4), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff5500 : 0xfacc15, transparent: true, opacity: 0.85 })); flm.position.set((i - 7) * 1.8, 1.5 + (i % 3) * 1.2, -5 - (i % 4) * 1.5); csStage.add(flm); csObjects.push(flm); fires.push(flm); }
-    const fLight = new THREE.PointLight(0xff6600, 4, 45); fLight.position.set(0, 7, -3); csStage.add(fLight); csObjects.push(fLight);
-    const kc = createR6("c00lkidd"); kc.position.set(0, 0, 1.5); kc.rotation.y = 0; csStage.add(kc); csObjects.push(kc);
-    let f = 0; csTick = setInterval(function(){
-      f++; fires.forEach(function(fm, i){ fm.scale.y = 0.7 + Math.sin(f * 0.35 + i) * 0.45; fm.rotation.y += 0.08; });
-      fLight.intensity = 3.4 + Math.sin(f * 0.4) * 0.8; car.position.y = 6.5 + Math.sin(f * 0.08) * 0.4;
-      kc.parts.rArm.rotation.x = 2.4; kc.parts.rArm.rotation.z = -0.3 + Math.sin(f * 0.3) * 0.35; kc.parts.head.rotation.z = Math.sin(f * 0.12) * 0.15;
-      csCamPos.set(0, -195.8, 6.5 + f * 0.09); csCamLook.set(0, -196.2, -3);
-      if (f === 145) fl.style.opacity = "1"; if (f >= 165) { clearCutsceneStage(); onDone(); }
-    }, 32);
+function submitJoinRoom() {
+  const code = document.getElementById("room-code-input").value.trim().toUpperCase();
+  if (!code) { showToast("Masukkan kode room!", "#f44"); return; }
+  isHost = false;
+  playMode = "MULTIPLAYER";
+  try {
+    myPeer = new Peer();
+    myPeer.on("open", function() {
+      peerConn = myPeer.connect(code);
+      peerConn.on("open", function() {
+        showToast("Berhasil terhubung ke room: " + code, "#0f8");
+      });
+    });
+  } catch (e) {
+    showToast("Gagal terhubung ke host.", "#f44");
   }
+  document.getElementById("mode-modal").style.display = "none";
+  gameState = "LOBBY";
+  timerSeconds = 30;
+  updateUIState();
 }
-  const minions = [], zombies = [], clones = [], corpses = [];
+
+// CUTSCENE OUTRO & VISUAL
+const minions = [], zombies = [], clones = [], corpses = [];
 function spawnVisualHitbox(k, len, col) {
   const hb = new THREE.Mesh(new THREE.BoxGeometry(4.4, 6, len), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35 }));
   const fwd = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), k.rotation.y);
@@ -1600,7 +1696,7 @@ function playShedSlashAnim(char) {
   }, 550);
 }
 
-// --- HUD ANGKA HP, STAMINA, PORTRAIT & DAFTAR SURVIVOR ---
+// HUD ANGKA HP, STAMINA & DAFTAR SURVIVOR
 function updatePlayerBarsUI() {
   const hpVal = Math.max(0, Math.ceil(playerNoob.hp || 0));
   document.getElementById("hp-bar").style.width = hpVal + "%";
@@ -1643,7 +1739,7 @@ function playKillAnimation(k, v) {
   if (v === playerNoob && playerRole === "SURVIVOR") {
     closePuzzle(); cancelMedkit(); cancelC00lgui(); clearHallucination(playerNoob, false);
     camFocusOverride = cp; isPlayerDead = true; playerNoob.hp = 0; updatePlayerBarsUI();
-    playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); clearAllEffects();
+    playerNoob.position.set(0, LOBBY_FLOOR_Y + 1.2, 14); clearAllEffects();
   }
   updateSurvivorHUDList();
   if (k.kType === "Noli") {
@@ -1787,7 +1883,7 @@ function useNoliVoidRush(k) {
   }
   if (k.reRushWindow && k.state === "IDLE") {
     k.reRushWindow = false; k.state = "RUSH_WINDUP"; k.parts.torso.rotation.x = 0.35;
-    k.rushHitTargets = new Set(); // Reset target hit agar bisa mengenai survivor yang sama untuk SLAM!
+    k.rushHitTargets = new Set();
     playSFXWithFallback(sfx.noliRushWu, function(){ playSynthTone(220, 0.5, "sawtooth", 0.16); });
     showToast("RE-RUSH CHARGING! Arahkan Kamera!", "#e879f9");
     safeTimeout(function(){ if (k.state !== "RUSH_WINDUP") return; k.state = "VOID_RUSHING"; k.rushTimer = 180; k.rushElapsed = 0; playSFX(sfx.noliRushAmb); }, 650);
@@ -2049,7 +2145,7 @@ function tryClickObservantGenerator(clientX, clientY) {
 
 let camYaw = 0, camPitch = 0.2, isPointerLocked = false, isMouseDown = false, prevMouseX = 0, prevMouseY = 0;
 document.body.addEventListener("click", function(e){
-  if (e.target.tagName === "BUTTON" || activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  if (e.target.tagName === "BUTTON" || activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO" || gameState === "LOADING" || gameState === "TITLE") return;
   if (tryClickObservantGenerator(e.clientX, e.clientY)) return;
   if (playerRole === "KILLER" && activeKillers[0] && activeKillers[0].state === "OBSERVANT") return;
   document.body.requestPointerLock(); document.getElementById("start-hint").style.display = "none"; unlockAllAudio();
@@ -2065,7 +2161,7 @@ window.addEventListener("mousedown", function(e){
 });
 window.addEventListener("mouseup", function(){ isMouseDown = false; });
 window.addEventListener("mousemove", function(e){
-  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO" || gameState === "LOADING" || gameState === "TITLE") return;
   let dx = 0, dy = 0;
   if (isPointerLocked) { dx = e.movementX; dy = e.movementY; }
   else if (isMouseDown) { dx = e.clientX - prevMouseX; dy = e.clientY - prevMouseY; prevMouseX = e.clientX; prevMouseY = e.clientY; }
@@ -2096,7 +2192,7 @@ function updateSkillButtonsForRole() {
   }
 }
 function updateUIState() {
-  const isCut = (gameState === "INTRO" || gameState === "OUTRO");
+  const isCut = (gameState === "INTRO" || gameState === "OUTRO" || gameState === "LOADING" || gameState === "TITLE");
   document.getElementById("top-hud").style.display = isCut ? "none" : "flex";
   document.getElementById("lobby-controls").style.display = gameState === "LOBBY" ? "flex" : "none";
   document.getElementById("gen-status").style.display = gameState === "INGAME" ? "block" : "none";
@@ -2123,7 +2219,7 @@ function startNewRound() {
   generators.forEach(function(g){ g.stage = 0; g.gearsInserted = 0; g.done = false; g.lamp.material.color.setHex(0xff0000); });
   document.getElementById("gen-status").innerText = "Generator Selesai: 0 / 5";
   if (playerRole === "SURVIVOR") { playerNoob.hp = 100; playerNoob.alive = true; playerNoob.visible = true; playerNoob.isInvulnerable = false; playerNoob.isUndetectable = false; playerNoob.hallucinationLvl = 0; playerNoob.parts.fireMesh.visible = false; updatePlayerBarsUI(); playerNoob.position.set(0, 0, 0); applyPlayerAppearance(); }
-  else { playerNoob.alive = false; playerNoob.visible = false; playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); }
+  else { playerNoob.alive = false; playerNoob.visible = false; playerNoob.position.set(0, LOBBY_FLOOR_Y + 1.2, 14); }
   buildRoundRoster(); spawnNoliFakeGenerators();
   playKillerIntroCutscene(function(){
     gameState = "INGAME"; timerSeconds = 180;
@@ -2136,9 +2232,10 @@ function endRoundToLobby(killerWon) {
   clearRoundTimers(); closePuzzle(); closeNPCModal(); clearObservantVisuals(); clearAllEffects(); stopAndResetAllAudio(); document.getElementById("blind-overlay").style.display = "none";
   fakeGenerators.forEach(function(fg){ scene.remove(fg.group); }); fakeGenerators.length = 0;
   function finalizeLobby() {
-    gameState = "LOBBY"; timerSeconds = 40; roundCount++; updateRoundInfoText(); lmsTriggered = false; isSpectating = false; camFocusOverride = null; playerVY = 0; isGrounded = true;
+    gameState = "LOBBY"; timerSeconds = (playMode === "MULTIPLAYER" && isHost && !peerConn) ? 999 : 40;
+    roundCount++; updateRoundInfoText(); lmsTriggered = false; isSpectating = false; camFocusOverride = null; playerVY = 0; isGrounded = true;
     camera.fov = 75; camera.updateProjectionMatrix();
-    playerNoob.position.set(0, LOBBY_FLOOR_Y, 14); playerNoob.visible = true; playerNoob.hallucinationLvl = 0; playerNoob.parts.fireMesh.visible = false; applyPlayerAppearance();
+    playerNoob.position.set(0, LOBBY_FLOOR_Y + 1.2, 14); playerNoob.visible = true; playerNoob.hallucinationLvl = 0; playerNoob.parts.fireMesh.visible = false; applyPlayerAppearance();
     aiSurvivors.forEach(function(a){ scene.remove(a); }); aiSurvivors = []; activeKillers.forEach(function(k){ scene.remove(k); }); activeKillers = [];
     minions.forEach(function(x){ scene.remove(x); }); minions.length = 0; zombies.forEach(function(x){ scene.remove(x); }); zombies.length = 0;
     clones.forEach(function(x){ scene.remove(x); }); clones.length = 0; corpses.forEach(function(x){ scene.remove(x); }); corpses.length = 0;
@@ -2148,8 +2245,15 @@ function endRoundToLobby(killerWon) {
 }
 
 setInterval(function(){
-  if (gameState === "LOBBY") { timerSeconds--; document.getElementById("round-timer").innerText = "LOBBY: " + timerSeconds + "s"; if (timerSeconds <= 0) startNewRound(); }
-  else if (gameState === "INGAME") {
+  if (gameState === "LOBBY") {
+    if (playMode === "MULTIPLAYER" && isHost && !peerConn) {
+      document.getElementById("round-timer").innerText = "WAIT ANY PLAYER TO JOIN...";
+    } else {
+      timerSeconds--;
+      document.getElementById("round-timer").innerText = "LOBBY: " + timerSeconds + "s";
+      if (timerSeconds <= 0) startNewRound();
+    }
+  } else if (gameState === "INGAME") {
     timerSeconds--; if (!playerNoob.hallucinationLvl) { const m = Math.floor(timerSeconds / 60), s = timerSeconds % 60; document.getElementById("round-timer").innerText = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s; }
     const al = []; if (playerRole === "SURVIVOR" && !isPlayerDead) al.push(playerNoob); aiSurvivors.forEach(function(a){ if (a.alive) al.push(a); });
     updateSpectateHPList(); updateSurvivorHUDList();
@@ -2169,7 +2273,7 @@ setInterval(function(){
 function toggleShiftlock() { isShiftlock = !isShiftlock; document.getElementById("btn-shiftlock").classList.toggle("active", isShiftlock); document.getElementById("crosshair").style.display = isShiftlock ? "block" : "none"; }
 window.addEventListener("keydown", function(e){
   keys[e.code] = true; if (e.code === "Escape") { if (activeGen) closePuzzle(); if (activeNPC) closeNPCModal(); return; }
-  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO") return;
+  if (activeGen || activeNPC || gameState === "INTRO" || gameState === "OUTRO" || gameState === "LOADING" || gameState === "TITLE") return;
   if (e.code === "KeyM") document.exitPointerLock(); if (e.code === "ShiftLeft") isSprinting = true;
   if (e.code === "Space" && gameState === "LOBBY" && isGrounded) { playerVY = 0.42; isGrounded = false; }
   if (e.code === "KeyF") {
@@ -2334,7 +2438,7 @@ function triggerPizzaDelivery(k) {
 function checkHitbox(k, t, len) { if (len === undefined) len = 5.5; const r = t.position.clone().sub(k.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), -k.rotation.y); return Math.abs(r.x) <= 2.3 && r.y >= -1 && r.y <= 5.5 && r.z <= 0.5 && r.z >= -len; }
 function animateWalkingLimbs(g, s) { g.walkCycle += s; g.parts.lArm.rotation.x = Math.sin(g.walkCycle) * 0.7; g.parts.rArm.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.lLeg.rotation.x = -Math.sin(g.walkCycle) * 0.7; g.parts.rLeg.rotation.x = Math.sin(g.walkCycle) * 0.7; }
 
-// Gerak AI dengan belok otomatis jika terhalang tembok/pohon (anti macet saat 007n7 teleport!)
+// AI Navigasi Cerdas (Belok Otomatis Saat Terhalang Tembok/Pohon)
 function moveAISmart(e, dx, dz, spd) {
   const ox = e.position.x, oz = e.position.z;
   moveWithCollision(e, dx * spd, dz * spd);
@@ -2368,7 +2472,7 @@ function handleNoliVoidRushTick(k, allSurvs, isPC) {
     k.state = "IDLE"; k.parts.torso.rotation.x = 0; k.parts.rArm.rotation.x = 0; k.parts.lArm.rotation.x = 0;
     playSFXWithFallback(sfx.noliRushCol, function(){ playSynthTone(95, 0.35, "sawtooth", 0.2); }); showToast("Void Rush Menabrak!", "#f44"); return;
   }
-  // Cek tabrakan ke SEMUA survivor hidup (termasuk 007n7 invisible & Noob Ghostburger/Slateskin!)
+  // Menabrak semua survivor hidup (termasuk 007n7 invisible & Noob Ghostburger/Slateskin)
   for (let i = 0; i < allSurvs.length; i++) {
     const s = allSurvs[i]; if (!s.alive || !checkHitbox(k, s, 6.2)) continue;
     if (k.rushHitTargets && k.rushHitTargets.has(s)) continue;
@@ -2400,8 +2504,20 @@ function handleNoliVoidRushTick(k, allSurvs, isPC) {
   }
 }
 
+let titleCamTime = 0;
 function animate() {
   requestAnimationFrame(animate);
+
+  // KONDISI KAMERA TITLE SCREEN (Sinematik Slow Pan Menatap Kabin Forsaken)
+  if (gameState === "TITLE") {
+    titleCamTime += 0.005;
+    camera.position.set(Math.sin(titleCamTime) * 35, 78 + Math.cos(titleCamTime * 0.7) * 3, 40 + Math.cos(titleCamTime) * 15);
+    camera.lookAt(0, 80, -10);
+    renderer.render(scene, camera);
+    return;
+  }
+  if (gameState === "LOADING") return; // Diam saat loading screen
+
   skyStar.rotation.y += 0.012; pizzaSkyGroup.visible = (currentMap === "PIZZA" && gameState !== "LOBBY");
   if (currentMap === "PIZZA") {
     pizzaFires.forEach(function(fl, i){ fl.scale.y = 0.75 + Math.sin(Date.now() * 0.02 + i) * 0.35; fl.rotation.y += 0.08; });
@@ -2416,7 +2532,8 @@ function animate() {
     if (k.parts.eyeFlare) { const s = 1 + Math.sin(Date.now() * 0.015) * 0.4; k.parts.eyeFlare.scale.set(s, s, 1); k.parts.eyeFlare.rotation.z += 0.05; }
     if (k.parts.noliStar && k.state !== "OBSERVANT_WINDUP") k.parts.noliStar.rotation.z += 0.06;
     if (k.parts.noliShadowRing) k.parts.noliShadowRing.rotation.z -= 0.04;
-    // ANIMASI OBSERVANT NOLI: Putar kedua tangan lalu tepuk Void Star dengan dua tangan!
+
+    // ANIMASI OBSERVANT NOLI (Memutar tangan lalu menepuk Void Star)
     if (k.state === "OBSERVANT_WINDUP") {
       k.obsWindElapsed = (k.obsWindElapsed || 0) + 1;
       if (k.obsWindElapsed < 48) {
@@ -2511,7 +2628,7 @@ function animate() {
         }
       });
     }
-    // Update Chase Theme sesuai Killer yang paling dekat!
+    // Update Chase Theme sesuai Killer yang paling dekat di Double Trouble!
     update4LayerChase(ad, nearestKType);
 
     if (fakeNoliChaser && !isPlayerDead && playerRole === "SURVIVOR") {
@@ -2521,7 +2638,6 @@ function animate() {
       else fakeNoliChaser.parts.rArm.rotation.x = Math.sin(Date.now() * 0.02) * 1.5;
     }
 
-    // Pisahkan allSurvivors (bisa kena hitbox walau invisible!) dan detectTargets (untuk AI mencari target)
     const allSurvivors = [];
     if (playerRole === "SURVIVOR" && !isPlayerDead) allSurvivors.push(playerNoob);
     aiSurvivors.forEach(function(a){ if (a.alive) allSurvivors.push(a); });
